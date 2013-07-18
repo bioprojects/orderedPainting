@@ -1,0 +1,150 @@
+
+This code is written by Koji Yahara, and
+implements the algorithm described in the following paper:
+
+  Efficient inference of recombination hot regions through copying probability matrices
+  in hundreds of recombining microbial genomes
+  Koji Yahara, Xavier Didelot, Azim Ansari, Samuel Sheppard and Daniel Falush
+  submitted
+
+orderedPainting is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by
+the Free Software Foundation.
+
+orderedPainting is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+
+#---------------------------------------------------------
+# 1. Selection of grid engine
+#---------------------------------------------------------
+
+orderedPainting uses UGE (SGE) by default.
+
+If you would like to use LSF instead, please edit "lib/env_func.bashrc" so that
+
+  #QUEUE_TYPE="SGE"         # comment out
+  #QSUB_COMMON="qsub -cwd " # comment out
+  
+  QUEUE_TYPE="LSF"          # comment in instead
+  QSUB_COMMON="bsub "       # comment in instead
+
+
+
+#---------------------------------------------------------
+# 2. Setup
+#---------------------------------------------------------
+
+Please execute "setup.sh" as follows.
+It will download and compile other programs used in orderedPainting.
+
+  $ /bin/bash setup.sh
+
+Compilation of one of the programs (GNU sort) requires a few minutes.
+Please wait during that time.
+
+
+
+#---------------------------------------------------------
+# 3. Basic usage
+#---------------------------------------------------------
+
+The following is the most basic example which uses files in the "example1" directory.
+
+  $ qsub -cwd -o example1.log <<< "/bin/bash ./orderedPainting.sh  -g example1/simulatedData_N100.hap  -l example1/strainName_N100.txt"
+
+The format of the ".hap" file is the same as ChromoPainter.
+
+The ".list" is a tab-delimited 2-column file which indicates name of each strain in the ".hap" file.
+
+
+
+#---------------------------------------------------------
+# 4. Output
+#---------------------------------------------------------
+
+Please check the log file you specified above.
+
+  $ tail example1.log
+
+If the program finished running normally, the following message 
+will be written in the log file
+
+  Done. Please look at output files in simulatedData_N100_orderedS1_rnd_1_10_dirs_results
+
+Please look at the output files there. 
+
+  $ ls simulatedData_N100_orderedS1_rnd_1_10_dirs_results/
+
+The following files and directories will be seen.
+
+  |-- bottom/
+  |-- bottom.list
+  |-- middle/
+  |-- middle.list
+  |-- top/
+  |-- top.list
+  |
+  |-- results_siteStats.txt.gz
+  |-- results_siteStats_along_seq.png
+  |-- results_siteStats_hist.png
+  |
+  |-- (results_siteStats_missingCnt.png)
+  |
+  |-- site_minus_average.matrix.summary.pos.txt
+  |-- sum_site_minus_average.summary.range.txt
+  `-- sum_site_minus_average.summary.txt.gz
+
+     ("results_siteStats_missingCnt.png"
+       will be produced only if imputed data are analyzed)
+
+
+"results_siteStats.txt.gz" contains value of the distance statistic of each site. 
+
+"results_siteStats_hist.png" shows its histgram.
+
+"results_siteStats_along_seq.png" shows its distribution along the genome.
+Two recombiantion hot regions should be seen.
+
+
+
+Other log files are produced temporarily in a current directory, and then moved 
+to the "log" directory.  If the output files are successfully obtained, 
+there is no need to check these additional log files.
+
+
+
+#---------------------------------------------------------
+# 5. Usage for imputed data
+#---------------------------------------------------------
+
+If you would like to use imputed data, please prepare a file which indicates
+
+  position[tab]name of missing strain at the position
+
+For example,
+
+  64	strain1
+  64	strain5
+  100	strain1
+
+indicates strain1 and strain5 are missing at position 64, and 
+strain 1 is missing at position 100.
+
+Please specify the file by "-m" option in orderedPainting.sh
+
+The file is used to calculate  site-by-site and average copying probability matrices 
+by masking columns and rows of missing individuals at a site.
+
+
+
+#---------------------------------------------------------
+# 6. Further information
+#---------------------------------------------------------
+
+Please refer to a PDF manual, which will be uploaded in the future.
+
+If you find any problem, please inform to k-yahara@gakushikai.jp
+
