@@ -5,7 +5,7 @@ implements the algorithm described in the following paper:
   Efficient inference of recombination hot regions through copying probability matrices
   in hundreds of recombining microbial genomes
   Koji Yahara, Xavier Didelot, Azim Ansari, Samuel Sheppard and Daniel Falush
-  submitted
+  in preparation
 
 orderedPainting is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by
