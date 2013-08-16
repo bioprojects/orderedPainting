@@ -1,100 +1,100 @@
-1	strain1
-2	strain2
-3	strain3
-4	strain4
-5	strain5
-6	strain6
-7	strain7
-8	strain8
-9	strain9
-10	strain10
-11	strain11
-12	strain12
-13	strain13
-14	strain14
-15	strain15
-16	strain16
-17	strain17
-18	strain18
-19	strain19
-20	strain20
-21	strain21
-22	strain22
-23	strain23
-24	strain24
-25	strain25
-26	strain26
-27	strain27
-28	strain28
-29	strain29
-30	strain30
-31	strain31
-32	strain32
-33	strain33
-34	strain34
-35	strain35
-36	strain36
-37	strain37
-38	strain38
-39	strain39
-40	strain40
-41	strain41
-42	strain42
-43	strain43
-44	strain44
-45	strain45
-46	strain46
-47	strain47
-48	strain48
-49	strain49
-50	strain50
-51	strain51
-52	strain52
-53	strain53
-54	strain54
-55	strain55
-56	strain56
-57	strain57
-58	strain58
-59	strain59
-60	strain60
-61	strain61
-62	strain62
-63	strain63
-64	strain64
-65	strain65
-66	strain66
-67	strain67
-68	strain68
-69	strain69
-70	strain70
-71	strain71
-72	strain72
-73	strain73
-74	strain74
-75	strain75
-76	strain76
-77	strain77
-78	strain78
-79	strain79
-80	strain80
-81	strain81
-82	strain82
-83	strain83
-84	strain84
-85	strain85
-86	strain86
-87	strain87
-88	strain88
-89	strain89
-90	strain90
-91	strain91
-92	strain92
-93	strain93
-94	strain94
-95	strain95
-96	strain96
-97	strain97
-98	strain98
-99	strain99
-100	strain100
+strain1
+strain2
+strain3
+strain4
+strain5
+strain6
+strain7
+strain8
+strain9
+strain10
+strain11
+strain12
+strain13
+strain14
+strain15
+strain16
+strain17
+strain18
+strain19
+strain20
+strain21
+strain22
+strain23
+strain24
+strain25
+strain26
+strain27
+strain28
+strain29
+strain30
+strain31
+strain32
+strain33
+strain34
+strain35
+strain36
+strain37
+strain38
+strain39
+strain40
+strain41
+strain42
+strain43
+strain44
+strain45
+strain46
+strain47
+strain48
+strain49
+strain50
+strain51
+strain52
+strain53
+strain54
+strain55
+strain56
+strain57
+strain58
+strain59
+strain60
+strain61
+strain62
+strain63
+strain64
+strain65
+strain66
+strain67
+strain68
+strain69
+strain70
+strain71
+strain72
+strain73
+strain74
+strain75
+strain76
+strain77
+strain78
+strain79
+strain80
+strain81
+strain82
+strain83
+strain84
+strain85
+strain86
+strain87
+strain88
+strain89
+strain90
+strain91
+strain92
+strain93
+strain94
+strain95
+strain96
+strain97
+strain98
+strain99
+strain100
