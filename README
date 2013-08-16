@@ -104,7 +104,7 @@ The following files and directories will be seen.
        will be produced only if imputed data are analyzed)
 
 
-"results_siteStats.txt.gz" contains values of the distance statistic and bootstrap support for each site. 
+"results_siteStats.txt.gz" contains values of the distance statistic and bootstrap support. 
 
 "results_siteStats_hist.png" shows its histgram.
 

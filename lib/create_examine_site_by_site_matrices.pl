@@ -618,10 +618,11 @@ if ($opt_n) {
       #print OUT_RESULTS "\t".$hash_sum_site_infoContent{$pos};  # to be commented out
       
       #
-      # bootstrap support by using the threshold of "top"
+      # bootstrap support by using the threshold of the top percentile 
+      # of the distribution of Di for all sites without bootstrapping
       #
       my $bootstrap_support = "NA";
-      #if ($hash_summaryPos2Type{$pos} eq "top") {
+      if ($hash_summaryPos2Type{$pos} eq "top") { # output only for atypical sites
         my $cnt_bootstrapped_in_top = 0;
         
         my @arr_i_boot = keys %{$hash_sum_site_bootstrapped_distScore{$pos}};
@@ -631,7 +632,7 @@ if ($opt_n) {
           }
         }
         $bootstrap_support = ( $cnt_bootstrapped_in_top / scalar(@arr_i_boot) ) * 100;
-      #}
+      }
       print OUT_RESULTS "\t" . $bootstrap_support;
       
       print OUT_RESULTS "\n";
