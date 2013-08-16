@@ -2,10 +2,9 @@
 This code is written by Koji Yahara, and
 implements the algorithm described in the following paper:
 
-  Efficient inference of recombination hot regions through copying probability matrices
-  in hundreds of recombining microbial genomes
+  Efficient inference of recombination hot regions in bacterial genomes
   Koji Yahara, Xavier Didelot, Azim Ansari, Samuel Sheppard and Daniel Falush
-  in preparation
+  in submission
 
 orderedPainting is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by
@@ -105,7 +104,7 @@ The following files and directories will be seen.
        will be produced only if imputed data are analyzed)
 
 
-"results_siteStats.txt.gz" contains value of the distance statistic of each site. 
+"results_siteStats.txt.gz" contains values of the distance statistic and bootstrap support for each site. 
 
 "results_siteStats_hist.png" shows its histgram.
 
