@@ -83,22 +83,23 @@ Please look at the output files there.
 
 The following files and directories will be seen.
 
-  |-- bottom/
-  |-- bottom.list
-  |-- middle/
-  |-- middle.list
-  |-- top/
-  |-- top.list
   |
-  |-- results_siteStats.txt.gz
   |-- results_siteStats_along_seq.png
   |-- results_siteStats_hist.png
+  |-- results_siteStats.txt.gz
   |
   |-- (results_siteStats_missingCnt.png)
   |
   |-- site_minus_average.matrix.summary.pos.txt
   |-- sum_site_minus_average.summary.range.txt
-  `-- sum_site_minus_average.summary.txt.gz
+  |-- sum_site_minus_average.summary.txt.gz
+  |
+  |-- visualize_bottom/
+  |-- visualize_bottom.list
+  |-- visualize_middle/
+  |-- visualize_middle.list
+  |-- visualize_top/
+  |-- visualize_top.list
 
      ("results_siteStats_missingCnt.png"
        will be produced only if imputed data are analyzed)
