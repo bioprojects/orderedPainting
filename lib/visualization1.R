@@ -1,5 +1,5 @@
 #
-# R --vanilla --quiet < lib/visualization.R --args lib/plotHeatmap.R  results_siteStats.txt.gz  
+# R --vanilla --quiet < lib/visualization1.R --args lib/plotHeatmap.R  results_siteStats.txt.gz  
 #
 library(MASS)
 

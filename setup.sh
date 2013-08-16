@@ -27,7 +27,7 @@ echo ${CMD}
 eval ${CMD}
 
 #
-# 1. chromopainter
+# 1. ChromoPainter
 #
 if [ ! -f "chromopainter-${VERSION}.tar.gz" ]; then
   URL=http://www.maths.bris.ac.uk/%7Emadjl/finestructure/chromopainter-${VERSION}.tar.gz
@@ -60,7 +60,7 @@ else
 fi
 
 #
-# 2. official scripts for chromopainter
+# 2. official scripts for ChromoPainter
 #
 arr_scripts=(
   makeuniformrecfile.pl
@@ -124,6 +124,7 @@ fi
 #
 cd ./${LIB_DIR}/randomize
 MSG=`make`
+echo ${MSG}
 if [ $? -ne 0 ]; then
   echo_fail "Make of randomize failed"
 fi
@@ -135,6 +136,7 @@ cd ../..
 #
 cd ./${LIB_DIR}/postprocess
 MSG=`make`
+echo ${MSG}
 if [ $? -ne 0 ]; then
   echo_fail "Make of postprocess failed"
 fi

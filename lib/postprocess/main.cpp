@@ -12,7 +12,7 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
-#include <cstdlib>
+#include <cstdlib> // rand, srand
 
 #include <map>
 #include <string>
@@ -20,8 +20,8 @@
 
 #include "func.h"
 
-#include <gsl/gsl_linalg.h>
-#include <gsl/gsl_rng.h>
+//#include <gsl/gsl_linalg.h>
+//#include <gsl/gsl_rng.h>
 
 using namespace std;
 //using namespace boost;
@@ -32,11 +32,12 @@ static const char * help=
             \n\
             Options:\n\
                 -d dir_each_ordering \n\
-                -s strainHapOrderFile \n\
+                -l strainHapOrderFile \n\
                 -o strainFineOrderFile \n\
                 -r dir_results \n\
                 -t 1|2 \n\
-                -l 1|2|3 \n\
+                -p 1|2|3 \n\
+                -s 1 (seed of random number generator for bootstrapping) \
                 [-m pos2missingInd.txt] \n\
                 [-c donor_recipient_constraint.txt] \n\
                 \n";
@@ -46,7 +47,9 @@ static const char * help=
 // global variables
 // ######################################################################
 
-gsl_rng * r;  /* global generator */
+//gsl_rng * r;  /* global generator */
+const int N_BOOTSTRAP = 100;
+
 const int MAX_BUFFER = 10240; 
 
 const char * sort_path = "./lib/sort";
@@ -79,6 +82,8 @@ const char * out_site_minus_average_matrix_summary_pos = "site_minus_average.mat
 // util
 // ######################################################################
 FILE * fopen_wrapper(const char * filename, const char * mode);
+int getRandom(int min,int max);
+
 vector<string> &split(const string &s, char delim, vector<string> &elems);
 vector<string> split(const string &s, char delim);
 
@@ -92,6 +97,10 @@ FILE * fopen_wrapper(const char * filename, const char * mode) {
     return f;
 }
 
+int getRandom(int min,int max)
+{
+    return min + (int)(rand()*(max-min+1.0)/(1.0+RAND_MAX));
+}
 
 
 // ######################################################################
@@ -108,20 +117,22 @@ int main(int argc, char **argv)
     char * dir_results=NULL;
     char * strainFineOrderFile=NULL;
     int type_painting=-1;
-    int loop_type=-1;
+    int loop_part=-1;
+    int seed=-1;
     char * pos2missingIndFile=NULL;
     char * donor_recipient_constraintFile=NULL;
 
     if (argc==1) {printf("%s",help);exit(0);}
-    while ((c = getopt (argc, argv, "d:s:r:o:t:l:m:c:v")) != -1)
+    while ((c = getopt (argc, argv, "d:l:r:o:t:p:m:c:v")) != -1)
         switch (c)
     {
         case('d'):dir_each_ordering=optarg;break;
-        case('s'):strainHapOrderFile=optarg;break;
+        case('l'):strainHapOrderFile=optarg;break;
         case('o'):strainFineOrderFile=optarg;break;
-        case('r'):dir_results=optarg;break; // used only in loop_type == 3
+        case('r'):dir_results=optarg;break; // used only in loop_part == 3
         case('t'):type_painting=atoi(optarg);break;
-        case('l'):loop_type=atoi(optarg);break;
+        case('p'):loop_part=atoi(optarg);break;
+        case('s'):seed=atoi(optarg);break;
         case('m'):pos2missingIndFile=optarg;break;
         case('c'):donor_recipient_constraintFile=optarg;break;
         case('v'):verbose=true;break;
@@ -200,11 +211,13 @@ int main(int argc, char **argv)
 
     string donor_or_recipient = "";
     string strainName = "";
+    int strainIND = -1; // 1-indexed
     map<string, int> hash_constrained_donors; 
     map<string, int> hash_constrained_recipients; 
 
 
     // ########################################################################################
+    srand ( seed );
 
     //
     // read pos2missingIndFile (if specified)
@@ -283,16 +296,7 @@ int main(int argc, char **argv)
             buffer[strlen(buffer) - 1] =  '\0';
 
             *arr_line = strtok(buffer , "\t");
-
-            for (i = 1; ; i++) { 
-                if (NULL == (*(arr_line+i) = strtok(NULL , "\t"))){
-                    break;
-                }
-                if (i == 1) {
-                    strainName = string(*(arr_line+i)); 
-                    break;
-                }
-            }
+            strainName = string(*arr_line);
 
             arr_indName_fineOrdering.push_back(strainName);
         }
@@ -306,23 +310,13 @@ int main(int argc, char **argv)
     //
     fh = fopen_wrapper(strainHapOrderFile, "r");
 
+    strainIND = 1;
     while (!feof(fh)) {
         if (fgets(buffer, MAX_BUFFER, fh) != NULL) {
             buffer[strlen(buffer) - 1] =  '\0';
-            int strainIND = -1;
 
             *arr_line = strtok(buffer , "\t");
-            strainIND = atoi(*arr_line);
-
-            for (i = 1; ; i++) { 
-                if (NULL == (*(arr_line+i) = strtok(NULL , "\t"))){
-                    break;
-                }
-                if (i == 1) {
-                    strainName = string(*(arr_line+i)); 
-                    break;
-                }
-            }
+            strainName = string(*arr_line);
 
             if (verbose) {
                 //cout << strainIND << "\t" << strainName << endl;
@@ -331,6 +325,8 @@ int main(int argc, char **argv)
             hash_strainIND2Name[strainIND] = strainName;
 
             arr_indName_eachOrdering.push_back(strainName);
+
+            strainIND++;
         }
     }
     fclose(fh);
@@ -338,7 +334,7 @@ int main(int argc, char **argv)
 
     // ########################################################################################
 
-    if (loop_type == 1) {
+    if (loop_part == 1) {
 
         // ************************************************************************
         // calculate average matrix
@@ -599,7 +595,7 @@ int main(int argc, char **argv)
 
         } // recipient loop
 
-    } else if (loop_type == 2 || loop_type == 3) {
+    } else if (loop_part == 2 || loop_part == 3) {
 
         if (verbose) {
             sprintf( fname_verbose, "%s/verbose_inc_exc.txt", dir_each_ordering ); 
@@ -659,7 +655,7 @@ int main(int argc, char **argv)
         //
         // loop 2 or 3, separately
         //
-        if (loop_type == 2) {
+        if (loop_part == 2) {
 
             // ************************************************************************
             // calculate the distance statistic for each site
@@ -862,7 +858,17 @@ int main(int argc, char **argv)
                         //     according to fine ordering
                         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
                         distScore_per_mat = 0;
+
+                        //
+                        // store score of each row as a vector
+                        //   for bootstrapping of score of each row 
+                        //
+                        vector<double> arr_score_each_row; 
+                        
                         for (i=0; i<arr_indName_eachOrdering.size(); i++) {
+
+                            double distScore_per_row = 0;
+
                             cnt_recipient = i+1;
                             recipient_name = hash_strainIND2Name[cnt_recipient];
 
@@ -874,12 +880,12 @@ int main(int argc, char **argv)
                                 continue;
                             }
 
+                            // calculate distScore_per_row
                             for (j=0; j<arr_indName_eachOrdering.size(); j++) {
                                 cnt_donor = j+1;
                                 donor_name = hash_strainIND2Name[cnt_donor];
 
-                                // TODO
-                                if (donor_recipient_constraintFile != NULL && donor_recipient_constraintFile[0] != '\0') {
+                                if (donor_recipient_constraintFile != NULL && donor_recipient_constraintFile[0] != '\0') { // under development
                                     if (has_key_string2int(hash_constrained_donors, donor_name) && 
                                         has_key_string2int(hash_constrained_recipients, recipient_name) ) {
                                         skip_calc_flag == false;
@@ -903,17 +909,46 @@ int main(int argc, char **argv)
                                         (hash_site_by_site_prob[pair<int,int>(cnt_recipient,cnt_donor)] - 
                                          hash_average_prob[pair<int,int>(cnt_recipient,cnt_donor)])
                                         );
+                                    distScore_per_row += each_score;
                                     distScore_per_mat += each_score;
                                 }
 
                             } // donor
+
+                            arr_score_each_row.push_back(distScore_per_row);
+
                         } // recipient
 
-                        fprintf(fh_out, "%d\t%.13lf\n", pos, distScore_per_mat);
-                        //fprintf(fh_out, "%d\t%.13lf\t%.13lf\n", pos, distScore_per_mat, donorInfoContent);
 
+                        // 
+                        // output 
+                        //
+
+                        // original distScore_per_mat
+                        fprintf(fh_out, "%d\t%.13lf", pos, distScore_per_mat);
+                        //fprintf(fh_out, "%d\t%.13lf\t%.13lf\n", pos, distScore_per_mat, donorInfoContent);
+                        
+                        // bootstrapping of score of each row 
+                        double distScore_per_mat;
+                        for (i = 0; i < N_BOOTSTRAP; i++) {
+                            double bootstrapped_distScore_per_mat = 0;
+                            for (j = 0; j < arr_score_each_row.size(); j++) {
+                                int i_rand = getRandom(0, arr_score_each_row.size()-1);
+                                bootstrapped_distScore_per_mat += arr_score_each_row[i_rand];
+                            }
+                            fprintf(fh_out, "\t%.13lf", bootstrapped_distScore_per_mat);
+                        }
+                        fprintf(fh_out, "\n");
+
+
+                        // 
+                        // prepartion for the next 
+                        //
                         i_recipient_strain_of_this_pos = 0;
 
+                        //
+                        // verbose
+                        //
                         if (verbose) {
                             fprintf(fh_inc_exc,"%d\t%lf",pos, pos_sum_distScore_included/pos_i_included);
 
@@ -935,7 +970,7 @@ int main(int argc, char **argv)
 
             } // read lines
 
-        } else if (loop_type == 3) {
+        } else if (loop_part == 3) {
 
             //
             // read positions to be processed

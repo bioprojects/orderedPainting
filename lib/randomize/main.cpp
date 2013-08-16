@@ -34,11 +34,11 @@ static const char * help=
             Options:\n\
                 -h file.hap \n\
                 -p outprefix \n\
-		-l strainName.list \n\
-		-o strainName_dispOrder.list \n\
-		-t 1,...,10 (th ordering to be randoized, which is also used to run from the reverse) \n\
-		-s 1 (this value + counter of random ordering => seed of random number generator) \n\
-		\n";
+                -l strainName.list \n\
+                -o strainName_dispOrder.list \n\
+                -t 1,...,10 (th ordering to be randoized, which is also used to run from the reverse) \n\
+                -s 1 (this value + counter of random ordering => seed of random number generator) \n\
+                \n";
 
 
 // ######################################################################
@@ -106,7 +106,8 @@ void output (string outDir, string outStrainOrder, vector<string>& arr_ind_order
                      string out_recip_hap = "";
 
                      // write the ordering to .strainOrder files
-                     fprintf(fh_out_strainOrder, "%d\t%s\n",i_recipient+1,arr_ind_ordering[i_recipient].c_str());
+                     //fprintf(fh_out_strainOrder, "%d\%s\n",i_recipient+1,arr_ind_ordering[i_recipient].c_str());
+                     fprintf(fh_out_strainOrder, "%s\n",arr_ind_ordering[i_recipient].c_str());
 
                      // exclude the 1st strain 
                      if (i_recipient == 0) {
@@ -168,7 +169,7 @@ int main(int argc, char **argv)
     int c;
     bool verbose=false;
     char * hapFile=NULL;
-    char * strainIndex2strain_listFile=NULL;
+    char * strain_listFile=NULL;
     char * fine_ordering_listFile=NULL;
     int cnt_rnd_order=-1;
     int seed=-1;
@@ -180,7 +181,7 @@ int main(int argc, char **argv)
     {
         case('h'):hapFile=optarg;break;
         case('p'):outprefix=optarg;break;
-        case('l'):strainIndex2strain_listFile=optarg;break;
+        case('l'):strain_listFile=optarg;break;
         case('o'):fine_ordering_listFile=optarg;break;
         case('t'):cnt_rnd_order=atoi(optarg);break;
         case('s'):seed=atoi(optarg);break;
@@ -205,6 +206,7 @@ int main(int argc, char **argv)
     //
     int i;
     int j;
+    int strainIND; // 1-indexed
     int status;
     int cnt_line; // 1-indexed
     FILE *fh;
@@ -265,30 +267,21 @@ int main(int argc, char **argv)
     }
 
     //
-    // read strainIndex2strain_listFile
+    // read strain_listFile
     //
-    fh = fopen_wrapper(strainIndex2strain_listFile, "r");
+    strainIND = 1;
+    fh = fopen_wrapper(strain_listFile, "r");
     while (!feof(fh)) {
         if (fgets(buffer, MAX_BUFFER, fh) != NULL) {
             buffer[strlen(buffer) - 1] =  '\0';
 
-            int Index;
             string strainName; 
 
             *arr_line = strtok(buffer , "\t");
-            Index = atoi(*arr_line);
+            strainName = string(*arr_line);
 
-            for (i = 1; ; i++) { 
-                if (NULL == (*(arr_line+i) = strtok(NULL , "\t"))){
-                    break;
-                }
-                if (i == 1) {
-                    strainName = string(*(arr_line+i)); 
-                    break;
-                }
-            }
-
-            hash_strainName2Index[strainName] = Index;
+            hash_strainName2Index[strainName] = strainIND;
+            strainIND++;
         }
     }
     fclose(fh);
@@ -296,26 +289,16 @@ int main(int argc, char **argv)
     //
     // read fine_ordering_listFile
     //
+    strainIND = 1;
     fh = fopen_wrapper(fine_ordering_listFile, "r");
     while (!feof(fh)) {
         if (fgets(buffer, MAX_BUFFER, fh) != NULL) {
             buffer[strlen(buffer) - 1] =  '\0';
 
-            int Index;
             string strainName; 
 
             *arr_line = strtok(buffer , "\t");
-            Index = atoi(*arr_line);
-
-            for (i = 1; ; i++) { 
-                if (NULL == (*(arr_line+i) = strtok(NULL , "\t"))){
-                    break;
-                }
-                if (i == 1) {
-                    strainName = string(*(arr_line+i)); 
-                    break;
-                }
-            }
+            strainName = string(*arr_line);
 
             arr_ind_rnd_eachOrdering.push_back(strainName);
         }

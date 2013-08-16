@@ -44,7 +44,9 @@ my $env_file = "$FindBin::Bin/env_func.bashrc";
 # path of commands/scripts
 #
 my $sort_path = "$FindBin::Bin/sort";
-my $sort_opt = " -m -n --batch-size=100 --parallel=8"; # "-m" makes the sorting much faster when all input files are sorted (ascending order)
+my $sort_opt = " -m -n --batch-size=300 --parallel=8"; # "-m" makes the sorting much faster when all input files are sorted (ascending order)
+                                                       # --batch-size=100 is enough for 10 orderings
+                                                       # --batch-size=300 is required for more than 50 orderings
 
 my $postprocess_path = "$FindBin::Bin/postprocess/pp";
 
@@ -53,8 +55,8 @@ my $postprocess_path = "$FindBin::Bin/postprocess/pp";
 #
 #   $out_each_dir_averave_matrix
 #
-my $out_each_dir_averave_matrix       = "average.matrix.txt";
-my $out_each_dir_site_distScore_info  = "site_distScore.txt";  
+my $out_each_dir_averave_matrix  = "average.matrix.txt";
+my $out_each_dir_site_distScore  = "site_distScore.txt";
 
 my $sortfile_catOrderings_copyprob    = "copyprobsperlocus.cat.sort";
 my $gz_sortfile_catOrderings_copyprob = "copyprobsperlocus.cat.sort.gz";
@@ -74,7 +76,7 @@ my $out_sum_site_minus_average_summary_range  = "sum_site_minus_average.summary.
 # number of sites in sum_site_minus_average.summary.txt and for visualization
 #
 my $prop_top_sites_summary           = 0.01; # proportion of top sites to be written in sum_site_minus_average.summary.txt 
-my $num_top_sites_visualization      =  200;
+#my $num_top_sites_visualization      =  200;
 
 my $num_other_sites_summary           = 10;  # num of middle/botton sites to be written in sum_site_minus_average.summary.txt 
 my $num_other_sites_visualization     = 10;
@@ -91,7 +93,7 @@ if ($opt_g) {
   $hap_file = $opt_g;
 } else {
   $hap_file = $dir_ordering_listFile;
-  $hap_file =~ s/_orderedS[0-9].*\.list/.hap/g; 
+  $hap_file =~ s/_orderedS[0-9].*\.list$/.hap/g; 
   if (! -s $hap_file) {
     die "Error: $hap_file doesn't exist or empty";
   }
@@ -104,13 +106,13 @@ if ($opt_t) {
 
 my $contrast_min = "";
 my $contrast_max = "";
-#if ($opt_c) { # -c 2 (upper limit of contrast parameter, otherwise the parameter is fixed to be 1)
+#if ($opt_c) { 
 #  $contrast_min  = 0;
 #  $contrast_max  = $opt_c;
 #  if (!($contrast_max > 0)) {
 #    die "Error: positive values must be specified by -c ";
 #  }
-#  $out_each_dir_site_distScore_info =~ s/\.txt/_c$contrast_max.txt/g; 
+#  $out_each_dir_site_distScore =~ s/\.txt/_c$contrast_max.txt/g; 
 #  $out_results =~ s/\.txt/_c$contrast_max.txt/g;
 #} else {
   $contrast_min  = 1;
@@ -118,8 +120,8 @@ my $contrast_max = "";
 #}
 
 if ($type_painting == 1) {
-  $out_each_dir_site_distScore_info =~ s/\.txt/_t1.txt/g; 
-  $out_results =~ s/\.txt/_t1.txt/g;
+  $out_each_dir_site_distScore =~ s/\.txt$/_t1.txt/g; 
+  $out_results =~ s/\.txt$/_t1.txt/g;
 }
 
 if (! -s $dir_ordering_listFile) {
@@ -139,8 +141,16 @@ open(FINESTRUCT_ORDER, $strainFineOrderFile);
 while (my $line = <FINESTRUCT_ORDER>) {
   chomp($line);
   my @arr_line = split(/\t/, $line);
-  push(@arr_ind_fineOrdering, $arr_line[1]);
-  $hash_ind_fineOrdering{$arr_line[1]} = 1;
+  
+  my $strainName = "";
+  if (scalar(@arr_line) == 1) {
+    $strainName = $arr_line[0];
+  } else {
+    $strainName = $arr_line[1];
+  }
+  
+  push(@arr_ind_fineOrdering, $strainName);
+  $hash_ind_fineOrdering{$strainName} = 1;
 }
 close(FINESTRUCT_ORDER);
 
@@ -158,7 +168,7 @@ my $out_dir_results = $dir_ordering_listFile;
 #
 my $cmd = "";
 my $cmd_common;
-my $loop_type;
+my $loop_part;
 my $stamp = "";
 
 my $num_site = `head -3 $hap_file | tail -1`;
@@ -167,9 +177,13 @@ chomp($num_site);
 my $num_ind = `head -2 $hap_file | tail -1`;
 chomp($num_ind);
 
+my $num_dir_orderings = `wc -l $dir_ordering_listFile | awk '{print \$1}'`;
+chomp($num_dir_orderings);
+
 # for restore and estimation
 my %hash_sum_site_minus_ave = ();
 my %hash_sum_site_distScore = ();
+my %hash_sum_site_bootstrapped_distScore = ();
 my %hash_sum_site_infoContent = ();
 
 #
@@ -268,7 +282,7 @@ if (!$opt_r) {
     $cmd_common  = "gzip -dc $dir_each_ordering/$gz_sortfile_catOrderings_copyprob |";
     $cmd_common .= " $postprocess_path ";
     $cmd_common .= " -d $dir_each_ordering ";
-    $cmd_common .= " -s $strainHapOrderFile ";
+    $cmd_common .= " -l $strainHapOrderFile ";
     $cmd_common .= " -o $strainFineOrderFile ";
     if ($opt_m) {
       $cmd_common .= " -m $pos2missingInd_File ";
@@ -279,7 +293,7 @@ if (!$opt_r) {
     ################################################################
     # calculate average matrix (long loop)
     ################################################################
-    $loop_type = 1;
+    $loop_part = 1;
     
     my $nrow_ave_matrix = 0;
     if (-s "$dir_each_ordering/$out_each_dir_averave_matrix") {
@@ -297,7 +311,7 @@ if (!$opt_r) {
       chomp($stamp);
       print "$stamp preparation of average matrix of this ordering started\n";
 
-      $cmd = $cmd_common . " -l $loop_type";
+      $cmd = $cmd_common . " -p $loop_part";
       print("$cmd\n");
       if( system("$cmd") != 0) { die("Error: $cmd failed"); };
 
@@ -307,31 +321,34 @@ if (!$opt_r) {
     }
 
     #############################################################################
-    # calculate the distance statistic for each site (long loop)
+    # calculate the distance statistic and its bootstrappd samples
+    # for each site (long loop)
     #############################################################################
-    $loop_type = 2;
+    $loop_part = 2;
     
     $stamp = `date +%Y%m%d_%T`;
     chomp($stamp);
-    print "$stamp Calculation of distance to the average  ( $dir_each_ordering/$out_each_dir_site_distScore_info ) started \n";
+    print "$stamp Calculation of distance to the average  ( $dir_each_ordering/$out_each_dir_site_distScore ) started \n";
 
     my $nrow_distScore = 0;
-    if (-s "$dir_each_ordering/$out_each_dir_site_distScore_info") {
-      $nrow_distScore = `wc -l $dir_each_ordering/$out_each_dir_site_distScore_info | awk '{print \$1}'`;
+    if (-s "$dir_each_ordering/$out_each_dir_site_distScore") {
+      $nrow_distScore = `wc -l $dir_each_ordering/$out_each_dir_site_distScore | awk '{print \$1}'`;
       chomp($nrow_distScore);
     }
 
     if ($nrow_distScore == $num_site) {
-      print "$dir_each_ordering/$out_each_dir_site_distScore_info already exists. Skipped.\n";
+      print "$dir_each_ordering/$out_each_dir_site_distScore already exists. Skipped.\n";
     } else {
       #
-      # calculate distance statistic by processing each site in $gz_sortfile_catOrderings_copyprob
+      # calculate distance statistic and its bootstrappd samples 
+      # by processing each site in $gz_sortfile_catOrderings_copyprob
+      #   (always using the same seed internally)
       #
       $stamp = `date +%Y%m%d_%T`;
       chomp($stamp);
       print "$stamp Calculation of distance statistic of this ordering started\n";
 
-      $cmd = $cmd_common . " -l $loop_type";
+      $cmd = $cmd_common . " -p $loop_part";
       if ($opt_c) {
         $cmd .= " -c $constraint_File";
       }
@@ -362,8 +379,8 @@ if (!$opt_r) {
       die "Error: $dir_each_ordering doesn't exist";
     }
 
-    if (! -s     "$dir_each_ordering/$out_each_dir_site_distScore_info") { 
-      $err_msg .= "Error: $dir_each_ordering/$out_each_dir_site_distScore_info doesn't exist or empty\n";
+    if (! -s     "$dir_each_ordering/$out_each_dir_site_distScore") { 
+      $err_msg .= "Error: $dir_each_ordering/$out_each_dir_site_distScore doesn't exist or empty\n";
     }
   }
   close(DIR_ORDERING);
@@ -392,6 +409,8 @@ if ($opt_n) {
   }
 
   my $header = "";
+  my $top_threshold = "";
+  my $N_bootstrap = "";
 
   if ($opt_r) {
     #
@@ -400,13 +419,6 @@ if ($opt_n) {
     $stamp = `date +%Y%m%d_%T`;
     chomp($stamp);
     print("$stamp preparing calculation of distScore across the orderings ... \n");
-    
-    my $num_orderings = `wc -l $dir_ordering_listFile | awk '{print \$1}'`;
-    chomp($num_orderings);
-
-    my $dir_ordering_prefix = `head -1 $dir_ordering_listFile`;
-    chomp($dir_ordering_prefix);
-    $dir_ordering_prefix =~ s/[0-9]+_forward//g;
 
 
     ###################################################################################################################
@@ -414,15 +426,26 @@ if ($opt_n) {
     # $out_dir_results/$out_site_minus_average_matrix_summary_pos
     ###################################################################################################################
 
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
     # calculate summation of statistics across orderings
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
     #
-    # cat and sort $out_each_dir_site_distScore_info across orderings
+    # cat and sort $out_each_dir_site_distScore across orderings
     #
     my $cmd_sort1  = "$sort_path $sort_opt "; 
-       $cmd_sort1 .= " -T $out_dir_results $dir_ordering_prefix*/$out_each_dir_site_distScore_info ";
+       $cmd_sort1 .= " -T $out_dir_results ";
+    open(DIR_ORDERING, $dir_ordering_listFile);
+    while (my $dir_each_ordering = <DIR_ORDERING>) {
+      print("$dir_each_ordering");
+      chomp($dir_each_ordering);
+      $dir_each_ordering  =~ s/\/$//g;
+      if (! -d $dir_each_ordering) {
+        die "Error: $dir_each_ordering doesn't exist";
+      }
+      $cmd_sort1 .= " $dir_each_ordering/$out_each_dir_site_distScore ";
+    }
+    close(DIR_ORDERING);
 
     #
     # %hash_sum_site_distScore (*pos*=>contrast=>type=>value)
@@ -444,7 +467,7 @@ if ($opt_n) {
 
       my $contrast = 1;
       my $distScore_per_mat = $arr_line[1];
-      my $donorInfoContent  = $arr_line[2];
+      #my $donorInfoContent = $arr_line[2];
 
       if ($contrast_max < $contrast) {
         next;
@@ -455,20 +478,30 @@ if ($opt_n) {
       } else {
         if (!defined($hash_sum_site_distScore{$pos})) { 
           $hash_sum_site_distScore{$pos}  = $distScore_per_mat;
+          
+          # bootstrapped distScore
+          foreach (my $i=2; $i<scalar(@arr_line); $i++) {
+            $hash_sum_site_bootstrapped_distScore{$pos}{$i-1} = $arr_line[$i];
+          }
         } else {
           $hash_sum_site_distScore{$pos} += $distScore_per_mat;
+          
+          # bootstrapped distScore
+          foreach (my $i=2; $i<scalar(@arr_line); $i++) {
+            $hash_sum_site_bootstrapped_distScore{$pos}{$i-1} += $arr_line[$i];
+          }
         }
       }
 
-      if (!defined($donorInfoContent)) {
-        print "Warning: donotInfoContent is empty and skipped at pos=$pos\n";
-      } else {
-        if (!defined($hash_sum_site_infoContent{$pos})) { 
-          $hash_sum_site_infoContent{$pos}  = $donorInfoContent;
-        } else {
-          $hash_sum_site_infoContent{$pos} += $donorInfoContent;
-        }
-      }
+      #if (!defined($donorInfoContent)) {
+      #  print "Warning: donotInfoContent is empty and skipped at pos=$pos\n";
+      #} else {
+      #  if (!defined($hash_sum_site_infoContent{$pos})) { 
+      #    $hash_sum_site_infoContent{$pos}  = $donorInfoContent;
+      #  } else {
+      #    $hash_sum_site_infoContent{$pos} += $donorInfoContent;
+      #  }
+      #}
 
     }
     close(SITE_DIST_CAT_SORT);
@@ -479,20 +512,25 @@ if ($opt_n) {
 
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-    # output statistics in a descending order
-    #  and 
     # extract position of summary sites in terms of the distance statistic summed across the orderings
+    #  and
+    # output statistics in a descending order
     #  (always overwrite)
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
     $stamp = `date +%Y%m%d_%T`;
     chomp($stamp);
-    print("$stamp output $out_dir_results/$out_results and $out_dir_results/$out_site_minus_average_matrix_summary_pos ... \n");
+    print("$stamp output $out_dir_results/$out_site_minus_average_matrix_summary_pos ... \n");
 
+    #
+    # extract position of summary sites and record the threshold of "top"
+    #
+    my $prefix_of_dirs_for_visualization = "$out_dir_results/visualize_";
+    
     my %hash_visType_count = ();
     my %hash_pos_visType = ();
     my @arr_type = ('top','middle','bottom');
     foreach my $each_type (@arr_type) {
-      my $dir = "$out_dir_results/$each_type"; 
+      my $dir = $prefix_of_dirs_for_visualization . $each_type; 
       if (! -d $dir) {
         mkdir("$dir");
         print("$dir was created\n")
@@ -500,39 +538,33 @@ if ($opt_n) {
       $hash_visType_count{$each_type} = 0;
     }
 
-    open(OUT_RESULTS, "> $out_dir_results/$out_results");
-    print OUT_RESULTS "pos";
-    print OUT_RESULTS "\t" . "sum_distScore";
-    #print OUT_RESULTS "\t" . "results_of_c";
-    #print OUT_RESULTS "\t" . "sum_donorInfoContent";
-    print OUT_RESULTS "\n";
-    
     my %hash_summaryPos2Type = ();
     my %hash_summaryPos_rank = ();
-    open(OUT_SUMMAY_POS, "> $out_dir_results/$out_site_minus_average_matrix_summary_pos");
 
     my $i_site = 1; 
     my $num_top_sites_summary = sprintf("%0.f",$num_site*$prop_top_sites_summary);
 
-    # sorted by distScore (descending)
+    # for each position sorted by distScore (descending)
     foreach my $pos (sort { $hash_sum_site_distScore{$b} <=> $hash_sum_site_distScore{$a} } keys %hash_sum_site_distScore){
-
-      my $contrast = 1;
-      print OUT_RESULTS $pos;
-      print OUT_RESULTS "\t".$hash_sum_site_distScore{$pos};
-      #print OUT_RESULTS "\t".$contrast;
-      #print OUT_RESULTS "\t".$hash_sum_site_infoContent{$pos};  # to be commented out
-      print OUT_RESULTS "\n";
-
+     
       my $type = "";
       if ( $i_site <  $num_top_sites_summary ) {
         $type = "top";
         $hash_summaryPos2Type{$pos} = "$type";
         $hash_summaryPos_rank{$pos} = "$i_site";
         $hash_visType_count{$type}++;
-        if ($hash_visType_count{$type} <= $num_top_sites_visualization) {
+        
+        #if ($hash_visType_count{$type} <= $num_top_sites_visualization) {
           $hash_pos_visType{$pos} = $type;
+        #}
+        
+        #
+        # record the threshold of "top"
+        #
+        if ($i_site == $num_top_sites_summary-1) {
+          $top_threshold = $hash_sum_site_distScore{$pos};
         }
+        
       } elsif (
            ($i_site > $num_site/2 - $num_other_sites_summary/2) && 
            ($i_site < $num_site/2 + $num_other_sites_summary/2) 
@@ -554,19 +586,73 @@ if ($opt_n) {
         }
       }
 
+      $i_site++;
+    }
+
+
+    #
+    # output
+    #
+    $stamp = `date +%Y%m%d_%T`;
+    chomp($stamp);
+    print("$stamp output $out_dir_results/$out_results and $out_dir_results/$out_site_minus_average_matrix_summary_pos ... \n");
+    
+    open(OUT_RESULTS, "> $out_dir_results/$out_results");
+    open(OUT_SUMMAY_POS, "> $out_dir_results/$out_site_minus_average_matrix_summary_pos");
+
+    print OUT_RESULTS "pos";
+    print OUT_RESULTS "\t" . "sum_distScore";
+    #print OUT_RESULTS "\t" . "results_of_c";
+    #print OUT_RESULTS "\t" . "sum_donorInfoContent";
+    print OUT_RESULTS "\t" . "bootstrap";
+    print OUT_RESULTS "\n";
+
+    # for each position sorted by distScore (descending)
+    $i_site = 1;
+    foreach my $pos (sort { $hash_sum_site_distScore{$b} <=> $hash_sum_site_distScore{$a} } keys %hash_sum_site_distScore){
+
+      #my $contrast = 1;
+      print OUT_RESULTS $pos;
+      print OUT_RESULTS "\t".$hash_sum_site_distScore{$pos};
+      #print OUT_RESULTS "\t".$contrast;
+      #print OUT_RESULTS "\t".$hash_sum_site_infoContent{$pos};  # to be commented out
+      
+      #
+      # bootstrap support by using the threshold of "top"
+      #
+      my $bootstrap_support = "NA";
+      #if ($hash_summaryPos2Type{$pos} eq "top") {
+        my $cnt_bootstrapped_in_top = 0;
+        
+        my @arr_i_boot = keys %{$hash_sum_site_bootstrapped_distScore{$pos}};
+        foreach my $i_boot (@arr_i_boot) {
+          if ($top_threshold <= $hash_sum_site_bootstrapped_distScore{$pos}{$i_boot}) {
+            $cnt_bootstrapped_in_top++;
+          }
+        }
+        $bootstrap_support = ( $cnt_bootstrapped_in_top / scalar(@arr_i_boot) ) * 100;
+      #}
+      print OUT_RESULTS "\t" . $bootstrap_support;
+      
+      print OUT_RESULTS "\n";
+
       if (defined($hash_summaryPos2Type{$pos})) {
-        print OUT_SUMMAY_POS "$pos\t"  . "dist" . $i_site . "\t" . $type . "\n";
+        print OUT_SUMMAY_POS  $pos;
+        #print OUT_SUMMAY_POS "\t" . "dist" . $i_site;
+        print OUT_SUMMAY_POS "\t" . $i_site;
+        print OUT_SUMMAY_POS "\t" . $hash_summaryPos2Type{$pos};
+        print OUT_SUMMAY_POS "\t" . $hash_sum_site_distScore{$pos};
+        print OUT_SUMMAY_POS "\t" . $bootstrap_support;
+        print OUT_SUMMAY_POS "\n";
       }
 
       $i_site++;
     }
-    
     close(OUT_RESULTS);
     close(OUT_SUMMAY_POS);
 
-    $stamp = `date +%Y%m%d_%T`;
-    chomp($stamp);
-    print("$stamp output $out_dir_results/$out_results and $out_dir_results/$out_site_minus_average_matrix_summary_pos ... finished\n");
+    print("$stamp output $out_dir_results/$out_results and $out_dir_results/$out_site_minus_average_matrix_summary_pos ... finished \n");
+
 
     $cmd = "gzip -f $out_dir_results/$out_results";
     if( system("$cmd") != 0) { die("Error: $cmd failed"); };
@@ -585,11 +671,11 @@ if ($opt_n) {
     # output sum of Sij - Mj (long loop)
     #   only for the top and middle/bottom positions extracted above
     ###################################################################################################################
-    $loop_type = 3;
+    $loop_part = 3;
 
-    my $l3_job_name = `date +%d%H%S`;
-    chomp($l3_job_name);
-    $l3_job_name = "l3_" . $l3_job_name;
+    my $p3_job_name = `date +%d%H%S`;
+    chomp($p3_job_name);
+    $p3_job_name = "p3_" . $p3_job_name;
 
     $stamp = `date +%Y%m%d_%T`;
     chomp($stamp);
@@ -618,7 +704,7 @@ if ($opt_n) {
       $cmd_common  = "gzip -dc $dir_each_ordering/$gz_sortfile_catOrderings_copyprob |";
       $cmd_common .= " $postprocess_path ";
       $cmd_common .= " -d $dir_each_ordering ";
-      $cmd_common .= " -s $strainHapOrderFile ";
+      $cmd_common .= " -l $strainHapOrderFile ";
       $cmd_common .= " -o $strainFineOrderFile ";
       if ($opt_m) {
         $cmd_common .= " -m $pos2missingInd_File ";
@@ -626,13 +712,17 @@ if ($opt_n) {
       $cmd_common .= " -r $out_dir_results ";
       $cmd_common .= " -t $type_painting ";
 
-      $cmd = "$QSUB $l3_job_name <<< '$cmd_common -l $loop_type'";
+      $cmd = "$QSUB $p3_job_name <<< '$cmd_common -p $loop_part'";
       print("$cmd\n");
       system("$cmd");
     } # dir_each_ordering
+    close(DIR_ORDERING);
 
+    #
+    # execute in parallel for the orderings
+    # 
     while () {
-      my $check = `$QSTAT | grep $l3_job_name | wc -l`;
+      my $check = `$QSTAT | grep $p3_job_name | wc -l`;
       #print "$check";
       chomp($check);
       
@@ -642,23 +732,35 @@ if ($opt_n) {
       sleep 10;
     }
     
-    my @arr_l3_job_logs = glob("$l3_job_name.*");
-    foreach my $each_l3_job_log (@arr_l3_job_logs) {
-      unlink($each_l3_job_log);
+    my @arr_p3_job_logs = glob("$p3_job_name.*");
+    foreach my $each_p3_job_log (@arr_p3_job_logs) {
+      unlink($each_p3_job_log);
     }
 
     $stamp = `date +%Y%m%d_%T`;
     chomp($stamp);
     print("$stamp output $out_each_dir_site_minus_average_matrix_summary for each ordering  ... finished \n");
 
+
     # 
-    # combine
-    # output (overwrite)
+    # combine and output (overwrite)
     #   %hash_sum_site_minus_ave (pos=>recipient_name=>donor_name)
     #                                  * fine ordering * 
     #
     my $cmd_sort2  = "$sort_path $sort_opt "; 
-       $cmd_sort2 .= " -T $out_dir_results $dir_ordering_prefix*/$out_each_dir_site_minus_average_matrix_summary ";
+       $cmd_sort2 .= " -T $out_dir_results ";
+    open(DIR_ORDERING, $dir_ordering_listFile);
+    while (my $dir_each_ordering = <DIR_ORDERING>) {
+      print("$dir_each_ordering");
+      chomp($dir_each_ordering);
+      $dir_each_ordering  =~ s/\/$//g;
+      if (! -d $dir_each_ordering) {
+        die "Error: $dir_each_ordering doesn't exist";
+      }
+      $cmd_sort2 .= " $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary ";
+    }
+    close(DIR_ORDERING);
+
 
     my $i_ordering_of_this_pos_recipient = 0;
     open(OUT_SUM_DEV, "> $out_dir_results/$out_sum_site_minus_average_summary");
@@ -671,7 +773,7 @@ if ($opt_n) {
     my $max = 0;
     my $min = 0;
 
-    # note that for each pos, the number of lines = scalar(@arr_ind_fineOrdering) * $num_orderings 
+    # note that for each pos, the number of lines = scalar(@arr_ind_fineOrdering) * $num_dir_orderings 
     print "$cmd_sort2\n";
     open(DIV_CAT_SORT, "$cmd_sort2 |");
     while (my $line = <DIV_CAT_SORT>) {
@@ -691,9 +793,9 @@ if ($opt_n) {
         my $donor_name     = $arr_ind_fineOrdering[$i_donor];
         
         if (!defined($hash_sum_site_minus_ave{$recipient_name}{$donor_name})) {
-          $hash_sum_site_minus_ave{$recipient_name}{$donor_name}  = $arr_line[$i_donor+2]; # note: pos recipient_name values ... (num_orderings lines)
+          $hash_sum_site_minus_ave{$recipient_name}{$donor_name}  = $arr_line[$i_donor+2]; # note: pos recipient_name values ... (num_dir_orderings lines)
         } else {
-          $hash_sum_site_minus_ave{$recipient_name}{$donor_name} += $arr_line[$i_donor+2]; # note: pos recipient_name values ... (num_orderings lines)
+          $hash_sum_site_minus_ave{$recipient_name}{$donor_name} += $arr_line[$i_donor+2]; # note: pos recipient_name values ... (num_dir_orderings lines)
         }
       }
 
@@ -702,14 +804,14 @@ if ($opt_n) {
       # output
       #
       
-      #print "$pos\t$recipient_name\t$i_ordering_of_this_pos_recipient\t$num_orderings\n";
-      if ($i_ordering_of_this_pos_recipient != scalar(@arr_ind_fineOrdering)*$num_orderings) {
+      #print "$pos\t$recipient_name\t$i_ordering_of_this_pos_recipient\t$num_dir_orderings\n";
+      if ($i_ordering_of_this_pos_recipient != scalar(@arr_ind_fineOrdering)*$num_dir_orderings) {
         next;
       } else {
         my $type = $hash_summaryPos2Type{$pos};
         
         if (defined($hash_pos_visType{$pos})) {
-          open(OUT_SUM_DEV_SITE, "> $out_dir_results/".$hash_summaryPos2Type{$pos}."/$pos.txt");
+          open(OUT_SUM_DEV_SITE, "> $prefix_of_dirs_for_visualization".$hash_summaryPos2Type{$pos}."/$pos.txt");
           print OUT_SUM_DEV_SITE "type distRankDesc pos $out_fine_header\n";
         }
 

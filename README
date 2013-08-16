@@ -38,7 +38,8 @@ If you would like to use LSF instead, please edit "lib/env_func.bashrc" so that
 #---------------------------------------------------------
 
 Please execute "setup.sh" as follows.
-It will download and compile other programs used in orderedPainting.
+It will set programs used in orderedPainting.sh
+(e.g., download and compile ChromoPainter and GNU sort).
 
   $ /bin/bash setup.sh
 
@@ -53,7 +54,7 @@ Please wait during that time.
 
 The following is the most basic example which uses files in the "example1" directory.
 
-  $ qsub -cwd -o example1.log <<< "/bin/bash ./orderedPainting.sh  -g example1/simulatedData_N100.hap  -l example1/strainName_N100.txt"
+  $ qsub -cwd -o example1.log -e example1.log <<< "/bin/bash ./orderedPainting.sh  -g example1/simulatedData_N100.hap  -l example1/strainName_N100.txt"
 
 The format of the ".hap" file is the same as ChromoPainter.
 
@@ -141,10 +142,25 @@ by masking columns and rows of missing individuals at a site.
 
 
 #---------------------------------------------------------
-# 6. Further information
+# 6. Disk space
+#---------------------------------------------------------
+
+A limitation for this program is disk space.
+For example, 500 genomes with 100,000 SNPs produce about 100GB 
+of raw uncompressed data per ordering, although they are compressed
+during post-processing.
+
+If your disk space is not enough, you can reduce the number of ordering
+to be post-processed simultaneously by "-n" option (default is 20),
+although it increases computational time.
+
+
+
+#---------------------------------------------------------
+# 7. Further information
 #---------------------------------------------------------
 
 Please refer to a PDF manual, which will be uploaded in the future.
 
-If you find any problem, please inform to k-yahara@gakushikai.jp
+If you find any problem, please inform to koji.yahara@gmail.com
 

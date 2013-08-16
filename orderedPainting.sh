@@ -8,16 +8,15 @@ usage () {
   elif [ "${QUEUE_TYPE}" == "LSF" ]; then
     echo "bsub -o logfile.txt <<< '"
   else
-    echo_fail "unknonw QUEUE_TYPE: ${QUEUE_TYPE}"
+    echo_fail "unknown QUEUE_TYPE: ${QUEUE_TYPE}"
   fi
 
   echo "/bin/bash $0 "
   echo "  -g file.hap "
-  echo "  -l strainName.list (1-indexed[tab]individual name in the hap file)" 
-  echo " [-n 20 (num. of dirs where large tmp files (output of chromopainter) are processed simultaneously, which can be increased in a larger disk: default=20) ]"
-  echo ""
+  echo "  -l strainName.list (individual name in the hap file)" 
+  echo " [-n 20 (num. of dirs where large tmp files (output of chromopainter) are processed simultaneously, which can be increased when you use a large disk: default=20) ]"
   echo " [-m pos2missingInd.txt (pos[tab]missing_individual_name]"
-  echo " [-o strainName.list (1-indexed[tab]individual name in an order for output: default is as specified by -l) ]"
+  echo " [-o strainName.list (individual name in an order for output: default is the file specified by -l) ]"
   echo " [-t 10 (num. of orderings and the reverse, default=10) ]"
   echo " [-s 1  (seed of random number generator: default=1) ]"
 
@@ -185,7 +184,6 @@ submit_msort_for_decompressed_dirs() {
     CMD=`returnQSUB_CMD ${STAMP}`
     CMD=${CMD}" <<< '"
     CMD=${CMD}" perl ${PL_MSORT_CLEAN_EACH_ORDERING} -d ${arr_dirs_being_decompressed[$i_dir]} -g ${PHASEFILE} "
-    CMD=${CMD}" -t 1 " # unordered
     CMD=${CMD}"'"
     #
     # msort
@@ -363,15 +361,6 @@ if [ "${WC_HAP_LIST}" -ne "${NUM_IND}" ]; then
   echo_fail "Error: The number of rows of ${HAP_LIST} must be ${NUM_IND}, but ${WC_HAP_LIST}"
 fi
 
-if [ ! -f "${HAP_LIST}.id" ]; then
-  seq 1 ${NUM_IND} | sort > ${HAP_LIST}.id.correct
-  awk '{print $1}' ${HAP_LIST} | sort > ${HAP_LIST}.id
-  DIFF=`diff ${HAP_LIST}.id.correct ${HAP_LIST}.id`
-  if [ "${DIFF}" != "" ]; then
-    echo_fail "Error: 1st column of ${HAP_LIST} is wrong: ${DIFF}"
-  fi
-fi
-
 # 
 # check ${HAP_LIST_OUTDISP}
 #
@@ -387,8 +376,8 @@ if [ "${HAP_LIST}" != "${HAP_LIST_OUTDISP}" ]; then
   fi
 
   if [ ! -s "${HAP_LIST_OUTDISP}.names" ]; then
-    awk '{print $2}' ${HAP_LIST}         | sort > ${HAP_LIST}.names
-    awk '{print $2}' ${HAP_LIST_OUTDISP} | sort > ${HAP_LIST_OUTDISP}.names
+    awk '{print $1}' ${HAP_LIST}         | sort > ${HAP_LIST}.names
+    awk '{print $1}' ${HAP_LIST_OUTDISP} | sort > ${HAP_LIST_OUTDISP}.names
     DIFF=`diff ${HAP_LIST}.names ${HAP_LIST_OUTDISP}.names`
     if [ "${DIFF}" != "" ]; then
       echo_fail "Error: difference of names between ${HAP_LIST} and ${HAP_LIST_OUTDISP}: ${DIFF}"
@@ -406,10 +395,10 @@ if [ "${MISSING_POS_IND_FILE}" != "" ]; then
   fi
 
   if [ ! -s "${MISSING_POS_IND_FILE}.names" ]; then
-    awk '{print $2}' ${MISSING_POS_IND_FILE} | sort -u > ${MISSING_POS_IND_FILE}.names
+    awk '{print $1}' ${MISSING_POS_IND_FILE} | sort -u > ${MISSING_POS_IND_FILE}.names
 
     if [ ! -s "${HAP_LIST}.names" ]; then
-      awk '{print $2}' ${HAP_LIST}  | sort > ${HAP_LIST}.names
+      awk '{print $1}' ${HAP_LIST}  | sort > ${HAP_LIST}.names
     fi
 
     DIFF=`comm -23 ${MISSING_POS_IND_FILE}.names ${HAP_LIST}.names`
@@ -582,7 +571,15 @@ if [ -s "${ORDER_DIR_LIST}" ]; then
   done < ${ORDER_DIR_LIST}
 fi
 
-if [ "${DONE_ALL_GZ_SORT_COPYPROB_EACH_DIR}" -eq 0 ]; then
+DONE_ALL_STRAIN_ORDER=1
+while read line 
+do
+  if [ ! -s "${DONE_ALL_STRAIN_ORDER}" ]; then
+    DONE_ALL_STRAIN_ORDER=0
+  fi
+done < ${ORDER_STRAIN_LIST}
+
+if [ "${DONE_ALL_GZ_SORT_COPYPROB_EACH_DIR}" -eq 0 -o "${DONE_ALL_STRAIN_ORDER}" -eq 0 ]; then
   
   i_forward_reverse=1
   while [ "${i_forward_reverse}" -le "${TYPE_NUM_ORDERING}"  ]
@@ -659,14 +656,6 @@ move_log_files "${STAMP}"
 #
 # tmp files created at the begining
 #
-if [ -f "${HAP_LIST}.id.correct" ]; then
-  /bin/rm -f ${HAP_LIST}.id.correct
-fi
-
-if [ -f "${HAP_LIST}.id" ]; then
-  /bin/rm -f ${HAP_LIST}.id
-fi
-
 if [ -f "${HAP_LIST}.names" ]; then
   /bin/rm -f ${HAP_LIST}.names
 fi
@@ -849,7 +838,7 @@ do
   fi
   # skip this ordered directory if there is already ${GZ_SORT_COPYPROB_EACH_DIR} 
   if [ ${CHECK_GZ_SORT_COPYPROB_EACH_DIR} -gt 0 ]; then
-    echo "  msort in${EACH_DIR} is skipped because there is already ${GZ_SORT_COPYPROB_EACH_DIR}"
+    echo "  msort in ${EACH_DIR} is skipped because there is already ${GZ_SORT_COPYPROB_EACH_DIR}"
   else
     #
     # decompress each .copyprobsperlocus.out.gz file,
@@ -1002,12 +991,6 @@ move_log_files "${STAMP}"
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 STEP=6
 
-arr_summary_type=(
-  'top'
-  'middle'
-  'bottom'
-)
-
 get_stamp ${STEP}
 #arr_STAMP=("${arr_STAMP[@]}" "${STAMP}")
 disp_punctuate ${STEP} ${STAMP}
@@ -1020,9 +1003,9 @@ if [ -s "${COMBINED_RES_DIR}/${OUTF_SITE_STATS}" ]; then
     if [ -s "${COMBINED_RES_DIR}/${OUTF_SUMMARY_TXT}" ]; then
       if [ -s "${COMBINED_RES_DIR}/${OUTF_SUMMARY_RANGE}" ]; then
         DIRS_OK_FLAG=1
-        for type in ${arr_summary_type[@]}
+        for VISUALIZE_TYPE_DIR in `find ${COMBINED_RES_DIR} -type d -name visualize\*`
         do
-          if [ ! -d "${COMBINED_RES_DIR}/${type}" ]; then
+          if [ ! -d "${VISUALIZE_TYPE_DIR}" ]; then
             DIRS_OK_FLAG=0
           fi
         done
@@ -1047,7 +1030,7 @@ if [ "${SKIP_FLAG}" -eq 0 ]; then
   #  CMD=${CMD}" -c ${CONTRAST_MAX} " 
   #fi
   CMD=${CMD}" -s ${HAP_LIST_OUTDISP} "
-  CMD=${CMD}" -r "   # only one difference from the step${STEP}
+  CMD=${CMD}" -r "   # only one difference from the previous step
   CMD=${CMD}"'"
   
   echo ${CMD}
@@ -1127,14 +1110,14 @@ fi
 MIN=`awk '{print $1}' "${COMBINED_RES_DIR}/${OUTF_SUMMARY_RANGE}"`
 MAX=`awk '{print $2}' "${COMBINED_RES_DIR}/${OUTF_SUMMARY_RANGE}"`
 
-echo "If you woud like to have visualization of representative sites, please execute the following commands"
+echo "If you would like to visualize representative sites, please execute the following commands"
 
-for TYPE in ${arr_summary_type[@]}
+for VISUALIZE_TYPE_DIR in `find ${COMBINED_RES_DIR} -type d -name visualize\*`
 do
-  if [ -d "${COMBINED_RES_DIR}/${TYPE}" ]; then
-    ls ${COMBINED_RES_DIR}/${TYPE}/* > ${COMBINED_RES_DIR}/${TYPE}.list
+  if [ -d "${VISUALIZE_TYPE_DIR}" ]; then
+    ls ${VISUALIZE_TYPE_DIR}/* > ${VISUALIZE_TYPE_DIR}.list
 
-    NUM_TARGET_POS=`wc -l ${COMBINED_RES_DIR}/${TYPE}.list | awk '{print $1}'`
+    NUM_TARGET_POS=`wc -l ${VISUALIZE_TYPE_DIR}.list | awk '{print $1}'`
 
     ARRAY_S=1
     ARRAY_E=${NUM_TARGET_POS}
@@ -1144,7 +1127,7 @@ do
     CMD=${CMD}" ${SH_R_MAIN2}"
     CMD=${CMD}"  -a ${MIN}"
     CMD=${CMD}"  -b ${MAX}"
-    CMD=${CMD}"  -l ${COMBINED_RES_DIR}/${TYPE}.list"
+    CMD=${CMD}"  -l ${VISUALIZE_TYPE_DIR}.list"
  
     echo ${CMD}
     #QSUB_MSG=`${CMD}`
@@ -1153,7 +1136,7 @@ do
     fi
     #QSUB_ID=`echo ${QSUB_MSG} | perl -pe 's/ \(.*$//g' | perl -pe 's/^.* //g' | perl -pe 's/\..*$//g'`
   else
-    echo_fail "Error: ${COMBINED_RES_DIR}/${TYPE} doesn't exist"
+    echo_fail "Error: ${VISUALIZE_TYPE_DIR} doesn't exist"
   fi
 done
 
