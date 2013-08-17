@@ -24,7 +24,7 @@ d_merged[is.na(d_merged$missingCnt), "missingCnt"] <- 0
 
 stopifnot(nrow(d_merged)==nrow(d_siteStats))
 
-#cor.value <- cor(d_merged$missingCnt, d_merged$sum_distScore,  method = c("spearman"))
+#cor.value <- cor(d_merged$missingCnt, d_merged$D_i,  method = c("spearman"))
 
 #
 # binning
@@ -41,7 +41,7 @@ for (i in 1:round(nrow(d_merged_xsorted)/bin_size)) {
   d_each_bin <- d_merged_xsorted[ range, ]
   d_each_bin <- d_each_bin[!is.na(d_each_bin[,1]), ] # to deal with the last bin
 
-  mean_per_bin <- mean(d_each_bin$sum_distScore)
+  mean_per_bin <- mean(d_each_bin$D_i)
   d_bin_value <- rbind(d_bin_value, data.frame(i=i, mean=mean_per_bin))
 
   list_d_each_bin[[i]] <- d_each_bin

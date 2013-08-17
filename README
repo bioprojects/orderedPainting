@@ -83,13 +83,13 @@ Please look at the output files there.
 The following files and directories will be seen.
 
   |
-  |-- results_siteStats_along_seq.png
-  |-- results_siteStats_hist.png
   |-- results_siteStats.txt.gz
+  |-- results_siteStats_hist.png
+  |-- results_siteStats_summary.pos.txt
+  |-- results_siteStats_along_seq.png
   |
   |-- (results_siteStats_missingCnt.png)
   |
-  |-- site_minus_average.matrix.summary.pos.txt
   |-- sum_site_minus_average.summary.range.txt
   |-- sum_site_minus_average.summary.txt.gz
   |
@@ -107,6 +107,9 @@ The following files and directories will be seen.
 "results_siteStats.txt.gz" contains values of the distance statistic and bootstrap support of each site.
 
 "results_siteStats_hist.png" shows histgram of the distance statistic.
+
+"results_siteStats_summary.pos.txt" contains information of representative sites picked up from
+the top/middle/bottom of the distribution.
 
 "results_siteStats_along_seq.png" shows distribution of the distance statistic along the genome.
 Two recombiantion hot regions should be seen.

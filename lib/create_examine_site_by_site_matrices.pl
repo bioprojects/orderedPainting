@@ -63,12 +63,13 @@ my $gz_sortfile_catOrderings_copyprob = "copyprobsperlocus.cat.sort.gz";
 
 
 my $out_each_dir_site_minus_average_matrix_summary = "site_minus_average.matrix.summary.txt"; # created by -r
+
 #
 # output to results dir
 #
-my $out_results                               = "results_siteStats.txt"; # gzipped at the end 
+my $out_results             = "results_siteStats.txt"; # gzipped at the end 
+my $out_results_summary_pos = "results_siteStats_summary.pos.txt";
 
-my $out_site_minus_average_matrix_summary_pos = "site_minus_average.matrix.summary.pos.txt";
 my $out_sum_site_minus_average_summary        = "sum_site_minus_average.summary.txt"; # gzipped at the end 
 my $out_sum_site_minus_average_summary_range  = "sum_site_minus_average.summary.range.txt";
 
@@ -423,7 +424,7 @@ if ($opt_n) {
 
     ###################################################################################################################
     # $out_dir_results/$out_results
-    # $out_dir_results/$out_site_minus_average_matrix_summary_pos
+    # $out_dir_results/$out_results_summary_pos
     ###################################################################################################################
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -519,7 +520,7 @@ if ($opt_n) {
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
     $stamp = `date +%Y%m%d_%T`;
     chomp($stamp);
-    print("$stamp output $out_dir_results/$out_site_minus_average_matrix_summary_pos ... \n");
+    print("$stamp output $out_dir_results/$out_results_summary_pos ... \n");
 
     #
     # extract position of summary sites and record the threshold of "top"
@@ -595,17 +596,24 @@ if ($opt_n) {
     #
     $stamp = `date +%Y%m%d_%T`;
     chomp($stamp);
-    print("$stamp output $out_dir_results/$out_results and $out_dir_results/$out_site_minus_average_matrix_summary_pos ... \n");
+    print("$stamp output $out_dir_results/$out_results and $out_dir_results/$out_results_summary_pos ... \n");
     
     open(OUT_RESULTS, "> $out_dir_results/$out_results");
-    open(OUT_SUMMAY_POS, "> $out_dir_results/$out_site_minus_average_matrix_summary_pos");
+    open(OUT_SUMMAY_POS, "> $out_dir_results/$out_results_summary_pos");
 
     print OUT_RESULTS "pos";
-    print OUT_RESULTS "\t" . "sum_distScore";
+    print OUT_RESULTS "\t" . "D_i";
     #print OUT_RESULTS "\t" . "results_of_c";
     #print OUT_RESULTS "\t" . "sum_donorInfoContent";
     print OUT_RESULTS "\t" . "bootstrap";
     print OUT_RESULTS "\n";
+
+    print OUT_SUMMAY_POS "pos";
+    print OUT_SUMMAY_POS "\t" . "rank";
+    print OUT_SUMMAY_POS "\t" . "type";
+    print OUT_SUMMAY_POS "\t" . "D_i";
+    print OUT_SUMMAY_POS "\t" . "bootstrap";
+    print OUT_SUMMAY_POS "\n";
 
     # for each position sorted by distScore (descending)
     $i_site = 1;
@@ -652,7 +660,7 @@ if ($opt_n) {
     close(OUT_RESULTS);
     close(OUT_SUMMAY_POS);
 
-    print("$stamp output $out_dir_results/$out_results and $out_dir_results/$out_site_minus_average_matrix_summary_pos ... finished \n");
+    print("$stamp output $out_dir_results/$out_results and $out_dir_results/$out_results_summary_pos ... finished \n");
 
 
     $cmd = "gzip -f $out_dir_results/$out_results";

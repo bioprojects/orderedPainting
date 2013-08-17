@@ -73,7 +73,7 @@ const char * out_each_dir_site_minus_average_matrix_summary = "site_minus_averag
 //
 
 //const char * out_results = "results_siteStats.txt";
-const char * out_site_minus_average_matrix_summary_pos = "site_minus_average.matrix.summary.pos.txt";
+const char * out_results_summary_pos = "results_siteStats_summary.pos.txt";
 //const char * out_sum_site_minus_average_summary        = "sum_site_minus_average.summary.txt";
 //const char * out_sum_site_minus_average_summary_range  = "sum_site_minus_average.summary.range.txt";
 
@@ -975,9 +975,10 @@ int main(int argc, char **argv)
             //
             // read positions to be processed
             //
-            sprintf( fname, "%s/%s", dir_results, out_site_minus_average_matrix_summary_pos ); 
+            sprintf( fname, "%s/%s", dir_results, out_results_summary_pos ); 
             fh = fopen_wrapper(fname, "r");
             while (!feof(fh)) {
+                fgets(buffer, MAX_BUFFER, fh); // skip the header
                 if (fgets(buffer, MAX_BUFFER, fh) != NULL) {
                     buffer[strlen(buffer) - 1] =  '\0';
 

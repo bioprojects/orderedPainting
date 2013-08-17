@@ -278,7 +278,8 @@ done
 OUTF_SITE_DISTSCORE=site_distScore.txt
 OUTF_SITE_STATS=results_siteStats.txt.gz
 
-OUTF_SUMMARY_POS=site_minus_average.matrix.summary.pos.txt
+OUTF_SUMMARY_POS=results_siteStats_summary.pos.txt
+
 OUTF_SUMMARY_TXT=sum_site_minus_average.summary.txt.gz
 OUTF_SUMMARY_RANGE=sum_site_minus_average.summary.range.txt
 
