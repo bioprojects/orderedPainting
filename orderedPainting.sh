@@ -396,7 +396,7 @@ if [ "${MISSING_POS_IND_FILE}" != "" ]; then
   fi
 
   if [ ! -s "${MISSING_POS_IND_FILE}.names" ]; then
-    awk '{print $1}' ${MISSING_POS_IND_FILE} | sort -u > ${MISSING_POS_IND_FILE}.names
+    awk '{print $2}' ${MISSING_POS_IND_FILE} | sort -u > ${MISSING_POS_IND_FILE}.names
 
     if [ ! -s "${HAP_LIST}.names" ]; then
       awk '{print $1}' ${HAP_LIST}  | sort > ${HAP_LIST}.names
