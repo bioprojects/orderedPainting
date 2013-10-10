@@ -4,7 +4,7 @@ implements the algorithm described in the following paper:
 
   Efficient inference of recombination hot regions in bacterial genomes
   Koji Yahara, Xavier Didelot, Azim Ansari, Samuel Sheppard and Daniel Falush
-  in submission
+  in preparation
 
 orderedPainting is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by
