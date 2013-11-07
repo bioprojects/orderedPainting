@@ -275,11 +275,13 @@ done
 #
 # output files (for error check)
 #
+
+# EACH_DIR
 OUTF_SITE_DISTSCORE=site_distScore.txt
+
+# COMBINED_RES_DIR
 OUTF_SITE_STATS=results_siteStats.txt.gz
-
 OUTF_SUMMARY_POS=results_siteStats_summary.pos.txt
-
 OUTF_SUMMARY_TXT=sum_site_minus_average.summary.txt.gz
 OUTF_SUMMARY_RANGE=sum_site_minus_average.summary.range.txt
 
@@ -299,6 +301,11 @@ elif [ "${QUEUE_TYPE}" == "LSF" ]; then
   if [ "${CHECK}" == "" ]; then
     echo_fail "Error: bsub is not available"
   fi
+fi
+
+CHECK=`which R`
+if [ "${CHECK}" == "" ]; then
+  echo_fail "Error: R is not installed in PATH"
 fi
 
 for aa in ${arr_executable_files[@]}

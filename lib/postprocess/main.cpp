@@ -66,7 +66,7 @@ const char * out_each_dir_site_distScore_info  = "site_distScore.txt";
 const char * sortfile_catOrderings_copyprob    = "copyprobsperlocus.cat.sort";
 const char * gz_sortfile_catOrderings_copyprob = "copyprobsperlocus.cat.sort.gz";
 
-const char * out_each_dir_site_minus_average_matrix_summary = "site_minus_average.matrix.summary.txt";
+const char * out_each_dir_site_minus_average_matrix = "site_minus_average.matrix.txt";
 
 // 
 // output to results dir
@@ -1007,7 +1007,7 @@ int main(int argc, char **argv)
             // calculate and output Sij - Mj matrix (hash_site_minus_ave)
             // ************************************************************************
             int i_row = 0;
-            sprintf( fname, "%s/%s", dir_each_ordering, out_each_dir_site_minus_average_matrix_summary ); 
+            sprintf( fname, "%s/%s", dir_each_ordering, out_each_dir_site_minus_average_matrix ); 
             fh_out = fopen_wrapper(fname, "w");
 
             while(fgets(buffer, MAX_BUFFER , stdin) != NULL) {

@@ -62,7 +62,7 @@ my $sortfile_catOrderings_copyprob    = "copyprobsperlocus.cat.sort";
 my $gz_sortfile_catOrderings_copyprob = "copyprobsperlocus.cat.sort.gz";
 
 
-my $out_each_dir_site_minus_average_matrix_summary = "site_minus_average.matrix.summary.txt"; # created by -r
+my $out_each_dir_site_minus_average_matrix_summary = "site_minus_average.matrix.txt"; # created by -r
 
 #
 # output to results dir
