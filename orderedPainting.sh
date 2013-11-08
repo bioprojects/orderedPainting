@@ -303,6 +303,14 @@ elif [ "${QUEUE_TYPE}" == "LSF" ]; then
   fi
 fi
 
+if [ ! -d "${LOG_DIR}" ]; then
+  echo_fail "Error: ${LOG_DIR} doesn't exist.  Please execute setup.sh first."
+fi
+
+if [ ! -d "${LIB_DIR}" ]; then
+  echo_fail "Error: ${LIB_DIR} doesn't exist.  Please execute setup.sh first."
+fi
+
 CHECK=`which R`
 if [ "${CHECK}" == "" ]; then
   echo_fail "Error: R is not installed in PATH"
