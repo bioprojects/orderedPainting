@@ -37,7 +37,7 @@ static const char * help=
                 -r dir_results \n\
                 -t 1|2 \n\
                 -p 1|2|3 \n\
-                -s 1 (seed of random number generator for bootstrapping) \
+                -s 1 (seed of random number generator for bootstrapping) \n\
                 [-m pos2missingInd.txt] \n\
                 [-c donor_recipient_constraint.txt] \n\
                 \n";
