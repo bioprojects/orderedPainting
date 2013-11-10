@@ -540,7 +540,7 @@ if ($opt_n) {
     }
 
     my %hash_summaryPos2Type = ();
-    my %hash_summaryPos_rank = ();
+    my %hash_summaryPos2Rank = ();
 
     my $i_site = 1; 
     my $num_top_sites_summary = sprintf("%0.f",$num_site*$prop_top_sites_summary);
@@ -552,7 +552,7 @@ if ($opt_n) {
       if ( $i_site <  $num_top_sites_summary ) {
         $type = "top";
         $hash_summaryPos2Type{$pos} = "$type";
-        $hash_summaryPos_rank{$pos} = "$i_site";
+        $hash_summaryPos2Rank{$pos} = "$i_site";
         $hash_visType_count{$type}++;
         
         #if ($hash_visType_count{$type} <= $num_top_sites_visualization) {
@@ -572,7 +572,7 @@ if ($opt_n) {
               ) {
         $type = "middle";
         $hash_summaryPos2Type{$pos} = "$type";
-        $hash_summaryPos_rank{$pos} = "$i_site";
+        $hash_summaryPos2Rank{$pos} = "$i_site";
         $hash_visType_count{$type}++;
         if ($hash_visType_count{$type} <= $num_other_sites_visualization) {
           $hash_pos_visType{$pos} = $type;
@@ -580,7 +580,7 @@ if ($opt_n) {
       } elsif ($i_site >  $num_site - $num_other_sites_summary ) {
         $type = "bottom";
         $hash_summaryPos2Type{$pos} = "$type";
-        $hash_summaryPos_rank{$pos} = "$i_site";
+        $hash_summaryPos2Rank{$pos} = "$i_site";
         $hash_visType_count{$type}++;
         if ($hash_visType_count{$type} <= $num_other_sites_visualization) {
           $hash_pos_visType{$pos} = $type;
@@ -820,7 +820,11 @@ if ($opt_n) {
         my $type = $hash_summaryPos2Type{$pos};
         
         if (defined($hash_pos_visType{$pos})) {
-          open(OUT_SUM_DEV_SITE, "> $prefix_of_dirs_for_visualization".$hash_summaryPos2Type{$pos}."/$pos.txt");
+          my $out_rank_pos_file  = "rank" . sprintf("%.5d", $hash_summaryPos2Rank{$pos});
+             $out_rank_pos_file .= "_";
+             $out_rank_pos_file .= "$pos.txt";
+
+          open(OUT_SUM_DEV_SITE, "> $prefix_of_dirs_for_visualization".$hash_summaryPos2Type{$pos}."/$out_rank_pos_file");
           print OUT_SUM_DEV_SITE "type distRankDesc pos $out_fine_header\n";
         }
 
@@ -829,7 +833,7 @@ if ($opt_n) {
           if (!defined($hash_summaryPos2Type{$pos})) {
             die "Error: $pos is not defined in hash_summaryPos2Type";
           }
-          my $out_line_pos_recipient = $type . " " . $hash_summaryPos_rank{$pos} . " $pos ";
+          my $out_line_pos_recipient = $type . " " . $hash_summaryPos2Rank{$pos} . " $pos ";
           foreach my $donor_name (@arr_ind_fineOrdering) {
             if (!defined($hash_sum_site_minus_ave{$recipient_name}{$donor_name})) {
               print Dumper(\%hash_sum_site_minus_ave);

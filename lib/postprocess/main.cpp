@@ -799,7 +799,7 @@ int main(int argc, char **argv)
                                 //
                                 if ( has_pairkey_int2double( hash_site_by_site_prob, pair<int,int>(cnt_recipient,cnt_donor) ) ) {
                                     // calculate rowsum_prob 
-                                    // (missing donor was set to be 0 above)
+                                    // (cells with missing data were set to be 0 above)
                                     rowsum_prob += hash_site_by_site_prob[pair<int,int>(cnt_recipient,cnt_donor)];
                                 } else {
                                     rowsum_prob += 0;
@@ -885,20 +885,20 @@ int main(int argc, char **argv)
                                 cnt_donor = j+1;
                                 donor_name = hash_strainIND2Name[cnt_donor];
 
-                                if (donor_recipient_constraintFile != NULL && donor_recipient_constraintFile[0] != '\0') { // under development
-                                    if (has_key_string2int(hash_constrained_donors, donor_name) && 
-                                        has_key_string2int(hash_constrained_recipients, recipient_name) ) {
-                                        skip_calc_flag == false;
-                                    } else {
-                                        skip_calc_flag == true;
-                                    }
+                                if (!has_pairkey_int2double( hash_average_prob, pair<int,int>(cnt_recipient,cnt_donor))) {
+                                    skip_calc_flag = true;
+                                } else if (hash_site_by_site_prob[pair<int,int>(cnt_recipient,cnt_donor)] == -9) {
+                                    skip_calc_flag = true;
+                                } else if (hash_average_prob[pair<int,int>(cnt_recipient,cnt_donor)] == -9) {
+                                    skip_calc_flag = true;
                                 } else {
-                                    if (!has_pairkey_int2double( hash_average_prob, pair<int,int>(cnt_recipient,cnt_donor))) {
-                                        skip_calc_flag = true;
-                                    } else if (hash_site_by_site_prob[pair<int,int>(cnt_recipient,cnt_donor)] == -9) {
-                                        skip_calc_flag = true;
-                                    } else if (hash_average_prob[pair<int,int>(cnt_recipient,cnt_donor)] == -9) {
-                                        skip_calc_flag = true;
+                                    if (donor_recipient_constraintFile != NULL && donor_recipient_constraintFile[0] != '\0') { // under development
+                                        if (has_key_string2int(hash_constrained_donors, donor_name) && 
+                                            has_key_string2int(hash_constrained_recipients, recipient_name) ) {
+                                            skip_calc_flag == false; // use only this combination of donor and recipient
+                                        } else {
+                                            skip_calc_flag == true;
+                                        }
                                     } else {
                                         skip_calc_flag = false;
                                     }
@@ -977,8 +977,8 @@ int main(int argc, char **argv)
             //
             sprintf( fname, "%s/%s", dir_results, out_results_summary_pos ); 
             fh = fopen_wrapper(fname, "r");
+            fgets(buffer, MAX_BUFFER, fh); // skip the header
             while (!feof(fh)) {
-                fgets(buffer, MAX_BUFFER, fh); // skip the header
                 if (fgets(buffer, MAX_BUFFER, fh) != NULL) {
                     buffer[strlen(buffer) - 1] =  '\0';
 
@@ -1083,6 +1083,7 @@ int main(int argc, char **argv)
                         } else {
                             skip_calc_flag = false;
                         }
+                        // TODO with constraint
 
                         if (skip_calc_flag == false) {
                             hash_site_minus_ave[pair<int,int>(cnt_recipient,cnt_donor)] = 
@@ -1092,8 +1093,8 @@ int main(int argc, char **argv)
                     } // for column
 
                     //
-                    // save Sij - Mj matrix 
-                    //   according to fine ordering
+                    // save a row of this recipient in Sij - Mj matrix 
+                    //   according to fine ordering of donors
                     // 
                     fprintf(fh_out, "%d %s",pos,recipient_name.c_str());
                     for (i=0; i<arr_indName_fineOrdering.size(); i++) {
