@@ -895,9 +895,9 @@ int main(int argc, char **argv)
                                     if (donor_recipient_constraintFile != NULL && donor_recipient_constraintFile[0] != '\0') { // under development
                                         if (has_key_string2int(hash_constrained_donors, donor_name) && 
                                             has_key_string2int(hash_constrained_recipients, recipient_name) ) {
-                                            skip_calc_flag == false; // use only this combination of donor and recipient
+                                            skip_calc_flag = false; // use only this combination of donor and recipient
                                         } else {
-                                            skip_calc_flag == true;
+                                            skip_calc_flag = true;
                                         }
                                     } else {
                                         skip_calc_flag = false;

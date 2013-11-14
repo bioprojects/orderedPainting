@@ -54,7 +54,7 @@ rownames(d_each_for_plot) <- names(d_each_for_plot)
 png_fpath <- sprintf("%s_%s.png", outprefix, type) # "rank" is included in the outprefix
 
 png(png_fpath)
-#print(png_fpath)
+print(png_fpath)
 plotHeatmap(as.matrix(d_each_for_plot), cex.axis=0.7, min_colscale=min_among_sites, max_colscale=max_among_sites, ordering_flag=T)
 dev.off()
 

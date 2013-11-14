@@ -587,14 +587,21 @@ if [ -s "${ORDER_DIR_LIST}" ]; then
   done < ${ORDER_DIR_LIST}
 fi
 
-DONE_ALL_STRAIN_ORDER=1
-while read line 
-do
-  if [ ! -s "${DONE_ALL_STRAIN_ORDER}" ]; then
-    DONE_ALL_STRAIN_ORDER=0
-  fi
-done < ${ORDER_STRAIN_LIST}
+# same logic as above
+DONE_ALL_STRAIN_ORDER=0
+if [ -f "${ORDER_STRAIN_LIST}"  ]; then
+  DONE_ALL_STRAIN_ORDER=1
+  while read line
+  do
+    if [ ! -s "${line}" ]; then
+      DONE_ALL_STRAIN_ORDER=0
+    fi
+  done < ${ORDER_STRAIN_LIST}
+fi
 
+#
+# execute haplotype ordering only if 
+#
 if [ "${DONE_ALL_GZ_SORT_COPYPROB_EACH_DIR}" -eq 0 -o "${DONE_ALL_STRAIN_ORDER}" -eq 0 ]; then
   
   i_forward_reverse=1
