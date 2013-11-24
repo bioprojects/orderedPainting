@@ -138,7 +138,7 @@ void output (string outDir, string outStrainOrder, vector<string>& arr_ind_order
                     // donors for this recipient (0,...,i_recipient-1)
                     //   the first donor in the 6th line of the .hap file is always the same 
                     //
-                    for (i_donor=0; i_donor<=i_recipient; i_donor++) {
+                    for (i_donor=0; i_donor<=i_recipient-1; i_donor++) {
                         strainIndex = hash_strainName2Index[arr_ind_ordering[i_donor]];
 
                         if (hash_strainIndex2hapseq[strainIndex] == "") {
