@@ -42,6 +42,7 @@ static const char * help=
                 -l strainName.list \n\
                 -o strainName_dispOrder.list \n\
                 -t 1,...,10 (th ordering to be randoized, which is also used to run from the reverse) \n\
+                -i 0,,,n-1  (th i_recipient) \n\
                 -s 1 (this value + counter of random ordering => seed of random number generator) \n\
                 \n";
 
@@ -62,7 +63,8 @@ void output (string outDir, string outStrainOrder, vector<string>& arr_ind_order
              string outprefix, 
              string& header_line345, 
              map<int, string>& hash_strainIndex2hapseq, 
-             map<string, int>& hash_strainName2Index);
+             map<string, int>& hash_strainName2Index,
+             int i_recipient);
 
 FILE * fopen_wrapper(const char * filename, const char * mode) {
 
@@ -93,10 +95,11 @@ void output (string outDir, string outStrainOrder, vector<string>& arr_ind_order
              string outprefix, 
              string& header_line345, 
              map<int, string>& hash_strainIndex2hapseq, 
-             map<string, int>& hash_strainName2Index) {
+             map<string, int>& hash_strainName2Index,
+             int i_recipient) {
 
                  int strainIndex; // 1-indexed
-                 int i_recipient; // 0-indexed
+                 //int i_recipient; // 0-indexed
                  int i_donor; // 0-indexed
                  FILE *fh_out_strainOrder;
                  FILE *fh_out_hap;
@@ -107,7 +110,8 @@ void output (string outDir, string outStrainOrder, vector<string>& arr_ind_order
                  sprintf( fname_strainOrder, "%s", outStrainOrder.c_str() ); 
                  fh_out_strainOrder = fopen_wrapper(fname_strainOrder, "w");
 
-                 for (i_recipient=0; i_recipient<arr_ind_ordering.size(); i_recipient++) { // recipient
+                 //for (i_recipient=0; i_recipient<arr_ind_ordering.size(); i_recipient++) { // recipient
+                 for (int i=i_recipient; i_recipient==i; i++) { // parallelized
                     string out_recip_hap = "";
 
                     // write the ordering to .strainOrder files
@@ -119,7 +123,7 @@ void output (string outDir, string outStrainOrder, vector<string>& arr_ind_order
                         continue;
                     }
 
-                    printf("output %dth recipient .hap file\n", i_recipient+1);
+                    printf("output %dth ordered recipient .hap file\n", i_recipient+1);
 
                     sprintf( name_recip, "_recip%04d", i_recipient+1 ); 
                     out_recip_hap = outDir + "/" + outprefix + "_orderedS" + int2string(seed) + string(name_recip) + "_" + arr_ind_ordering[i_recipient] + ".hap";
@@ -173,11 +177,12 @@ int main(int argc, char **argv)
     char * strain_listFile=NULL;
     char * fine_ordering_listFile=NULL;
     int cnt_rnd_order=-1;
+    int i_recipient=-1;
     int seed=-1;
     string outprefix = "";
 
     if (argc==1) {printf("%s",help);exit(0);}
-    while ((c = getopt (argc, argv, "h:p:l:o:t:s:v")) != -1)
+    while ((c = getopt (argc, argv, "h:p:l:o:t:i:s:v")) != -1)
         switch (c)
     {
         case('h'):hapFile=optarg;break;
@@ -185,6 +190,7 @@ int main(int argc, char **argv)
         case('l'):strain_listFile=optarg;break;
         case('o'):fine_ordering_listFile=optarg;break;
         case('t'):cnt_rnd_order=atoi(optarg);break;
+        case('i'):i_recipient=atoi(optarg);break;
         case('s'):seed=atoi(optarg);break;
         case('v'):verbose=true;break;
         case '?':
@@ -348,9 +354,9 @@ int main(int argc, char **argv)
 #endif
 
     output(outDir_forward, outStrainOrder_forward, arr_ind_rnd_eachOrdering, 
-        seed, outprefix, header_line345, hash_strainIndex2hapseq, hash_strainName2Index);
+        seed, outprefix, header_line345, hash_strainIndex2hapseq, hash_strainName2Index, i_recipient);
     output(outDir_reverse, outStrainOrder_reverse, arr_ind_reverse_eachOrdering, 
-        seed, outprefix, header_line345, hash_strainIndex2hapseq, hash_strainName2Index);
+        seed, outprefix, header_line345, hash_strainIndex2hapseq, hash_strainName2Index, i_recipient);
 
     //
     // end
@@ -358,7 +364,7 @@ int main(int argc, char **argv)
     free(arr_line);
 
     timer = time(NULL); stamp = ctime(&timer); stamp[strlen(stamp)-1] = '\0';
-    printf("%s: %s/ and %s/ were prepared\n", stamp, outDir_forward.c_str(), outDir_reverse.c_str());
+    printf("%s: output files are in %s/ and %s/\n", stamp, outDir_forward.c_str(), outDir_reverse.c_str());
 
     return 0;
 

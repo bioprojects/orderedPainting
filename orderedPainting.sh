@@ -38,7 +38,8 @@ PL_CHECK_LINE_LEN=./${LIB_DIR}/check_lineLen.pl
 PL_MAKE_RECMAP=./${LIB_DIR}/makeuniformrecfile.pl
 PL_ESTIMATE_Ne=./${LIB_DIR}/neaverage.pl
 
-EXE_PREPARE_RECIPIENT_ORDER_HAPS=./${LIB_DIR}/randomize/rd
+EXE_RANDOMIZE=./${LIB_DIR}/randomize/rd
+SH_RANDOMIZE=./${LIB_DIR}/randomize_arrayjob.sh
 SH_PAINT_QSUB=./${LIB_DIR}/chromopainter_linkage_orderings_arrayjob.sh
 PL_SITE_BY_SITE=./${LIB_DIR}/create_examine_site_by_site_matrices.pl
 SH_DECOMPRESS_SORT_SPLIT_EACH_ORDERING=./${LIB_DIR}/decompress_sort_split_gz_arrayjob.sh
@@ -61,7 +62,8 @@ arr_executable_files=(
   $PL_CHECK_LINE_LEN
   $PL_MAKE_RECMAP
   $PL_ESTIMATE_Ne
-  $EXE_PREPARE_RECIPIENT_ORDER_HAPS
+  $EXE_RANDOMIZE
+  $SH_RANDOMIZE
   $EXE_PAINT
   $PL_SITE_BY_SITE
   $SH_DECOMPRESS_SORT_SPLIT_EACH_ORDERING
@@ -617,20 +619,20 @@ if [ "${DONE_ALL_GZ_SORT_COPYPROB_EACH_DIR}" -eq 0 -o "${DONE_ALL_STRAIN_ORDER}"
   i_forward_reverse=1
   while [ "${i_forward_reverse}" -le "${TYPE_NUM_ORDERING}"  ]
   do
-    # always recreate (because they are removed in the step${STEP})
-    CMD=`returnQSUB_CMD ${STAMP}`
-    CMD=${CMD}" <<< '"
-    CMD=${CMD}"${EXE_PREPARE_RECIPIENT_ORDER_HAPS} "
+    ARRAY_S=1
+    ARRAY_E=`wc -l ${HAP_LIST} | awk '{print $1}'`
+
+    CMD=`returnQSUB_CMD ${STAMP} ${ARRAY_S} ${ARRAY_E}`
+    CMD=${CMD}" ${SH_RANDOMIZE}"
     CMD=${CMD}" -h ${PHASEFILE}"
     CMD=${CMD}" -p ${OUT_PREFIX_BASE}"
     CMD=${CMD}" -l ${HAP_LIST}"
     CMD=${CMD}" -o ${HAP_LIST_OUTDISP}"
     CMD=${CMD}" -t ${i_forward_reverse}"
     CMD=${CMD}" -s ${SEED}" 
-    CMD=${CMD}"'"
-    
+
     echo ${CMD}
-    eval ${CMD}
+    QSUB_MSG=`${CMD}`
     if [ $? -ne 0 ]; then 
       echo_fail "Execution error: ${CMD} (step${STEP}) "
     fi
