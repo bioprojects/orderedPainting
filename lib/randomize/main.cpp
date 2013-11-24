@@ -128,7 +128,7 @@ void output (string outDir, string outStrainOrder, vector<string>& arr_ind_order
                     ofstream ofs(fname_hap);
                     ofs << 0 << endl;
                     ofs << i_recipient+1 << endl;
-                    ofs << header_line345 << endl;
+                    ofs << header_line345 << flush;
 
                     //
                     // donors for this recipient (0,...,i_recipient-1)
