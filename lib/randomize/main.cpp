@@ -123,10 +123,10 @@ void output (string outDir, string outStrainOrder, vector<string>& arr_ind_order
                         continue;
                     }
 
-                    printf("output %dth ordered recipient .hap file\n", i_recipient+1);
-
                     sprintf( name_recip, "recip%04d", i_recipient+1 ); 
                     out_recip_hap = outDir + "/" + string(name_recip) + "_" + arr_ind_ordering[i_recipient] + ".hap";
+
+                    printf(sprintf("output %dth recipient: %s\n", i_recipient+1, out_recip_hap));
 
                     sprintf( fname_hap, "%s", out_recip_hap.c_str() ); 
                     ofstream ofs(fname_hap);
