@@ -1,3 +1,8 @@
+//
+// computation time:
+//   about 2 minutes when N=170, P=80,000
+//
+
 #ifdef WIN32
 #include "getopt.h"
 #else
@@ -103,56 +108,52 @@ void output (string outDir, string outStrainOrder, vector<string>& arr_ind_order
                  fh_out_strainOrder = fopen_wrapper(fname_strainOrder, "w");
 
                  for (i_recipient=0; i_recipient<arr_ind_ordering.size(); i_recipient++) { // recipient
-                     string out_recip_hap = "";
+                    string out_recip_hap = "";
 
-                     // write the ordering to .strainOrder files
-                     //fprintf(fh_out_strainOrder, "%d\%s\n",i_recipient+1,arr_ind_ordering[i_recipient].c_str());
-                     fprintf(fh_out_strainOrder, "%s\n",arr_ind_ordering[i_recipient].c_str());
+                    // write the ordering to .strainOrder files
+                    //fprintf(fh_out_strainOrder, "%d\%s\n",i_recipient+1,arr_ind_ordering[i_recipient].c_str());
+                    fprintf(fh_out_strainOrder, "%s\n",arr_ind_ordering[i_recipient].c_str());
 
-                     // exclude the 1st strain 
-                     if (i_recipient == 0) {
-                         continue;
-                     }
+                    // exclude the 1st strain 
+                    if (i_recipient == 0) {
+                        continue;
+                    }
 
-                     printf("output %dth recipient .hap file\n", i_recipient+1);
+                    printf("output %dth recipient .hap file\n", i_recipient+1);
 
-                     sprintf( name_recip, "_recip%04d", i_recipient+1 ); 
-                     out_recip_hap = outDir + "/" + outprefix + "_orderedS" + int2string(seed) + string(name_recip) + "_" + arr_ind_ordering[i_recipient] + ".hap";
+                    sprintf( name_recip, "_recip%04d", i_recipient+1 ); 
+                    out_recip_hap = outDir + "/" + outprefix + "_orderedS" + int2string(seed) + string(name_recip) + "_" + arr_ind_ordering[i_recipient] + ".hap";
 
-                     sprintf( fname_hap, "%s", out_recip_hap.c_str() ); 
-                     fh_out_hap = fopen_wrapper(fname_hap, "w");
-                     fprintf(fh_out_hap, "0\n");
-                     fprintf(fh_out_hap, "%d\n",i_recipient+1);
-                     fprintf(fh_out_hap, "%s",header_line345.c_str());
+                    sprintf( fname_hap, "%s", out_recip_hap.c_str() ); 
+                    ofstream ofs(fname_hap);
+                    ofs << 0 << endl;
+                    ofs << i_recipient+1 << endl;
+                    ofs << header_line345 << endl;
 
-                     //
-                     // donors for this recipient (0,...,i_recipient-1)
-                     //   the first donor in the 6th line of the .hap file is always the same 
-                     //
-                     for (i_donor=0; i_donor<=i_recipient; i_donor++) {
-                         strainIndex = hash_strainName2Index[arr_ind_ordering[i_donor]];
+                    //
+                    // donors for this recipient (0,...,i_recipient-1)
+                    //   the first donor in the 6th line of the .hap file is always the same 
+                    //
+                    for (i_donor=0; i_donor<=i_recipient; i_donor++) {
+                        strainIndex = hash_strainName2Index[arr_ind_ordering[i_donor]];
 
-                         if (hash_strainIndex2hapseq[strainIndex] == "") {
-                             fprintf(stderr, "Error: strainName=%s is not found in hash_strainName2Index\n",
-                                 arr_ind_ordering[i_donor].c_str());
+                        if (hash_strainIndex2hapseq[strainIndex] == "") {
+                            fprintf(stderr, "Error: strainName=%s is not found in hash_strainName2Index\n",
+                                arr_ind_ordering[i_donor].c_str());
 
-                             map<string, int>::iterator p;
-                             for (p = hash_strainName2Index.begin(); p != hash_strainName2Index.end(); p++) {
-                                 printf("%s\t%d\n", p->first.c_str(), p->second);
-                             }
-                             exit(1);
-                         }
-
-                         fprintf(fh_out_hap, "%s\n",hash_strainIndex2hapseq[strainIndex].c_str());
-                     }
-                     //
-                     // recipient haplotype in the final row
-                     //
-                     strainIndex = hash_strainName2Index[arr_ind_ordering[i_recipient]];
-                     fprintf(fh_out_hap, "%s\n",hash_strainIndex2hapseq[strainIndex].c_str());	
-
-                     fclose(fh_out_hap);
-
+                            map<string, int>::iterator p;
+                            for (p = hash_strainName2Index.begin(); p != hash_strainName2Index.end(); p++) {
+                                printf("%s\t%d\n", p->first.c_str(), p->second);
+                            }
+                            exit(1);
+                        }
+                       ofs << hash_strainIndex2hapseq[strainIndex] << endl;
+                    }
+                    //
+                    // recipient haplotype in the final row
+                    //
+                    strainIndex = hash_strainName2Index[arr_ind_ordering[i_recipient]];
+                    ofs << hash_strainIndex2hapseq[strainIndex] << endl;
                  }
                  fclose(fh_out_strainOrder);
 
