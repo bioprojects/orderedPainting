@@ -46,7 +46,7 @@ if [ "${QUEUE_TYPE}" == "SGE" ]; then
 elif [ "${QUEUE_TYPE}" == "LSF" ]; then
   gzfile=${array["LSB_JOBINDEX"-1]}
 else
-  echo_fail "unknonw QUEUE_TYPE: ${QUEUE_TYPE}"
+  echo_fail "unknown QUEUE_TYPE: ${QUEUE_TYPE}"
 fi
 
 each_copyprobsperlocus=`echo ${gzfile} | perl -pe 's/\.gz//g'`

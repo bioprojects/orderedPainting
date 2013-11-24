@@ -49,7 +49,7 @@ elif [ "${QUEUE_TYPE}" == "LSF" ]; then
 else
   echo_fail "unknonw QUEUE_TYPE: ${QUEUE_TYPE}"
 fi
-i_recipient=${i_recipient}-1
+let i_recipient=${i_recipient}-1 # 1-indexed => 0-indexed
 
 #
 # execute

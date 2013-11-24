@@ -51,7 +51,7 @@ if [ "${QUEUE_TYPE}" == "SGE" ]; then
 elif [ "${QUEUE_TYPE}" == "LSF" ]; then
   phasefile=${array["LSB_JOBINDEX"-1]}
 else
-  echo_fail "unknonw QUEUE_TYPE: ${QUEUE_TYPE}"
+  echo_fail "unknown QUEUE_TYPE: ${QUEUE_TYPE}"
 fi
 
 OUT_PREFIX=`echo ${phasefile} | perl -pe 's/\.hap$//g'`
