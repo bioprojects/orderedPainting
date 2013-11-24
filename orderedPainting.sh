@@ -827,7 +827,8 @@ move_log_files "${STAMP}"
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 # postprocessing 1
 #   for each ordering,
-#   merge and sort .copyprobsperlocus.out > ${GZ_SORT_COPYPROB_EACH_DIR}
+#     split
+#     sort -m *.copyprobsperlocus.out > ${GZ_SORT_COPYPROB_EACH_DIR}
 #
 #     it can require a large temporary disk in each ordering
 #     (e.g., N=500, SNP=100,000 => about 100GB per ordering
