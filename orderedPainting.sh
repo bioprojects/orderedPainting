@@ -372,6 +372,11 @@ if [ "${CHECK_CR}" != "" ]; then
   perl -i -pe 's/\r//g' ${HAP_LIST}
 fi
 
+CHECK_PIPE=`cat "${HAP_LIST}" | grep '|'`
+if [ "${CHECK_PIPE}" != "" ]; then
+  perl -i -pe 's/|/_/g' ${HAP_LIST}
+fi
+
 WC_HAP_LIST=`wc -l ${HAP_LIST} | awk '{print $1}'`
 if [ "${WC_HAP_LIST}" -ne "${NUM_IND}" ]; then
   echo_fail "Error: The number of rows of ${HAP_LIST} must be ${NUM_IND}, but ${WC_HAP_LIST}"
@@ -384,6 +389,11 @@ if [ "${HAP_LIST}" != "${HAP_LIST_OUTDISP}" ]; then
   CHECK_CR=`od -c "${HAP_LIST_OUTDISP}" | grep "\r"`
   if [ "${CHECK_CR}" != "" ]; then
     perl -i -pe 's/\r//g' ${HAP_LIST_OUTDISP}
+  fi
+
+  CHECK_PIPE=`cat "${HAP_LIST_OUTDISP}" | grep '|'`
+  if [ "${CHECK_PIPE}" != "" ]; then
+    perl -i -pe 's/|/_/g' ${HAP_LIST_OUTDISP}
   fi
 
   WC_HAP_LISTDISP=`wc -l ${HAP_LIST_OUTDISP} | awk '{print $1}'`

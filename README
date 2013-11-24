@@ -55,7 +55,7 @@ The following is the most basic example which uses files in the "example1" direc
 
   $ qsub -cwd -o example1.log -e example1.log <<< "/bin/bash ./orderedPainting.sh  -g example1/simulatedData_N100.hap  -l example1/strainName_N100.txt"
   
-  (If you use LSF, please use "bsub -o example1.log" instead of "qsub -cwd -o example1.log -e example1.log")
+  (If you use LSF, please use "bsub" instead of "qsub -cwd")
 
 The format of the ".hap" file is the same as ChromoPainter.
 
