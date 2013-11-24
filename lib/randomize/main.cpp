@@ -126,7 +126,7 @@ void output (string outDir, string outStrainOrder, vector<string>& arr_ind_order
                     sprintf( name_recip, "recip%04d", i_recipient+1 ); 
                     out_recip_hap = outDir + "/" + string(name_recip) + "_" + arr_ind_ordering[i_recipient] + ".hap";
 
-                    printf(sprintf("output %dth recipient: %s\n", i_recipient+1, out_recip_hap.c_str()));
+                    printf("output %s\n", out_recip_hap.c_str());
 
                     sprintf( fname_hap, "%s", out_recip_hap.c_str() ); 
                     ofstream ofs(fname_hap);
