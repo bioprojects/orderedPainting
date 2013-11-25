@@ -89,7 +89,7 @@ done
 #
 # 3. GNU sort 8.11
 #
-if [ ! -f "coreutils-8.11.tar.gz" ]; then
+if [ ! -d "coreutils-8.11" ]; then
   URL=http://ftp.gnu.org/gnu/coreutils/coreutils-8.11.tar.gz
   wget ${URL}
   if [ $? -ne 0 ]; then

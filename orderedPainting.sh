@@ -182,17 +182,19 @@ submit_msort_for_decompressed_dirs() {
   i_dir=0
   while [ "$i_dir" -lt ${#arr_dirs_being_decompressed[@]} ]; do
     date +%Y%m%d_%T
-    
-    CMD=`returnQSUB_CMD ${STAMP}`
-    CMD=${CMD}" <<< '"
-    CMD=${CMD}" perl ${PL_MSORT_CLEAN_EACH_ORDERING} -d ${arr_dirs_being_decompressed[$i_dir]} -g ${PHASEFILE} "
-    CMD=${CMD}"'"
+
+    ARRAY_S=1
+    ARRAY_E=9
+
+    CMD=`returnQSUB_CMD ${STAMP} ${ARRAY_S} ${ARRAY_E}`
+    CMD=${CMD}" ${PL_MSORT_CLEAN_EACH_ORDERING} -d ${arr_dirs_being_decompressed[$i_dir]} -g ${PHASEFILE} "
     #
-    # msort
-    #   25min per an ordering for N=200, P=222717 (with | gzip), temporary 60GB
-    #   11min per an ordering for N=200, P=222717 (without | gzip)
+    # non-arrayjob version
+    #   msort
+    #     25min per an ordering for N=200, P=222717 (with | gzip), temporary 60GB
+    #     11min per an ordering for N=200, P=222717 (without | gzip)
     #
-    # the script checks whether the output file (copyprobsperlocus.cat.sort.gz) is incomplete or not
+    #   check whether the output file (copyprobsperlocus.cat.sort.gz) is incomplete or not
     #   and re-execute it until the complete output file is obtained
     #
     echo ${CMD}
@@ -200,6 +202,7 @@ submit_msort_for_decompressed_dirs() {
     if [ $? -ne 0 ]; then 
       echo_fail "Execution error: ${CMD} (step${STEP}) "
     fi
+    
     #
     # update the array by removing the submitted dir
     #
@@ -443,6 +446,11 @@ OUT_PREFIX_BASE=`echo ${PHASEFILE} | perl -pe 's/^.*\///g' | perl -pe "s/\.hap//
 
 TGZ_ORDER_PAINTINGS=${OUT_PREFIX_BASE}_orderedS${SEED}_both_paintings.tgz
 
+# output files of STEP2
+ORDER_HAP_LIST=${OUT_PREFIX_BASE}_orderedS${SEED}_hap.list
+ORDER_DIR_LIST=${OUT_PREFIX_BASE}_orderedS${SEED}_rnd_1_${TYPE_NUM_ORDERING}_dirs.list
+ORDER_STRAIN_LIST=${OUT_PREFIX_BASE}_orderedS${SEED}_rnd_1_${TYPE_NUM_ORDERING}_dirs_strainOrder.list
+
 #declare -a arr_STAMP
 
 cwd=`dirname $0` 
@@ -572,10 +580,6 @@ STEP=2
 get_stamp ${STEP}
 #arr_STAMP=("${arr_STAMP[@]}" "${STAMP}")
 disp_punctuate ${STEP} ${STAMP}
-
-ORDER_HAP_LIST=${OUT_PREFIX_BASE}_orderedS${SEED}_hap.list
-ORDER_DIR_LIST=${OUT_PREFIX_BASE}_orderedS${SEED}_rnd_1_${TYPE_NUM_ORDERING}_dirs.list
-ORDER_STRAIN_LIST=${OUT_PREFIX_BASE}_orderedS${SEED}_rnd_1_${TYPE_NUM_ORDERING}_dirs_strainOrder.list
 
 #
 # check (in case of re-execution)
@@ -879,7 +883,7 @@ do
     #
     # decompress each .copyprobsperlocus.out.gz file,
     # sort it by position (ascending), 
-    # split every 50000 line
+    # split
     # cat and save it as copyprobsperlocus.out
     #
     #   in order to use "sort -m" which is much faster and can handle large data
@@ -945,9 +949,11 @@ done < ${ORDER_DIR_LIST}
 #
 wait_until_finish "${STAMP}"
 
-#
-# then submit msort for each decompressed dir
-#
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - 
+# submit msort for each decompressed dir
+# - - - - - - - - - - - - - - - - - - - - - - - - 
 submit_msort_for_decompressed_dirs "${STAMP}"
 #
 # wait until the submitted msort jobs are finished
@@ -955,9 +961,30 @@ submit_msort_for_decompressed_dirs "${STAMP}"
 wait_until_finish "${STAMP}"
 
 #
+# cat gzfiles (obtained by array job) in each dir into ${GZ_SORT_COPYPROB_EACH_DIR} 
+#
+while read EACH_DIR
+do
+  if ls ${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR}.?? &> /dev/null; then
+    CMD=`returnQSUB_CMD ${STAMP}`
+    CMD=${CMD}" <<< '"
+    CMD=${CMD}" cat ${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR}.?? > ${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR}"
+    CMD=${CMD}"'"
+
+    echo ${CMD}
+    eval ${CMD}
+    if [ $? -ne 0 ]; then 
+      echo_fail "Execution error: ${CMD} (step${STEP})"
+    fi
+  fi
+done < ${ORDER_DIR_LIST}
+
+wait_until_finish "${STAMP}"
+
+
+#
 # check ${GZ_SORT_COPYPROB_EACH_DIR} in each dir
 #
-sleep 1
 while read EACH_DIR
 do
   if [ ! -s "${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR}" ]; then
@@ -969,8 +996,21 @@ do
     fi
   fi
 
+  #
+  # remove temporary files in each ordering dir
+  #   copyprobsperlocus.out_?? files 
+  #   *.hap files 
+  #
   if ls ${EACH_DIR}/sort?????? &> /dev/null; then
     /bin/rm -f ${EACH_DIR}/sort??????
+  fi
+
+  if ls ${EACH_DIR}/*copyprobsperlocus.out_?? &> /dev/null; then
+    /bin/rm -f ${EACH_DIR}/*copyprobsperlocus.out_??
+  fi
+
+  if ls ${EACH_DIR}/*.hap &> /dev/null; then
+    /bin/rm -f ${EACH_DIR}/*.hap
   fi
 done < ${ORDER_DIR_LIST}
 

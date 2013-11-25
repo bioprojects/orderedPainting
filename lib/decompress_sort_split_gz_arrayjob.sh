@@ -24,6 +24,8 @@ if [ $# -lt 2 ] ; then
   usage
 fi
 
+EXE_SPLITN=lib/splitN/sp
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # decompress *copyprobsperlocus.out.gz
 #
@@ -58,7 +60,7 @@ each_copyprobsperlocus=`echo ${gzfile} | perl -pe 's/\.gz//g'`
 #
 date +%Y%m%d_%T
 
-CMD="gzip -dc ${gzfile} | sort -n | split -50000 - ${each_copyprobsperlocus}_"
+CMD="gzip -dc ${gzfile} | grep -v '^pos' | grep -v '^HAP' | sort -n | ${EXE_SPLITN} -p ${each_copyprobsperlocus}_"
 #CMD="gzip -dc ${gzfile} | grep -v '^pos' | grep -v '^HAP' | sort -n | split -50000 - ${each_copyprobsperlocus}_"
 echo ${CMD}
 eval ${CMD}

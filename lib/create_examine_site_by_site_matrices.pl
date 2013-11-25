@@ -752,12 +752,12 @@ if ($opt_n) {
 
 
     # 
-    # combine and output (overwrite)
+    # combine $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary 
     #   %hash_sum_site_minus_ave (pos=>recipient_name=>donor_name)
     #                                  * fine ordering * 
     #
-    my $cmd_sort2  = "$sort_path $sort_opt "; 
-       $cmd_sort2 .= " -T $out_dir_results ";
+    my $cmd_sort_p3  = "$sort_path $sort_opt "; 
+       $cmd_sort_p3 .= " -T $out_dir_results ";
     open(DIR_ORDERING, $dir_ordering_listFile);
     while (my $dir_each_ordering = <DIR_ORDERING>) {
       print("$dir_each_ordering");
@@ -766,7 +766,7 @@ if ($opt_n) {
       if (! -d $dir_each_ordering) {
         die "Error: $dir_each_ordering doesn't exist";
       }
-      $cmd_sort2 .= " $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary ";
+      $cmd_sort_p3 .= " $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary ";
     }
     close(DIR_ORDERING);
 
@@ -783,8 +783,8 @@ if ($opt_n) {
     my $min = 0;
 
     # note that for each pos, the number of lines = scalar(@arr_ind_fineOrdering) * $num_dir_orderings 
-    print "$cmd_sort2\n";
-    open(DIV_CAT_SORT, "$cmd_sort2 |");
+    print "$cmd_sort_p3\n";
+    open(DIV_CAT_SORT, "$cmd_sort_p3 |");
     while (my $line = <DIV_CAT_SORT>) {
       if ($line !~ /^[0-9]/) {
         next;
@@ -868,7 +868,7 @@ if ($opt_n) {
         $i_ordering_of_this_pos_recipient = 0;
         %hash_sum_site_minus_ave = ();
       }
-    }
+    } # while across the orderings
     close(OUT_SUM_DEV);
 
     $stamp = `date +%Y%m%d_%T`;

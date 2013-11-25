@@ -41,7 +41,7 @@ static const char * help=
                 -p outprefix \n\
                 -l strainName.list \n\
                 -o strainName_dispOrder.list \n\
-                -t 1,...,10 (th ordering to be randoized, which is also used to run from the reverse) \n\
+                -t 1,...,10 (th ordering to be randomized, which is also used to run from the reverse) \n\
                 -i 0,,,n-1  (th i_recipient) \n\
                 -s 1 (this value + counter of random ordering => seed of random number generator) \n\
                 \n";
@@ -98,68 +98,71 @@ void output (string outDir, string outStrainOrder, vector<string>& arr_ind_order
              map<string, int>& hash_strainName2Index,
              int i_recipient) {
 
-                 int strainIndex; // 1-indexed
-                 //int i_recipient; // 0-indexed
-                 int i_donor; // 0-indexed
-                 FILE *fh_out_strainOrder;
-                 FILE *fh_out_hap;
-                 char name_recip[512];
-                 char fname_strainOrder[512];
-                 char fname_hap[512];
+                int strainIndex; // 1-indexed
+                //int i_recipient; // 0-indexed
+                int i_donor; // 0-indexed
+                FILE *fh_out_strainOrder;
+                FILE *fh_out_hap;
+                char name_recip[512];
+                char fname_strainOrder[512];
+                char fname_hap[512];
 
-                 sprintf( fname_strainOrder, "%s", outStrainOrder.c_str() ); 
-                 fh_out_strainOrder = fopen_wrapper(fname_strainOrder, "w");
-
-                 //for (i_recipient=0; i_recipient<arr_ind_ordering.size(); i_recipient++) { // recipient
-                 for (int i=i_recipient; i_recipient==i; i++) { // parallelized
+                //for (i_recipient=0; i_recipient<arr_ind_ordering.size(); i_recipient++) { // recipient
+                // parallelized for i_recipient
                     string out_recip_hap = "";
 
-                    // write the ordering to .strainOrder files
-                    //fprintf(fh_out_strainOrder, "%d\%s\n",i_recipient+1,arr_ind_ordering[i_recipient].c_str());
-                    fprintf(fh_out_strainOrder, "%s\n",arr_ind_ordering[i_recipient].c_str());
-
-                    // exclude the 1st strain 
+                    // the 1st strain
                     if (i_recipient == 0) {
-                        continue;
-                    }
 
-                    sprintf( name_recip, "recip%04d", i_recipient+1 ); 
-                    out_recip_hap = outDir + "/" + string(name_recip) + "_" + arr_ind_ordering[i_recipient] + ".hap";
+                         // output strainOrder of this ordering
+                         sprintf( fname_strainOrder, "%s", outStrainOrder.c_str() ); 
+                         fh_out_strainOrder = fopen_wrapper(fname_strainOrder, "w");
 
-                    printf("output %s\n", out_recip_hap.c_str());
+                         for (int i=i_recipient; i<arr_ind_ordering.size(); i++) {
+                            fprintf(fh_out_strainOrder, "%s\n",arr_ind_ordering[i].c_str());
+                         }
 
-                    sprintf( fname_hap, "%s", out_recip_hap.c_str() ); 
-                    ofstream ofs(fname_hap);
-                    ofs << 0 << endl;
-                    ofs << i_recipient+1 << endl;
-                    ofs << header_line345 << flush;
+                         fclose(fh_out_strainOrder);
 
-                    //
-                    // donors for this recipient (0,...,i_recipient-1)
-                    //   the first donor in the 6th line of the .hap file is always the same 
-                    //
-                    for (i_donor=0; i_donor<=i_recipient-1; i_donor++) {
-                        strainIndex = hash_strainName2Index[arr_ind_ordering[i_donor]];
+                    } else {
+                        sprintf( name_recip, "recip%04d", i_recipient+1 ); 
+                        out_recip_hap = outDir + "/" + string(name_recip) + "_" + arr_ind_ordering[i_recipient] + ".hap";
 
-                        if (hash_strainIndex2hapseq[strainIndex] == "") {
-                            fprintf(stderr, "Error: strainName=%s is not found in hash_strainName2Index\n",
-                                arr_ind_ordering[i_donor].c_str());
+                        printf("output %s\n", out_recip_hap.c_str());
 
-                            map<string, int>::iterator p;
-                            for (p = hash_strainName2Index.begin(); p != hash_strainName2Index.end(); p++) {
-                                printf("%s\t%d\n", p->first.c_str(), p->second);
+                        sprintf( fname_hap, "%s", out_recip_hap.c_str() ); 
+                        ofstream ofs(fname_hap);
+                        ofs << 0 << endl;
+                        ofs << i_recipient+1 << endl;
+                        ofs << header_line345 << flush;
+
+                        //
+                        // donors for this recipient (0,...,i_recipient-1)
+                        //   the first donor in the 6th line of the .hap file is always the same 
+                        //
+                        for (i_donor=0; i_donor<=i_recipient-1; i_donor++) {
+                            strainIndex = hash_strainName2Index[arr_ind_ordering[i_donor]];
+
+                            if (hash_strainIndex2hapseq[strainIndex] == "") {
+                                fprintf(stderr, "Error: strainName=%s is not found in hash_strainName2Index\n",
+                                    arr_ind_ordering[i_donor].c_str());
+
+                                map<string, int>::iterator p;
+                                for (p = hash_strainName2Index.begin(); p != hash_strainName2Index.end(); p++) {
+                                    printf("%s\t%d\n", p->first.c_str(), p->second);
+                                }
+                                exit(1);
                             }
-                            exit(1);
+                           ofs << hash_strainIndex2hapseq[strainIndex] << endl;
                         }
-                       ofs << hash_strainIndex2hapseq[strainIndex] << endl;
+                        //
+                        // recipient haplotype in the final row
+                        //
+                        strainIndex = hash_strainName2Index[arr_ind_ordering[i_recipient]];
+                        ofs << hash_strainIndex2hapseq[strainIndex] << endl;
                     }
-                    //
-                    // recipient haplotype in the final row
-                    //
-                    strainIndex = hash_strainName2Index[arr_ind_ordering[i_recipient]];
-                    ofs << hash_strainIndex2hapseq[strainIndex] << endl;
-                 }
-                 fclose(fh_out_strainOrder);
+
+                //}
 
 }
 
@@ -295,6 +298,7 @@ int main(int argc, char **argv)
 
     //
     // read fine_ordering_listFile
+    //   random orderings are created based on this 
     //
     strainIND = 1;
     fh = fopen_wrapper(fine_ordering_listFile, "r");

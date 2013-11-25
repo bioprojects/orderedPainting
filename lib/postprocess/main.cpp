@@ -52,9 +52,6 @@ const int N_BOOTSTRAP = 100;
 
 const int MAX_BUFFER = 10240; 
 
-const char * sort_path = "./lib/sort";
-const char * sort_opt = "-m -n --batch-size=100 --parallel=8";
-
 //
 // output to each ordering dir
 //
@@ -83,9 +80,6 @@ const char * out_results_summary_pos = "results_siteStats_summary.pos.txt";
 // ######################################################################
 FILE * fopen_wrapper(const char * filename, const char * mode);
 int getRandom(int min,int max);
-
-vector<string> &split(const string &s, char delim, vector<string> &elems);
-vector<string> split(const string &s, char delim);
 
 FILE * fopen_wrapper(const char * filename, const char * mode) {
 
@@ -1005,6 +999,7 @@ int main(int argc, char **argv)
 
             // ************************************************************************
             // calculate and output Sij - Mj matrix (hash_site_minus_ave)
+            //    only for the respresentative sites stored in hash_summaryPos2Type
             // ************************************************************************
             int i_row = 0;
             sprintf( fname, "%s/%s", dir_each_ordering, out_each_dir_site_minus_average_matrix ); 
@@ -1052,6 +1047,7 @@ int main(int argc, char **argv)
                         }
                     }
 
+                    // only for the respresentative sites stored in hash_summaryPos2Type
                     if (!has_key_int2string(hash_summaryPos2Type, pos)) {
                         continue;
                     }
@@ -1083,7 +1079,7 @@ int main(int argc, char **argv)
                         } else {
                             skip_calc_flag = false;
                         }
-                        // TODO with constraint
+                        // (constraint => look at specific rows and columns in this matrix)
 
                         if (skip_calc_flag == false) {
                             hash_site_minus_ave[pair<int,int>(cnt_recipient,cnt_donor)] = 
