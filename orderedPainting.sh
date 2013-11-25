@@ -45,6 +45,7 @@ PL_SITE_BY_SITE=./${LIB_DIR}/create_examine_site_by_site_matrices.pl
 SH_DECOMPRESS_SORT_SPLIT_EACH_ORDERING=./${LIB_DIR}/decompress_sort_split_gz_arrayjob.sh
 PL_MSORT_CLEAN_EACH_ORDERING=./${LIB_DIR}/msort_out_clean_each_ordering.pl
 EXE_SORT=./${LIB_DIR}/sort 
+EXE_SPLITN=./${LIB_DIR}/splitN/sp
 EXE_PP=./${LIB_DIR}/postprocess/pp
 
 R_MAIN1=./${LIB_DIR}/visualization1.R
@@ -69,6 +70,7 @@ arr_executable_files=(
   $SH_DECOMPRESS_SORT_SPLIT_EACH_ORDERING
   $PL_MSORT_CLEAN_EACH_ORDERING
   $EXE_SORT
+  $EXE_SPLITN
   $EXE_PP
 )
 

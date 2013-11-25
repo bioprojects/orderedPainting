@@ -131,8 +131,22 @@ fi
 
 cd ../..
 
+
 #
-# 5. postprocess
+# 5. splitN
+#
+cd ./${LIB_DIR}/splitN
+MSG=`make`
+echo ${MSG}
+if [ $? -ne 0 ]; then
+  echo_fail "Make of splitN failed"
+fi
+
+cd ../..
+
+
+#
+# 6. postprocess
 #
 cd ./${LIB_DIR}/postprocess
 MSG=`make`
@@ -142,6 +156,7 @@ if [ $? -ne 0 ]; then
 fi
 
 cd ../..
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
