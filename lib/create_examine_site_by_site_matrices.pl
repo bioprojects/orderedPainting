@@ -445,8 +445,8 @@ if ($opt_n) {
     close(DIR_ORDERING);
 
     #
-    # prepare %hash_sum_site_distScore 
-    #         %hash_sum_site_bootstrapped_distScore
+    # prepare %hash_sum_site_distScore (pos=>value)
+    #         %hash_sum_site_bootstrapped_distScore (pos=>i_boot=>value)
     #
     # memory usage becomes largest in this script
     #
@@ -614,7 +614,7 @@ if ($opt_n) {
     print OUT_SUMMAY_POS "\t" . "bootstrap";
     print OUT_SUMMAY_POS "\n";
 
-    # for each position sorted by distScore (descending)
+    # for each position sorted by distScore summed across the orderings (descending)
     $i_site = 1;
     foreach my $pos (sort { $hash_sum_site_distScore{$b} <=> $hash_sum_site_distScore{$a} } keys %hash_sum_site_distScore){
 
