@@ -448,6 +448,8 @@ if ($opt_n) {
     # prepare %hash_sum_site_distScore 
     #         %hash_sum_site_bootstrapped_distScore
     #
+    # memory usage becomes largest in this script
+    #
     $stamp = `date +%Y%m%d_%T`;
     chomp($stamp);
     print("$stamp calculating sum of distScore across the orderings ... \n");
@@ -685,6 +687,7 @@ if ($opt_n) {
     # part 3:
     #   output sum of Sij - Mj (long loop)
     #     only for the top and middle/bottom positions extracted above
+    #    , which is thus quick
     #######################################################################################################
     $loop_part = 3;
 
@@ -767,8 +770,8 @@ if ($opt_n) {
     #
     ######################################################################################
     my $i_ordering_of_this_pos = 0;
-    open(OUT_SUM_DEV, "> $out_dir_results/$out_sum_site_minus_average_summary");
-    print OUT_SUM_DEV "type distRankDesc pos $out_fine_header\n";
+    open(OUT_SUM_DIST_SUMMARY_MATRIX, "> $out_dir_results/$out_sum_site_minus_average_summary");
+    print OUT_SUM_DIST_SUMMARY_MATRIX "type distRankDesc pos $out_fine_header\n";
 
     $stamp = `date +%Y%m%d_%T`;
     chomp($stamp);
@@ -860,14 +863,14 @@ if ($opt_n) {
         $out_line_pos_recipient =~ s/ $//g;
         print OUT_SUM_DIST_SITE $out_line_pos_recipient . "\n";
 
-        print OUT_SUM_DEV $out_line_pos_recipient . "\n";
+        print OUT_SUM_DIST_SUMMARY_MATRIX $out_line_pos_recipient . "\n";
         
       } # recipient
 
       delete $hash_sum_site_minus_ave{$pos};
       close(OUT_SUM_DIST_SITE);
     }
-    close(OUT_SUM_DEV);
+    close(OUT_SUM_DIST_SUMMARY_MATRIX);
     undef %hash_sum_site_minus_ave;
 
     $stamp = `date +%Y%m%d_%T`;

@@ -56,7 +56,7 @@ if [ ! -f "chromopainter-${VERSION}/chromopainter" ]; then
   eval ${CMD}
   cd ..
 else
-  echo "chromopainter-${VERSION}.tar.gz already exists.  Skipped."
+  echo "chromopainter-${VERSION}/chromopainter already exists.  Skipped."
 fi
 
 #
@@ -81,7 +81,7 @@ do
     echo ${CMD}
     eval ${CMD}
   else
-    echo "${aa}.zip already exists.  Skipped."
+    echo "${aa} already exists.  Skipped."
   fi
 done
 
@@ -115,7 +115,7 @@ if [ ! -d "coreutils-8.11" ]; then
   
   cd ../../
 else
-  echo "coreutils-8.11.tar.gz already exists.  Skipped."
+  echo "coreutils-8.11 already exists.  Skipped."
 fi
 
 
