@@ -14,7 +14,6 @@ usage () {
   echo "/bin/bash $0 "
   echo "  -g file.hap "
   echo "  -l strainName.list (individual name in the hap file)" 
-  echo " [-n 20 (num. of dirs where large tmp files (output of chromopainter) are processed simultaneously, which can be increased when you use a large disk: default=20) ]"
   echo " [-m pos2missingInd.txt (pos[tab]missing_individual_name]"
   echo " [-o strainName.list (individual name in an order for output: default is the file specified by -l) ]"
   echo " [-t 10 (num. of orderings and the reverse, default=10) ]"
@@ -242,7 +241,10 @@ SEED=1
 TYPE_NUM_ORDERING=10
 VERBOSE=FALSE
 CONTRAST_MAX=-9999
-MAX_PARALLEL_DECOMPRESS=20
+MAX_PARALLEL_DECOMPRESS=20 
+# -n: num. of dirs where large tmp files (output of chromopainter) are processed simultaneously,
+#     which can be increased when you use a large disk: default=20
+
 MISSING_POS_IND_FILE=""
 CONSTRAINT_FILE=""
 while getopts g:t:s:l:o:n:m:c:v OPTION
@@ -1002,16 +1004,17 @@ do
 
   #
   # remove temporary files in each ordering dir
-  #   copyprobsperlocus.out_?? files 
-  #   *.hap files 
   #
-  if ls ${EACH_DIR}/sort?????? &> /dev/null; then
+  if ls ${EACH_DIR}/sort?????? &> /dev/null; then # old (non-arrayjob) version
     /bin/rm -f ${EACH_DIR}/sort??????
   fi
 
-  if ls ${EACH_DIR}/*copyprobsperlocus.out_?? &> /dev/null; then
+  if ls ${EACH_DIR}/*copyprobsperlocus.out_?? &> /dev/null; then # arrayjob version
     /bin/rm -f ${EACH_DIR}/*copyprobsperlocus.out_??
   fi
+  #if ls ${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR}_?? &> /dev/null; then
+  #  /bin/rm -f ${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR}_??
+  #fi
 
   if ls ${EACH_DIR}/*.hap &> /dev/null; then
     /bin/rm -f ${EACH_DIR}/*.hap

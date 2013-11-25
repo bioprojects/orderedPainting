@@ -56,13 +56,12 @@ const int MAX_BUFFER = 10240;
 // output to each ordering dir
 //
 
-const char * out_each_dir_averave_matrix       = "average.matrix.txt";
-const char * out_each_dir_site_distScore_info  = "site_distScore.txt";  
-
 const char * sortfile_catOrderings_copyprob    = "copyprobsperlocus.cat.sort";
 const char * gz_sortfile_catOrderings_copyprob = "copyprobsperlocus.cat.sort.gz";
 
-const char * out_each_dir_site_minus_average_matrix = "site_minus_average.matrix.txt";
+const char * out_each_dir_averave_matrix       = "average.matrix.txt"; // output of part1
+const char * out_each_dir_site_distScore_info  = "site_distScore.txt"; // output of part2 
+const char * out_each_dir_site_minus_average_matrix = "site_minus_average.matrix.txt"; // output of part3
 
 // 
 // output to results dir
