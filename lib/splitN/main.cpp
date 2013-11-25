@@ -35,22 +35,6 @@ static const char * help=
 
 
 // ######################################################################
-// util
-// ######################################################################
-FILE * fopen_wrapper(const char * filename, const char * mode);
-
-FILE * fopen_wrapper(const char * filename, const char * mode) {
-
-    FILE * f = fopen(filename, mode);
-
-    if (f == NULL) {
-        printf("Failed to open file %s\n", filename);
-    }
-    return f;
-}
-
-
-// ######################################################################
 // main 
 // ######################################################################
 int main(int argc, char **argv)

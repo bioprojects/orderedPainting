@@ -56,7 +56,6 @@ const int MAX_BUFFER = 10240;
 // output to each ordering dir
 //
 
-//const char * out_each_dir_site_distScore_info  = "site_distScore.txt";
 const char * out_each_dir_averave_matrix       = "average.matrix.txt";
 const char * out_each_dir_site_distScore_info  = "site_distScore.txt";  
 

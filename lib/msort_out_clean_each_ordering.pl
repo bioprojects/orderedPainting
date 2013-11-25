@@ -39,7 +39,9 @@ my $phasefile           = $opt_g or die $usage;
 # env
 #
 my $sort_path = "$FindBin::Bin/sort";
-my $sort_opt = " -m --batch-size=100 --parallel=8"; # "-m" makes the sorting much faster when all input files are sorted (ascending order)
+my $sort_opt = " -n -m --batch-size=100 --parallel=8"; 
+# "-n" is required to cat across recipient individuals sorted by position
+# "-m" makes the sorting much faster when all input files are sorted (ascending order)
 
 my $sortfile_catOrderings_copyprob    = "copyprobsperlocus.cat.sort";
 my $gz_sortfile_catOrderings_copyprob = "copyprobsperlocus.cat.sort.gz";
