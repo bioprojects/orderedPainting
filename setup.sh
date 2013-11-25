@@ -29,7 +29,7 @@ eval ${CMD}
 #
 # 1. ChromoPainter
 #
-if [ ! -f "chromopainter-${VERSION}.tar.gz" ]; then
+if [ ! -f "chromopainter-${VERSION}/chromopainter" ]; then
   URL=http://www.maths.bris.ac.uk/%7Emadjl/finestructure/chromopainter-${VERSION}.tar.gz
   wget ${URL}
   if [ $? -ne 0 ]; then
@@ -69,7 +69,7 @@ arr_scripts=(
 
 for aa in ${arr_scripts[@]}
 do
-  if [ ! -f "${aa}.zip" ]; then
+  if [ ! -f "${LIB_DIR}/${aa}" ]; then
     URL=http://www2.maths.bris.ac.uk/~madjl/finestructure/${aa}.zip
     wget ${URL}
     if [ $? -ne 0 ]; then
