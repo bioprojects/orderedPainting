@@ -1,8 +1,8 @@
 #! /bin/bash
 #$ -S /bin/bash
 
-##$ -e /dev/null
-##$ -o /dev/null
+#$ -e /dev/null
+#$ -o /dev/null
 
 . lib/env_func.bashrc
 

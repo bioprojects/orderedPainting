@@ -49,8 +49,8 @@ my $gz_sortfile_catOrderings_copyprob = "copyprobsperlocus.cat.sort.gz";
 my $arrayJobID = "";
 if ($ENV{LSB_JOBINDEX} ne "") {
   $arrayJobID = $ENV{LSB_JOBINDEX};
-} elsif ($ENV{LSB_JOBINDEX} ne "") {
-  $arrayJobID = $ENV{LSB_JOBINDEX};
+} elsif ($ENV{SGE_TASK_ID} ne "") {
+  $arrayJobID = $ENV{SGE_TASK_ID};
 }
 
 #

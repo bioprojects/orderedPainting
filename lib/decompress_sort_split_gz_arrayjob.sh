@@ -1,10 +1,10 @@
 #! /bin/bash
 #$ -S /bin/bash
 
-. lib/env_func.bashrc
-
 #$ -e /dev/null
 #$ -o /dev/null
+
+. lib/env_func.bashrc
 
 usage () {
   echo "qsub -cwd -t 1:NUM_GZ -S /bin/bash `basename $0` -l each_ordering_dir/target_gz.list "
