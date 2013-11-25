@@ -965,16 +965,18 @@ wait_until_finish "${STAMP}"
 #
 while read EACH_DIR
 do
-  if ls ${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR}.?? &> /dev/null; then
-    CMD=`returnQSUB_CMD ${STAMP}`
-    CMD=${CMD}" <<< '"
-    CMD=${CMD}" cat ${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR}.?? > ${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR}"
-    CMD=${CMD}"'"
+  if [ ! -s "${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR}" ]; then
+    if ls ${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR}.?? &> /dev/null; then
+      CMD=`returnQSUB_CMD ${STAMP}`
+      CMD=${CMD}" <<< '"
+      CMD=${CMD}" cat ${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR}.?? > ${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR}"
+      CMD=${CMD}"'"
 
-    echo ${CMD}
-    eval ${CMD}
-    if [ $? -ne 0 ]; then 
-      echo_fail "Execution error: ${CMD} (step${STEP})"
+      echo ${CMD}
+      eval ${CMD}
+      if [ $? -ne 0 ]; then 
+        echo_fail "Execution error: ${CMD} (step${STEP})"
+      fi
     fi
   fi
 done < ${ORDER_DIR_LIST}

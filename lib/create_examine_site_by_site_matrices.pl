@@ -44,7 +44,7 @@ my $env_file = "$FindBin::Bin/env_func.bashrc";
 # path of commands/scripts
 #
 my $sort_path = "$FindBin::Bin/sort";
-my $sort_opt = " -m -n --batch-size=300 --parallel=8"; # "-m" makes the sorting much faster when all input files are sorted (ascending order)
+my $sort_opt = " -m --batch-size=300 --parallel=8"; # "-m" makes the sorting much faster when all input files are sorted (ascending order)
                                                        # --batch-size=100 is enough for 10 orderings
                                                        # --batch-size=300 is required for more than 50 orderings
 
@@ -771,7 +771,7 @@ if ($opt_n) {
     close(DIR_ORDERING);
 
 
-    my $i_ordering_of_this_pos_recipient = 0;
+    my $i_ordering_of_this_pos = 0;
     open(OUT_SUM_DEV, "> $out_dir_results/$out_sum_site_minus_average_summary");
     print OUT_SUM_DEV "type distRankDesc pos $out_fine_header\n";
 
@@ -782,7 +782,7 @@ if ($opt_n) {
     my $max = 0;
     my $min = 0;
 
-    # note that for each pos, the number of lines = scalar(@arr_ind_fineOrdering) * $num_dir_orderings 
+    # note that for each pos, the number of lines = (scalar(@arr_ind_fineOrdering)-1) * $num_dir_orderings 
     print "$cmd_sort_p3\n";
     open(DIV_CAT_SORT, "$cmd_sort_p3 |");
     while (my $line = <DIV_CAT_SORT>) {
@@ -791,7 +791,7 @@ if ($opt_n) {
       }
       chomp $line;
 
-      $i_ordering_of_this_pos_recipient++;
+      $i_ordering_of_this_pos++;
 
       my @arr_line = split(/ /, $line);
 
@@ -807,16 +807,16 @@ if ($opt_n) {
           $hash_sum_site_minus_ave{$recipient_name}{$donor_name} += $arr_line[$i_donor+2]; # note: pos recipient_name values ... (num_dir_orderings lines)
         }
       }
-
-      #
-      # after $hash_sum_site_minus_ave of this site was prepared above, 
-      # output
-      #
       
-      #print "$pos\t$recipient_name\t$i_ordering_of_this_pos_recipient\t$num_dir_orderings\n";
-      if ($i_ordering_of_this_pos_recipient != scalar(@arr_ind_fineOrdering)*$num_dir_orderings) {
+      if ($i_ordering_of_this_pos != (scalar(@arr_ind_fineOrdering)-1)*$num_dir_orderings) {
         next;
       } else {
+        #print "$pos\t$i_ordering_of_this_pos\n";
+        
+        #
+        # after $hash_sum_site_minus_ave of this site was prepared above, 
+        # output
+        #
         my $type = $hash_summaryPos2Type{$pos};
         
         if (defined($hash_pos_visType{$pos})) {
@@ -865,7 +865,7 @@ if ($opt_n) {
         #
         # for the next pos
         #
-        $i_ordering_of_this_pos_recipient = 0;
+        $i_ordering_of_this_pos = 0;
         %hash_sum_site_minus_ave = ();
       }
     } # while across the orderings
