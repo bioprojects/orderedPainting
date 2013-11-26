@@ -120,43 +120,25 @@ fi
 
 
 #
-# 4. randomize
+# 4. C programs
 #
-cd ./${LIB_DIR}/randomize
-MSG=`make`
-echo ${MSG}
-if [ $? -ne 0 ]; then
-  echo_fail "Make of randomize failed"
-fi
+arr_C=(
+  'randomize'
+  'splitN'
+  'postprocess'
+)
 
-cd ../..
-
-
-#
-# 5. splitN
-#
-cd ./${LIB_DIR}/splitN
-MSG=`make`
-echo ${MSG}
-if [ $? -ne 0 ]; then
-  echo_fail "Make of splitN failed"
-fi
-
-cd ../..
-
-
-#
-# 6. postprocess
-#
-cd ./${LIB_DIR}/postprocess
-MSG=`make`
-echo ${MSG}
-if [ $? -ne 0 ]; then
-  echo_fail "Make of postprocess failed"
-fi
-
-cd ../..
-
+for each_C in ${arr_C[@]}
+do
+  cd ./${LIB_DIR}/${each_C}
+  MSG=`make`
+  echo ${MSG}
+  if [ $? -ne 0 ]; then
+    echo_fail "Make of ${each_C} failed"
+  fi
+  
+  cd ../..
+done
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
