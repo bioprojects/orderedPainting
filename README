@@ -174,9 +174,9 @@ by masking columns and rows of missing individuals at a site.
 # 7. Re-execution
 #---------------------------------------------------------
 
-If orderedPainting stops during its computation, for example
-by a problem of your grid engine, please re-execute the
-command as previously after fixing the problem.
+If orderedPainting stoped during its computation, for example
+by an occasional problem of your grid engine, please 
+re-execute the command as previously after fixing the problem.
 
 It should restart computation at an appropriate step
 and proceed to the end.
