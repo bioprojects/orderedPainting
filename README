@@ -17,23 +17,47 @@ General Public License for more details.
 
 
 #---------------------------------------------------------
-# 1. Selection of grid engine
+# 1. Selection of your grid engine
 #---------------------------------------------------------
 
 orderedPainting uses UGE (SGE) by default.
 
 If you would like to use LSF instead, please edit "lib/env_func.bashrc" so that
 
-  #QUEUE_TYPE="SGE"         # comment out
-  #QSUB_COMMON="qsub -cwd " # comment out
+  #QUEUE_TYPE="SGE"                        # comment out
+  #QSUB_COMMON="qsub -cwd "                # comment out
+  #MAX_MEMORY="-l s_vmem=8G -l mem_req=8"  # comment out
   
   QUEUE_TYPE="LSF"          # comment in instead
   QSUB_COMMON="bsub "       # comment in instead
+  MAX_MEMORY="-M 8000000"   # comment in instead
 
 
 
 #---------------------------------------------------------
-# 2. Setup
+# 2. Disk and memory usage
+#---------------------------------------------------------
+
+The disk usage of orderedPainting depends on both the number of 
+SNPs and individuals, and it can produce a large amount of 
+temporary data.
+
+For example, 500 genomes with 100,000 SNPs produce about 100GB of 
+raw uncompressed data of ChromoPainter per ordering
+(although they are compressed during post-processing).
+
+
+The memory usage of orderedPainting depends on the number of 
+SNPs but not on that of individuals.
+
+For example, 190,000 SNPs requires about 2.6 GB RAM.
+The upper limit of memory usage for your grid engine can 
+be speficied by "MAX_MEMORY" in "lib/env_func.bashrc" above.
+
+
+
+#---------------------------------------------------------
+# 3. Setup
 #---------------------------------------------------------
 
 Please execute "setup.sh" as follows.
@@ -48,7 +72,7 @@ Please wait during that time.
 
 
 #---------------------------------------------------------
-# 3. Basic usage
+# 4. Basic usage
 #---------------------------------------------------------
 
 The following is the most basic example which uses files in the "example1" directory.
@@ -64,7 +88,7 @@ The ".list" is a 1-column file which indicates name of each strain in the ".hap"
 
 
 #---------------------------------------------------------
-# 4. Output
+# 5. Output
 #---------------------------------------------------------
 
 Please check the log file you specified above.
@@ -123,7 +147,20 @@ there is no need to check these additional log files.
 
 
 #---------------------------------------------------------
-# 5. Usage for imputed data
+# 6. Re-execution
+#---------------------------------------------------------
+
+If orderedPainting stops during its computation, for example
+by a problem of your grid engine, please re-execute the
+command as previously after fixing the problem.
+
+It should start computation at an appropriate step again
+and proceed to the end.
+
+
+
+#---------------------------------------------------------
+# 7. Usage for imputed data
 #---------------------------------------------------------
 
 If you would like to use imputed data, please prepare a file which indicates
@@ -141,31 +178,14 @@ strain 1 is missing at position 100.
 
 Please specify the file by "-m" option in orderedPainting.sh
 
-The file is used to calculate  site-by-site and average copying probability matrices 
+The file is used to calculate site-by-site and average copying probability matrices 
 by masking columns and rows of missing individuals at a site.
 
 
 
 #---------------------------------------------------------
-# 6. Disk space
+# 8. Further information
 #---------------------------------------------------------
-
-A limitation for this program is disk space.
-For example, 500 genomes with 100,000 SNPs produce about 100GB 
-of raw uncompressed data per ordering, although they are compressed
-during post-processing.
-
-If your disk space is not enough, you can reduce the number of ordering
-to be post-processed simultaneously by "-n" option (default is 20),
-although it increases computational time.
-
-
-
-#---------------------------------------------------------
-# 7. Further information
-#---------------------------------------------------------
-
-Please refer to a PDF manual, which will be uploaded in the future.
 
 If you find any problem, please inform to koji.yahara@gmail.com
 

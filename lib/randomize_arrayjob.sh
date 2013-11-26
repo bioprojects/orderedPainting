@@ -47,7 +47,7 @@ if [ "${QUEUE_TYPE}" == "SGE" ]; then
 elif [ "${QUEUE_TYPE}" == "LSF" ]; then
   i_recipient=${LSB_JOBINDEX}
 else
-  echo_fail "unknonw QUEUE_TYPE: ${QUEUE_TYPE}"
+  echo_fail "unknown QUEUE_TYPE: ${QUEUE_TYPE}"
 fi
 let i_recipient=${i_recipient}-1 # 1-indexed => 0-indexed
 

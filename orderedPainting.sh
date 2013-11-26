@@ -620,7 +620,8 @@ if [ -f "${ORDER_STRAIN_LIST}"  ]; then
 fi
 
 #
-# execute haplotype ordering only if 
+# prepare ordered haplotypes
+#   only if 
 #
 if [ "${DONE_ALL_GZ_SORT_COPYPROB_EACH_DIR}" -eq 0 -o "${DONE_ALL_STRAIN_ORDER}" -eq 0 ]; then
   
