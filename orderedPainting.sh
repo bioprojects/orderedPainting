@@ -356,7 +356,7 @@ if [ "${WC_UQ_HAP_LEN}" -gt 1 ]; then
 fi
 
 NUM_IND=`head -2 ${PHASEFILE} | tail -1`
-
+let NUM_IND_2=${NUM_IND}+${NUM_IND}
 
 if [ ! -f "${HAP_LIST}" ]; then
   echo_fail "Error: ${HAP_LIST} doesn't exist"
@@ -607,25 +607,38 @@ if [ -s "${ORDER_DIR_LIST}" ]; then
   done < ${ORDER_DIR_LIST}
 fi
 
-NOT_YET_ALL_STRAINS=0
-for EACH_DIR in `find ./ -maxdepth 1 -type d -name ${OUT_PREFIX_BASE}_orderedS${SEED}_rnd\* | grep -v results | perl -pe 's/^\.\///g'`
-do
-  NUM_HAP_EACH_DIR=`ls ${EACH_DIR}/*.hap | wc -l`
-  let NUM_HAP_EACH_DIR=${NUM_HAP_EACH_DIR}+1
-  
-  if [ "${NUM_HAP_EACH_DIR}" != "${NUM_IND}" ]; then
-    NOT_YET_ALL_STRAINS=1
-    break
-  fi
-done
-
 #
 # prepare ordered haplotypes
 #
-if [ "${DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR}" -eq 0 -o "${NOT_YET_ALL_STRAINS}" -eq 0 ]; then
-  
+if [ "${DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR}" -eq 0 ]; then
+
+  #
+  # check unfinished directories
+  #
+  arr_target_ordering=()
   i_ordering=1
   while [ "${i_ordering}" -le "${TYPE_NUM_ORDERING}"  ]
+  do
+    EACH_DIR_PREFIX=$(printf %s_orderedS%s_rnd%02d ${OUT_PREFIX_BASE} ${SEED} ${i_ordering})
+    
+    if ls ${EACH_DIR_PREFIX}_forward/*.hap &> /dev/null; then
+      NUM_HAP_F_R=`ls ${EACH_DIR_PREFIX}_???????/*.hap | wc -l`
+
+      let NUM_HAP_F_R=${NUM_HAP_F_R}+2
+      
+      if [ "${NUM_HAP_F_R}" != "${NUM_IND_2}" ]; then
+        i_target_ordering=`echo ${EACH_DIR} | perl -pe 's/^.*rnd//g' | perl -pe 's/_.*//g'`
+        arr_target_ordering+=(i_target_ordering)
+      fi
+    fi
+  done
+
+  
+
+  #
+  # execute
+  #
+  for i_ordering in ${arr_target_ordering[@]}
   do
     ARRAY_S=1
     ARRAY_E=`wc -l ${HAP_LIST} | awk '{print $1}'`
@@ -653,7 +666,7 @@ if [ "${DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR}" -eq 0 -o "${NOT_YET_ALL_STRAINS}" -e
 
   # ${ORDER_HAP_LIST}
   i_ordering=1
-  while [ "${i_ordering}" -le "${TYPE_NUM_ORDERING}"  ]
+  for i_ordering in ${arr_target_ordering[@]}
   do
     EACH_DIR_PREFIX=$(printf %s_orderedS%s_rnd%02d ${OUT_PREFIX_BASE} ${SEED} ${i_ordering})
     CMD="ls ${EACH_DIR_PREFIX}_*/*.hap "
