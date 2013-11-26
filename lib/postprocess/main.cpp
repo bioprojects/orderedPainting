@@ -115,7 +115,7 @@ int main(int argc, char **argv)
         case('r'):dir_results=optarg;break; // used only in loop_part == 3
         case('t'):type_painting=atoi(optarg);break;
         case('p'):loop_part=atoi(optarg);break;
-        case('s'):suffix=atoi(optarg);break;
+        case('s'):suffix=optarg;break;
         case('m'):pos2missingIndFile=optarg;break;
         case('c'):donor_recipient_constraintFile=optarg;break;
         case('v'):verbose=true;break;
