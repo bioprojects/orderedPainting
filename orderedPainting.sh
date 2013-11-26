@@ -120,9 +120,9 @@ move_log_files() {
 returnQSUB_CMD() {
   QSUB_CMD=""
   if [ "${QUEUE_TYPE}" == "SGE" -o "${QUEUE_TYPE}" == "UGE" ]; then
-    QSUB_CMD="${QSUB_COMMON} -o $1.log -N $1"
+    QSUB_CMD="${QSUB_COMMON} -o $1.log -e $1.log -N $1"
   elif [ "${QUEUE_TYPE}" == "LSF" ]; then
-    QSUB_CMD="${QSUB_COMMON} -o $1.log -J $1"
+    QSUB_CMD="${QSUB_COMMON} -o $1.log -e $1.log -J $1"
   fi
   
   if test "$2" = "" ; then
