@@ -607,14 +607,14 @@ if [ -s "${ORDER_DIR_LIST}" ]; then
   done < ${ORDER_DIR_LIST}
 fi
 
-DONE_ALL_STRAIN_ORDER=0
+NOT_YET_ALL_STRAINS=0
 for EACH_DIR in `find ./ -maxdepth 1 -type d -name ${OUT_PREFIX_BASE}_orderedS${SEED}_rnd\* | grep -v results | perl -pe 's/^\.\///g'`
 do
-  NUM_HAP_EACH_DIR=`ls ${EACH_DIR}/*.hap`
+  NUM_HAP_EACH_DIR=`ls ${EACH_DIR}/*.hap | wc -l`
   let NUM_HAP_EACH_DIR=${NUM_HAP_EACH_DIR}+1
   
   if [ "${NUM_HAP_EACH_DIR}" != "${NUM_IND}" ]; then
-    DONE_ALL_STRAIN_ORDER=1
+    NOT_YET_ALL_STRAINS=1
     break
   fi
 done
@@ -622,7 +622,7 @@ done
 #
 # prepare ordered haplotypes
 #
-if [ "${DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR}" -eq 0 -o "${DONE_ALL_STRAIN_ORDER}" -eq 0 ]; then
+if [ "${DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR}" -eq 0 -o "${NOT_YET_ALL_STRAINS}" -eq 0 ]; then
   
   i_ordering=1
   while [ "${i_ordering}" -le "${TYPE_NUM_ORDERING}"  ]
