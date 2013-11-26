@@ -38,19 +38,19 @@ If you would like to use LSF instead, please edit "lib/env_func.bashrc" so that
 # 2. Disk and memory usage
 #---------------------------------------------------------
 
-The disk usage of orderedPainting depends on both the number of 
-SNPs and individuals, and it can produce a large amount of 
-temporary data.
+As an example, 200 genomes with 100,000 SNPs require
 
-For example, 500 genomes with 100,000 SNPs produce about 100GB of 
-raw uncompressed data of ChromoPainter per ordering
-(although they are compressed during post-processing).
+  about 400GB temporary disk space 
+  (for 10 orderings and their reverse) 
 
+  6GB RAM
 
-The memory usage of orderedPainting depends on the number of 
-SNPs but not on that of individuals.
+The disk space is required to store raw uncompressed data 
+of ChromoPainter (although these data are compressed 
+during post-processing).
 
-For example, 190,000 SNPs requires about 2.6 GB RAM.
+The RAM is required to combine results of the orderings.
+
 The upper limit of memory usage for your grid engine can 
 be speficied by "MAX_MEMORY" in "lib/env_func.bashrc" above.
 

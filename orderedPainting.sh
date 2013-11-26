@@ -607,26 +607,25 @@ if [ -s "${ORDER_DIR_LIST}" ]; then
   done < ${ORDER_DIR_LIST}
 fi
 
-# same logic as above
 DONE_ALL_STRAIN_ORDER=0
-if [ -f "${ORDER_STRAIN_LIST}"  ]; then
-  DONE_ALL_STRAIN_ORDER=1
-  while read line
-  do
-    if [ ! -s "${line}" ]; then
-      DONE_ALL_STRAIN_ORDER=0
-    fi
-  done < ${ORDER_STRAIN_LIST}
-fi
+for EACH_DIR in `find ./ -maxdepth 1 -type d -name ${OUT_PREFIX_BASE}_orderedS${SEED}_rnd\* | grep -v results | perl -pe 's/^\.\///g'`
+do
+  NUM_HAP_EACH_DIR=`ls ${EACH_DIR}/*.hap`
+  let NUM_HAP_EACH_DIR=${NUM_HAP_EACH_DIR}+1
+  
+  if [ "${NUM_HAP_EACH_DIR}" != "${NUM_IND}" ]; then
+    DONE_ALL_STRAIN_ORDER=1
+    break
+  fi
+done
 
 #
 # prepare ordered haplotypes
-#   only if 
 #
 if [ "${DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR}" -eq 0 -o "${DONE_ALL_STRAIN_ORDER}" -eq 0 ]; then
   
-  i_forward_reverse=1
-  while [ "${i_forward_reverse}" -le "${TYPE_NUM_ORDERING}"  ]
+  i_ordering=1
+  while [ "${i_ordering}" -le "${TYPE_NUM_ORDERING}"  ]
   do
     ARRAY_S=1
     ARRAY_E=`wc -l ${HAP_LIST} | awk '{print $1}'`
@@ -637,7 +636,7 @@ if [ "${DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR}" -eq 0 -o "${DONE_ALL_STRAIN_ORDER}" 
     CMD=${CMD}" -p ${OUT_PREFIX_BASE}"
     CMD=${CMD}" -l ${HAP_LIST}"
     CMD=${CMD}" -o ${HAP_LIST_OUTDISP}"
-    CMD=${CMD}" -t ${i_forward_reverse}"
+    CMD=${CMD}" -t ${i_ordering}"
     CMD=${CMD}" -s ${SEED}" 
 
     echo ${CMD}
@@ -646,19 +645,19 @@ if [ "${DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR}" -eq 0 -o "${DONE_ALL_STRAIN_ORDER}" 
       echo_fail "Execution error: ${CMD} (step${STEP}) "
     fi
 
-    let i_forward_reverse=${i_forward_reverse}+1
+    let i_ordering=${i_ordering}+1
   done
 
   wait_until_finish "${STAMP}"
 
 
   # ${ORDER_HAP_LIST}
-  i_forward_reverse=1
-  while [ "${i_forward_reverse}" -le "${TYPE_NUM_ORDERING}"  ]
+  i_ordering=1
+  while [ "${i_ordering}" -le "${TYPE_NUM_ORDERING}"  ]
   do
-    EACH_DIR_PREFIX=$(printf %s_orderedS%s_rnd%02d ${OUT_PREFIX_BASE} ${SEED} ${i_forward_reverse})
+    EACH_DIR_PREFIX=$(printf %s_orderedS%s_rnd%02d ${OUT_PREFIX_BASE} ${SEED} ${i_ordering})
     CMD="ls ${EACH_DIR_PREFIX}_*/*.hap "
-    if [ "${i_forward_reverse}" -eq 1 ]; then
+    if [ "${i_ordering}" -eq 1 ]; then
       CMD=${CMD}" >  ${ORDER_HAP_LIST}"
     else
       CMD=${CMD}" >> ${ORDER_HAP_LIST}"
@@ -668,7 +667,7 @@ if [ "${DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR}" -eq 0 -o "${DONE_ALL_STRAIN_ORDER}" 
     if [ $? -ne 0 ]; then 
       echo_fail "Error: ${CMD}  "
     fi
-    let i_forward_reverse=${i_forward_reverse}+1
+    let i_ordering=${i_ordering}+1
   done
   echo "${ORDER_HAP_LIST} was created"
 
