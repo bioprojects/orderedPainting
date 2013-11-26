@@ -1095,7 +1095,8 @@ fi
 
 if [ "${SKIP_FLAG}" -eq 0 ]; then
 
-  CMD=`returnQSUB_CMD ${STAMP} ${MAX_MEMORY}` # ${MAX_MEMORY} is used only here
+  CMD=`returnQSUB_CMD ${STAMP}` 
+  CMD=${CMD}" ${MAX_MEMORY}' " # ${MAX_MEMORY} is used only here
   CMD=${CMD}" <<< '"
   CMD=${CMD}"perl ${PL_SITE_BY_SITE}"
   CMD=${CMD}" -g ${PHASEFILE} "

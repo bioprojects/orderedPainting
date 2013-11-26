@@ -1,5 +1,6 @@
 #########################################################################
 # definition of grid engine
+#   MAX_MEMORY is used only at the step of combining orderings
 #########################################################################
 
 QUEUE_TYPE="SGE"
