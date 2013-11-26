@@ -37,7 +37,7 @@ static const char * help=
                 -r dir_results \n\
                 -t 1|2 \n\
                 -p 1|2|3 \n\
-                -s 1 (seed of random number generator for bootstrapping) \n\
+                -s .01 (suffix added to the the output file) \n\
                 [-m pos2missingInd.txt] \n\
                 [-c donor_recipient_constraint.txt] \n\
                 \n";
@@ -52,21 +52,15 @@ const int N_BOOTSTRAP = 100;
 
 const int MAX_BUFFER = 10240; 
 
-//
-// output to each ordering dir
-//
-const char * out_each_dir_averave_matrix       = "average.matrix.txt"; // output of part1
-const char * out_each_dir_site_distScore_info  = "site_distScore.txt"; // output of part2 
-const char * out_each_dir_site_minus_average_matrix = "site_minus_average.matrix.txt"; // output of part3
+// part1 - output
+const char * out_each_dir_averave_matrix       = "average.matrix.txt"; 
 
-// 
-// output to results dir
-//
+// part 2 - output
+const char * out_each_dir_site_distScore_info  = "site_distScore.txt";
 
-//const char * out_results = "results_siteStats.txt";
-const char * out_results_summary_pos = "results_siteStats_summary.pos.txt";
-//const char * out_sum_site_minus_average_summary        = "sum_site_minus_average.summary.txt";
-//const char * out_sum_site_minus_average_summary_range  = "sum_site_minus_average.summary.range.txt";
+// part 3 - one of the inputs and ouptut
+const char * out_results_summary_pos = "results_siteStats_summary.pos.txt"; // in the results dir
+const char * out_each_dir_site_minus_average_matrix = "site_minus_average.matrix.txt"; 
 
 
 // ######################################################################
@@ -104,14 +98,15 @@ int main(int argc, char **argv)
     char * strainHapOrderFile=NULL;
     char * dir_results=NULL;
     char * strainFineOrderFile=NULL;
+    char * suffix=NULL;
     int type_painting=-1;
     int loop_part=-1;
-    int seed=-1;
+    int seed=-1; // constant
     char * pos2missingIndFile=NULL;
     char * donor_recipient_constraintFile=NULL;
 
     if (argc==1) {printf("%s",help);exit(0);}
-    while ((c = getopt (argc, argv, "d:l:r:o:t:p:m:c:v")) != -1)
+    while ((c = getopt (argc, argv, "d:l:r:o:t:p:s:m:c:v")) != -1)
         switch (c)
     {
         case('d'):dir_each_ordering=optarg;break;
@@ -120,7 +115,7 @@ int main(int argc, char **argv)
         case('r'):dir_results=optarg;break; // used only in loop_part == 3
         case('t'):type_painting=atoi(optarg);break;
         case('p'):loop_part=atoi(optarg);break;
-        case('s'):seed=atoi(optarg);break;
+        case('s'):suffix=atoi(optarg);break;
         case('m'):pos2missingIndFile=optarg;break;
         case('c'):donor_recipient_constraintFile=optarg;break;
         case('v'):verbose=true;break;
@@ -590,7 +585,7 @@ int main(int argc, char **argv)
         //
         // restore average matrix (common in loop 2 and 3)
         //
-        sprintf( fname, "%s/%s", dir_each_ordering, out_each_dir_averave_matrix ); 
+        sprintf( fname, "%s/%s%s", dir_each_ordering, out_each_dir_averave_matrix, suffix ); 
 
         fh = fopen_wrapper(fname, "r");
 
