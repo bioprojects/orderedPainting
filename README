@@ -147,20 +147,7 @@ there is no need to check these additional log files.
 
 
 #---------------------------------------------------------
-# 6. Re-execution
-#---------------------------------------------------------
-
-If orderedPainting stops during its computation, for example
-by a problem of your grid engine, please re-execute the
-command as previously after fixing the problem.
-
-It should start computation at an appropriate step again
-and proceed to the end.
-
-
-
-#---------------------------------------------------------
-# 7. Usage for imputed data
+# 6. Usage for imputed data
 #---------------------------------------------------------
 
 If you would like to use imputed data, please prepare a file which indicates
@@ -180,6 +167,19 @@ Please specify the file by "-m" option in orderedPainting.sh
 
 The file is used to calculate site-by-site and average copying probability matrices 
 by masking columns and rows of missing individuals at a site.
+
+
+
+#---------------------------------------------------------
+# 7. Re-execution
+#---------------------------------------------------------
+
+If orderedPainting stops during its computation, for example
+by a problem of your grid engine, please re-execute the
+command as previously after fixing the problem.
+
+It should restart computation at an appropriate step
+and proceed to the end.
 
 
 
