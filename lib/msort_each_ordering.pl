@@ -48,8 +48,8 @@ my $sort_opt = " -n -m --batch-size=100 --parallel=8";
 # "-n" is required to cat across recipient individuals sorted by position
 # "-m" makes the sorting much faster when all input files are sorted (ascending order)
 
-my $sortfile_catOrderings_copyprob    = "copyprobsperlocus.sort";
-my $gz_sortfile_catOrderings_copyprob = "copyprobsperlocus.sort.gz";
+my $cat_copyprob_each_dir    = "copyprobsperlocus.cat";
+my $gz_cat_copyprob_each_dir = "copyprobsperlocus.cat.gz";
 
 my $arrayJobID = "";
 if (defined($ENV{LSB_JOBINDEX})) {
@@ -117,7 +117,7 @@ if ($arrayJobID > 0) {
   
   $cmd  = "$sort_path $sort_opt ";
   $cmd .= " -T $dir_each_ordering $dir_each_ordering/*.copyprobsperlocus.out_$each_suffix";
-  $cmd .= " | gzip > $dir_each_ordering/$gz_sortfile_catOrderings_copyprob" . "." . "$each_suffix"; # split gz files
+  $cmd .= " | gzip > $dir_each_ordering/$gz_cat_copyprob_each_dir" . "." . "$each_suffix"; # split gz files
   print "$cmd\n";
   system("$cmd");
 
@@ -152,10 +152,10 @@ if ($arrayJobID > 0) {
   while () {
 
     #
-    # if there is an incomplete $sortfile_catOrderings_copyprob files created previously, remove it
+    # if there is an incomplete $cat_copyprob_each_dir files created previously, remove it
     #
-    if (  -f "$dir_each_ordering/$gz_sortfile_catOrderings_copyprob") {
-      unlink("$dir_each_ordering/$gz_sortfile_catOrderings_copyprob");
+    if (  -f "$dir_each_ordering/$gz_cat_copyprob_each_dir") {
+      unlink("$dir_each_ordering/$gz_cat_copyprob_each_dir");
     }
 
     #
@@ -172,7 +172,7 @@ if ($arrayJobID > 0) {
       
       $cmd  = "$sort_path $sort_opt ";
       $cmd .= " -T $dir_each_ordering $dir_each_ordering/*.copyprobsperlocus.out_$each_suffix";
-      $cmd .= " | gzip -c >> $dir_each_ordering/$gz_sortfile_catOrderings_copyprob";
+      $cmd .= " | gzip -c >> $dir_each_ordering/$gz_cat_copyprob_each_dir";
       print "$cmd\n";
       system("$cmd");
 
@@ -184,15 +184,15 @@ if ($arrayJobID > 0) {
     $stamp = `date +%Y%m%d_%T`;
     print "$stamp";
    
-    print("checking $dir_each_ordering/$gz_sortfile_catOrderings_copyprob ... \n");
-    my $nrow = `gzip -dc $dir_each_ordering/$gz_sortfile_catOrderings_copyprob | wc -l`;
+    print("checking $dir_each_ordering/$gz_cat_copyprob_each_dir ... \n");
+    my $nrow = `gzip -dc $dir_each_ordering/$gz_cat_copyprob_each_dir | wc -l`;
     chomp($nrow);
     
     if ($nrow == $correct_nrow_catCopyprob) {
-      print("OK, there are $nrow rows in $dir_each_ordering/$gz_sortfile_catOrderings_copyprob\n");
+      print("OK, there are $nrow rows in $dir_each_ordering/$gz_cat_copyprob_each_dir\n");
       last;
     } else {
-      print "gzip -dc $dir_each_ordering/$gz_sortfile_catOrderings_copyprob | wc -l: $nrow, but must be $correct_nrow_catCopyprob.  Do the msort again.\n";
+      print "gzip -dc $dir_each_ordering/$gz_cat_copyprob_each_dir | wc -l: $nrow, but must be $correct_nrow_catCopyprob.  Do the msort again.\n";
     }
 
     print "\n";

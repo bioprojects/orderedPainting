@@ -168,9 +168,6 @@ int main(int argc, char **argv)
 
     // ########################################################################################
 
-    //
-    // calculate an average matrix by processing each site in gz_sortfile_catOrderings_copyprob
-    //
     timer = time(NULL); stamp = ctime(&timer); stamp[strlen(stamp)-1] = '\0';
     printf("%s: start\n", stamp);
 

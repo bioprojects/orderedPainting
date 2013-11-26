@@ -16,7 +16,7 @@ my $usage = <<_EOH_;
 # [-g file.hap]
 #
 #  -d prefix_rnd_1-10_both_dirs.list 
-#    (list of ordered dirs where copyprobsperlocus.sort.gz files are stored)
+#    (list of ordered dirs where copyprobsperlocus.cat.gz files are stored)
 #
 #  -l prefix_rnd_1-10_both_dirs_strainOrder.list
 #
@@ -53,8 +53,8 @@ my $postprocess_path = "$FindBin::Bin/postprocess/pp";
 #
 # output to each ordering dir
 #
-my $sortfile_catOrderings_copyprob    = "copyprobsperlocus.sort";
-my $gz_sortfile_catOrderings_copyprob = "copyprobsperlocus.sort.gz";
+my $cat_copyprob_each_dir    = "copyprobsperlocus.cat";
+my $gz_cat_copyprob_each_dir = "copyprobsperlocus.cat.gz";
 
 my $out_each_dir_averave_matrix  = "average.matrix.txt"; # part 1 of postprocessing
 my $out_each_dir_site_distScore  = "site_distScore.txt"; # part 2 of postprocessing
@@ -276,7 +276,7 @@ if (!$opt_r) {
     #
     # prepare cmd
     #
-    $cmd_ppGz  = "gzip -dc $dir_each_ordering/$gz_sortfile_catOrderings_copyprob |";
+    $cmd_ppGz  = "gzip -dc $dir_each_ordering/$gz_cat_copyprob_each_dir |";
     $cmd_ppGz .= " $postprocess_path ";
     $cmd_ppGz .= " -d $dir_each_ordering ";
     $cmd_ppGz .= " -l $strainHapOrderFile ";
@@ -303,7 +303,7 @@ if (!$opt_r) {
       print "$dir_each_ordering/$out_each_dir_averave_matrix already exists. Skipped.\n";
     } else {
       #
-      # calculate an average matrix by processing each site in $gz_sortfile_catOrderings_copyprob
+      # calculate an average matrix by processing each site in $gz_cat_copyprob_each_dir
       #
       $stamp = `date +%Y%m%d_%T`;
       chomp($stamp);
@@ -340,7 +340,7 @@ if (!$opt_r) {
     } else {
       #
       # calculate distance statistic and its bootstrappd samples 
-      # by processing each site in $gz_sortfile_catOrderings_copyprob
+      # by processing each site in $gz_cat_copyprob_each_dir
       #   (always using the same seed internally)
       #
       $stamp = `date +%Y%m%d_%T`;
@@ -719,7 +719,7 @@ if ($opt_n) {
       #
       # prepare cmd for this ordering
       #
-      $cmd_ppGz  = "gzip -dc $dir_each_ordering/$gz_sortfile_catOrderings_copyprob |";
+      $cmd_ppGz  = "gzip -dc $dir_each_ordering/$gz_cat_copyprob_each_dir |";
       $cmd_ppGz .= " $postprocess_path ";
       $cmd_ppGz .= " -d $dir_each_ordering ";
       $cmd_ppGz .= " -l $strainHapOrderFile ";
