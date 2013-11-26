@@ -55,10 +55,6 @@ const int MAX_BUFFER = 10240;
 //
 // output to each ordering dir
 //
-
-const char * sortfile_catOrderings_copyprob    = "copyprobsperlocus.cat.sort";
-const char * gz_sortfile_catOrderings_copyprob = "copyprobsperlocus.cat.sort.gz";
-
 const char * out_each_dir_averave_matrix       = "average.matrix.txt"; // output of part1
 const char * out_each_dir_site_distScore_info  = "site_distScore.txt"; // output of part2 
 const char * out_each_dir_site_minus_average_matrix = "site_minus_average.matrix.txt"; // output of part3
@@ -334,9 +330,6 @@ int main(int argc, char **argv)
         sprintf( fname, "%s/%s", dir_each_ordering, out_each_dir_averave_matrix ); 
         fh_out = fopen_wrapper(fname, "w");
 
-        //
-        // calculate an average matrix by processing each site in gz_sortfile_catOrderings_copyprob
-        //
         int i_row = 0;
         int i_recipient_strain_of_this_pos = 0;
 

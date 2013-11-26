@@ -48,8 +48,8 @@ my $sort_opt = " -n -m --batch-size=100 --parallel=8";
 # "-n" is required to cat across recipient individuals sorted by position
 # "-m" makes the sorting much faster when all input files are sorted (ascending order)
 
-my $sortfile_catOrderings_copyprob    = "copyprobsperlocus.cat.sort";
-my $gz_sortfile_catOrderings_copyprob = "copyprobsperlocus.cat.sort.gz";
+my $sortfile_catOrderings_copyprob    = "copyprobsperlocus.sort";
+my $gz_sortfile_catOrderings_copyprob = "copyprobsperlocus.sort.gz";
 
 my $arrayJobID = "";
 if (defined($ENV{LSB_JOBINDEX})) {

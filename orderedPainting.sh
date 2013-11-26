@@ -88,7 +88,7 @@ NUM_EM=30 # 0-indexed. 10 is sometimes not enough for convergence
 #
 # rule
 #
-GZ_SORT_COPYPROB_EACH_DIR=copyprobsperlocus.cat.sort.gz
+GZ_CAT_COPYPROB_EACH_DIR=copyprobsperlocus.cat.gz
 
 #
 # vars
@@ -195,7 +195,7 @@ submit_msort_each_ordering() {
     #     25min per an ordering for N=200, P=222717 (with | gzip), temporary 60GB
     #     11min per an ordering for N=200, P=222717 (without | gzip)
     #
-    #   check whether the output file (copyprobsperlocus.cat.sort.gz) is incomplete or not
+    #   check whether the output file (copyprobsperlocus.cat.gz) is incomplete or not
     #   and re-execute it until the complete output file is obtained
     #
     echo ${CMD}
@@ -588,20 +588,20 @@ disp_punctuate ${STEP} ${STAMP}
 #
 # check (in case of re-execution)
 #
-DONE_ALL_GZ_SORT_COPYPROB_EACH_DIR=0
+DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR=0
 if [ -s "${ORDER_DIR_LIST}" ]; then
-  DONE_ALL_GZ_SORT_COPYPROB_EACH_DIR=1
+  DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR=1
   while read EACH_DIR
   do
-    if [ ! -s "${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR}" ]; then
-      DONE_ALL_GZ_SORT_COPYPROB_EACH_DIR=0
+    if [ ! -s "${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}" ]; then
+      DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR=0
     else
-      CHECK_GZ_SORT_COPYPROB_EACH_DIR=`gzip -dc ${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR} | head | wc -l`
-      if [ ${CHECK_GZ_SORT_COPYPROB_EACH_DIR} -eq 0 ]; then
-        DONE_ALL_GZ_SORT_COPYPROB_EACH_DIR=0
+      CHECK_GZ_CAT_COPYPROB_EACH_DIR=`gzip -dc ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR} | head | wc -l`
+      if [ ${CHECK_GZ_CAT_COPYPROB_EACH_DIR} -eq 0 ]; then
+        DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR=0
         
-        /bin/rm -f ${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR}
-        echo "incomplete ${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR} was removed"
+        /bin/rm -f ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}
+        echo "incomplete ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR} was removed"
       fi
     fi
   done < ${ORDER_DIR_LIST}
@@ -623,7 +623,7 @@ fi
 # prepare ordered haplotypes
 #   only if 
 #
-if [ "${DONE_ALL_GZ_SORT_COPYPROB_EACH_DIR}" -eq 0 -o "${DONE_ALL_STRAIN_ORDER}" -eq 0 ]; then
+if [ "${DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR}" -eq 0 -o "${DONE_ALL_STRAIN_ORDER}" -eq 0 ]; then
   
   i_forward_reverse=1
   while [ "${i_forward_reverse}" -le "${TYPE_NUM_ORDERING}"  ]
@@ -735,13 +735,13 @@ do
   cat /dev/null > ${TARGET_HAP_LIST}
   echo "preparing ${TARGET_HAP_LIST} ... "
 
-  CHECK_GZ_SORT_COPYPROB_EACH_DIR=0
-  if [ -f "${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR}" ]; then
-    CHECK_GZ_SORT_COPYPROB_EACH_DIR=`gzip -dc ${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR} | head | wc -l`
+  CHECK_GZ_CAT_COPYPROB_EACH_DIR=0
+  if [ -f "${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}" ]; then
+    CHECK_GZ_CAT_COPYPROB_EACH_DIR=`gzip -dc ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR} | head | wc -l`
   fi
-  # skip this ordered directory if there is ${GZ_SORT_COPYPROB_EACH_DIR} created by the next step
-  if [ ${CHECK_GZ_SORT_COPYPROB_EACH_DIR} -gt 0 ]; then
-    echo "  painting in ${EACH_DIR} is skipped because there is already ${GZ_SORT_COPYPROB_EACH_DIR}"
+  # skip this ordered directory if there is ${GZ_CAT_COPYPROB_EACH_DIR} created by the next step
+  if [ ${CHECK_GZ_CAT_COPYPROB_EACH_DIR} -gt 0 ]; then
+    echo "  painting in ${EACH_DIR} is skipped because there is already ${GZ_CAT_COPYPROB_EACH_DIR}"
   else
     for EACH_HAP in `grep ${EACH_DIR} ${ORDER_HAP_LIST}`
     do
@@ -837,7 +837,7 @@ move_log_files "${STAMP}"
 # postprocessing 1
 #   for each ordering,
 #     split
-#     sort -m *.copyprobsperlocus.out > ${GZ_SORT_COPYPROB_EACH_DIR}
+#     sort -m *.copyprobsperlocus.out > ${GZ_CAT_COPYPROB_EACH_DIR}
 #
 #     it can require a large temporary disk in each ordering
 #     (e.g., N=500, SNP=100,000 => about 100GB per ordering
@@ -874,13 +874,13 @@ do
 
   NUM_TARGET_GZ=`wc -l ${TARGET_GZ_LIST} | awk '{print $1}'`
 
-  CHECK_GZ_SORT_COPYPROB_EACH_DIR=0
-  if [ -f "${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR}" ]; then
-    CHECK_GZ_SORT_COPYPROB_EACH_DIR=`gzip -dc ${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR} | head | wc -l`
+  CHECK_GZ_CAT_COPYPROB_EACH_DIR=0
+  if [ -f "${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}" ]; then
+    CHECK_GZ_CAT_COPYPROB_EACH_DIR=`gzip -dc ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR} | head | wc -l`
   fi
-  # skip this ordered directory if there is already ${GZ_SORT_COPYPROB_EACH_DIR} 
-  if [ ${CHECK_GZ_SORT_COPYPROB_EACH_DIR} -gt 0 ]; then
-    echo "  msort in ${EACH_DIR} is skipped because there is already ${GZ_SORT_COPYPROB_EACH_DIR}"
+  # skip this ordered directory if there is already ${GZ_CAT_COPYPROB_EACH_DIR} 
+  if [ ${CHECK_GZ_CAT_COPYPROB_EACH_DIR} -gt 0 ]; then
+    echo "  msort in ${EACH_DIR} is skipped because there is already ${GZ_CAT_COPYPROB_EACH_DIR}"
   else
     #
     # decompress each .copyprobsperlocus.out.gz file,
@@ -958,15 +958,15 @@ submit_msort_each_ordering "${STAMP}"
 wait_until_finish "${STAMP}"
 
 #
-# cat gzfiles (obtained by array job) in each dir into ${GZ_SORT_COPYPROB_EACH_DIR} 
+# cat gzfiles (obtained by array job) in each dir into ${GZ_CAT_COPYPROB_EACH_DIR} 
 #
 while read EACH_DIR
 do
-  if [ ! -s "${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR}" ]; then
-    if ls ${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR}.?? &> /dev/null; then
+  if [ ! -s "${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}" ]; then
+    if ls ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}.?? &> /dev/null; then
       CMD=`returnQSUB_CMD ${STAMP}`
       CMD=${CMD}" <<< '"
-      CMD=${CMD}" cat ${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR}.?? > ${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR}"
+      CMD=${CMD}" cat ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}.?? > ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}"
       CMD=${CMD}"'"
 
       echo ${CMD}
@@ -982,16 +982,16 @@ wait_until_finish "${STAMP}"
 
 
 #
-# check ${GZ_SORT_COPYPROB_EACH_DIR} in each dir
+# check ${GZ_CAT_COPYPROB_EACH_DIR} in each dir
 #
 while read EACH_DIR
 do
-  if [ ! -s "${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR}" ]; then
-    echo_fail "Error: ${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR} doesn't exist or empty"
+  if [ ! -s "${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}" ]; then
+    echo_fail "Error: ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR} doesn't exist or empty"
   else
-    CHECK_HEAD=`gzip -dc ${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR} | head | wc -l`
+    CHECK_HEAD=`gzip -dc ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR} | head | wc -l`
     if [ $? -ne 0 -o "${CHECK_HEAD}" -eq 0 ]; then
-      echo_fail "Error: ${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR} is an incomplete file"
+      echo_fail "Error: ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR} is an incomplete file"
     fi
   fi
 
@@ -1005,8 +1005,8 @@ do
   if ls ${EACH_DIR}/*copyprobsperlocus.out_?? &> /dev/null; then # arrayjob version
     /bin/rm -f ${EACH_DIR}/*copyprobsperlocus.out_??
   fi
-  #if ls ${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR}_?? &> /dev/null; then
-  #  /bin/rm -f ${EACH_DIR}/${GZ_SORT_COPYPROB_EACH_DIR}_??
+  #if ls ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}_?? &> /dev/null; then
+  #  /bin/rm -f ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}_??
   #fi
 
   if ls ${EACH_DIR}/*.hap &> /dev/null; then

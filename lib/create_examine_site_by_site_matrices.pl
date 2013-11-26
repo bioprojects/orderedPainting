@@ -16,7 +16,7 @@ my $usage = <<_EOH_;
 # [-g file.hap]
 #
 #  -d prefix_rnd_1-10_both_dirs.list 
-#    (list of ordered dirs where copyprobsperlocus.cat.sort.gz files are stored)
+#    (list of ordered dirs where copyprobsperlocus.sort.gz files are stored)
 #
 #  -l prefix_rnd_1-10_both_dirs_strainOrder.list
 #
@@ -53,8 +53,8 @@ my $postprocess_path = "$FindBin::Bin/postprocess/pp";
 #
 # output to each ordering dir
 #
-my $sortfile_catOrderings_copyprob    = "copyprobsperlocus.cat.sort";
-my $gz_sortfile_catOrderings_copyprob = "copyprobsperlocus.cat.sort.gz";
+my $sortfile_catOrderings_copyprob    = "copyprobsperlocus.sort";
+my $gz_sortfile_catOrderings_copyprob = "copyprobsperlocus.sort.gz";
 
 my $out_each_dir_averave_matrix  = "average.matrix.txt"; # part 1 of postprocessing
 my $out_each_dir_site_distScore  = "site_distScore.txt"; # part 2 of postprocessing
