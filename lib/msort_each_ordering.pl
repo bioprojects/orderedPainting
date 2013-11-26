@@ -1,5 +1,10 @@
 #! /usr/bin/perl
 
+#$ -cwd
+#$ -S /usr/bin/perl
+#$ -e /dev/null
+#$ -o /dev/null
+
 use Data::Dumper;
 use Getopt::Std;
 use FindBin;
@@ -38,7 +43,7 @@ my $phasefile           = $opt_g or die $usage;
 #
 # env
 #
-my $sort_path = "$FindBin::Bin/sort";
+my $sort_path = "lib/sort"; # FindBin doesn't work in arrayjob in UGE
 my $sort_opt = " -n -m --batch-size=100 --parallel=8"; 
 # "-n" is required to cat across recipient individuals sorted by position
 # "-m" makes the sorting much faster when all input files are sorted (ascending order)
@@ -47,7 +52,7 @@ my $sortfile_catOrderings_copyprob    = "copyprobsperlocus.cat.sort";
 my $gz_sortfile_catOrderings_copyprob = "copyprobsperlocus.cat.sort.gz";
 
 my $arrayJobID = "";
-if ($ENV{LSB_JOBINDEX} ne "") {
+if (defined($ENV{LSB_JOBINDEX})) {
   $arrayJobID = $ENV{LSB_JOBINDEX};
 } elsif ($ENV{SGE_TASK_ID} ne "") {
   $arrayJobID = $ENV{SGE_TASK_ID};
