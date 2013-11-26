@@ -585,7 +585,7 @@ int main(int argc, char **argv)
         //
         // restore average matrix (common in loop 2 and 3)
         //
-        sprintf( fname, "%s/%s%s", dir_each_ordering, out_each_dir_averave_matrix, suffix ); 
+        sprintf( fname, "%s/%s", dir_each_ordering, out_each_dir_averave_matrix ); 
 
         fh = fopen_wrapper(fname, "r");
 
@@ -640,7 +640,11 @@ int main(int argc, char **argv)
             // ************************************************************************
             // calculate the distance statistic for each site
             // ************************************************************************
-            sprintf( fname, "%s/%s", dir_each_ordering, out_each_dir_site_distScore_info ); 
+            if (suffix == NULL) {
+                sprintf( fname, "%s/%s", dir_each_ordering, out_each_dir_site_distScore_info ); 
+            } else {
+                sprintf( fname, "%s/%s%s", dir_each_ordering, out_each_dir_site_distScore_info, suffix ); 
+            }
             fh_out = fopen_wrapper(fname, "w");
 
             int i_row = 0;
@@ -955,7 +959,12 @@ int main(int argc, char **argv)
             //
             // read positions to be processed
             //
-            sprintf( fname, "%s/%s", dir_results, out_results_summary_pos ); 
+            if (suffix == NULL) {
+                sprintf( fname, "%s/%s", dir_each_ordering, out_results_summary_pos ); 
+            } else {
+                sprintf( fname, "%s/%s%s", dir_each_ordering, out_results_summary_pos, suffix ); 
+            }
+
             fh = fopen_wrapper(fname, "r");
             fgets(buffer, MAX_BUFFER, fh); // skip the header
             while (!feof(fh)) {
