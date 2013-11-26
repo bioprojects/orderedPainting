@@ -179,7 +179,7 @@ wait_until_finish() {
   done
 }
 
-submit_msort_for_decompressed_dirs() {
+submit_msort_each_ordering() {
   i_dir=0
   while [ "$i_dir" -lt ${#arr_dirs_being_decompressed[@]} ]; do
     date +%Y%m%d_%T
@@ -842,9 +842,6 @@ move_log_files "${STAMP}"
 #     (e.g., N=500, SNP=100,000 => about 100GB per ordering
 #            N=200, SNP=222,717 =>        60GB per ordering)
 #
-#     disk size is the limiting factor of the number of parallelization
-#     (default=5, can be changed by -n option)
-#
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 STEP=4
 
@@ -886,13 +883,8 @@ do
   else
     #
     # decompress each .copyprobsperlocus.out.gz file,
-    # sort it by position (ascending), 
     # split
-    # cat and save it as copyprobsperlocus.out
-    #
-    #   in order to use "sort -m" which is much faster and can handle large data
-    #
-    #   the number of parallelization is controlled by ${MAX_PARALLEL_DECOMPRESS} to deal with limit of disk space
+    # cat to copyprobsperlocus.out
     #
     ARRAY_S=1
     ARRAY_E=${NUM_TARGET_GZ}
@@ -927,7 +919,7 @@ do
         #
         # then submit msort for each decompressed dir
         #
-        submit_msort_for_decompressed_dirs "${STAMP}"
+        submit_msort_each_ordering "${STAMP}"
         #
         # wait until the submitted msort jobs are finished
         #
@@ -955,10 +947,10 @@ wait_until_finish "${STAMP}"
 
 
 
-# - - - - - - - - - - - - - - - - - - - - - - - - 
-# submit msort for each decompressed dir
-# - - - - - - - - - - - - - - - - - - - - - - - - 
-submit_msort_for_decompressed_dirs "${STAMP}"
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# submit msort for each ordering (decompressed dir)
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+submit_msort_each_ordering "${STAMP}"
 #
 # wait until the submitted msort jobs are finished
 #
@@ -1103,7 +1095,7 @@ fi
 
 if [ "${SKIP_FLAG}" -eq 0 ]; then
 
-  CMD=`returnQSUB_CMD ${STAMP}`
+  CMD=`returnQSUB_CMD ${STAMP} ${MAX_MEMORY}` # ${MAX_MEMORY} is used only here
   CMD=${CMD}" <<< '"
   CMD=${CMD}"perl ${PL_SITE_BY_SITE}"
   CMD=${CMD}" -g ${PHASEFILE} "
