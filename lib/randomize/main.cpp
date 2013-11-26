@@ -58,7 +58,7 @@ const int MAX_BUFFER = 10240;
 FILE * fopen_wrapper(const char * filename, const char * mode);
 void strReplace (string& str, const string& from, const string& to);
 string int2string(int number);
-void output (string outDir, string outStrainOrder, vector<string>& arr_ind_ordering, 
+void output (string outDir, string outStrainOrder, vector<string>& arr_indName_rnd, 
              int seed, 
              string outprefix, 
              string& header_line345, 
@@ -90,7 +90,7 @@ string int2string(int number) {
     return ss.str();
 }
 
-void output (string outDir, string outStrainOrder, vector<string>& arr_ind_ordering, 
+void output (string outDir, string outStrainOrder, vector<string>& arr_indName_rnd, 
              int seed, 
              string outprefix, 
              string& header_line345, 
@@ -107,7 +107,7 @@ void output (string outDir, string outStrainOrder, vector<string>& arr_ind_order
                 char fname_strainOrder[512];
                 char fname_hap[512];
 
-                //for (i_recipient=0; i_recipient<arr_ind_ordering.size(); i_recipient++) { // recipient
+                //for (i_recipient=0; i_recipient<arr_indName_rnd.size(); i_recipient++) { // recipient
                 // parallelized for i_recipient
                     string out_recip_hap = "";
 
@@ -118,15 +118,15 @@ void output (string outDir, string outStrainOrder, vector<string>& arr_ind_order
                          sprintf( fname_strainOrder, "%s", outStrainOrder.c_str() ); 
                          fh_out_strainOrder = fopen_wrapper(fname_strainOrder, "w");
 
-                         for (int i=i_recipient; i<arr_ind_ordering.size(); i++) {
-                            fprintf(fh_out_strainOrder, "%s\n",arr_ind_ordering[i].c_str());
+                         for (int i=i_recipient; i<arr_indName_rnd.size(); i++) {
+                            fprintf(fh_out_strainOrder, "%s\n",arr_indName_rnd[i].c_str());
                          }
 
                          fclose(fh_out_strainOrder);
 
                     } else {
                         sprintf( name_recip, "recip%04d", i_recipient+1 ); 
-                        out_recip_hap = outDir + "/" + string(name_recip) + "_" + arr_ind_ordering[i_recipient] + ".hap";
+                        out_recip_hap = outDir + "/" + string(name_recip) + "_" + arr_indName_rnd[i_recipient] + ".hap";
 
                         printf("output %s\n", out_recip_hap.c_str());
 
@@ -136,16 +136,22 @@ void output (string outDir, string outStrainOrder, vector<string>& arr_ind_order
                         ofs << i_recipient+1 << endl;
                         ofs << header_line345 << flush;
 
+                        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+                        // randomized indName 
+                        // => strainIndex 
+                        // => hash_strainIndex2hapseq[strainIndex] (in the input hap file)
+                        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
                         //
                         // donors for this recipient (0,...,i_recipient-1)
                         //   the first donor in the 6th line of the .hap file is always the same 
                         //
                         for (i_donor=0; i_donor<=i_recipient-1; i_donor++) {
-                            strainIndex = hash_strainName2Index[arr_ind_ordering[i_donor]];
+                            strainIndex = hash_strainName2Index[arr_indName_rnd[i_donor]];
 
                             if (hash_strainIndex2hapseq[strainIndex] == "") {
                                 fprintf(stderr, "Error: strainName=%s is not found in hash_strainName2Index\n",
-                                    arr_ind_ordering[i_donor].c_str());
+                                    arr_indName_rnd[i_donor].c_str());
 
                                 map<string, int>::iterator p;
                                 for (p = hash_strainName2Index.begin(); p != hash_strainName2Index.end(); p++) {
@@ -158,7 +164,7 @@ void output (string outDir, string outStrainOrder, vector<string>& arr_ind_order
                         //
                         // recipient haplotype in the final row
                         //
-                        strainIndex = hash_strainName2Index[arr_ind_ordering[i_recipient]];
+                        strainIndex = hash_strainName2Index[arr_indName_rnd[i_recipient]];
                         ofs << hash_strainIndex2hapseq[strainIndex] << endl;
                     }
 
@@ -230,8 +236,8 @@ int main(int argc, char **argv)
     //string outprefix = hapFile;
     //strReplace(outprefix,".hap","");
 
-    vector<string> arr_ind_rnd_eachOrdering; // randomized
-    vector<string> arr_ind_reverse_eachOrdering; // randomized and reversed
+    vector<string> arr_indName_rnd_eachOrdering; // randomized
+    vector<string> arr_indName_reverse_eachOrdering; // randomized and reversed
 
     string outDir_forward;
     string outDir_reverse;
@@ -311,7 +317,7 @@ int main(int argc, char **argv)
             *arr_line = strtok(buffer , "\t");
             strainName = string(*arr_line);
 
-            arr_ind_rnd_eachOrdering.push_back(strainName);
+            arr_indName_rnd_eachOrdering.push_back(strainName);
         }
     }
     fclose(fh);	
@@ -319,13 +325,13 @@ int main(int argc, char **argv)
     //
     // randomize 
     // 
-    random_shuffle ( arr_ind_rnd_eachOrdering.begin(), arr_ind_rnd_eachOrdering.end() );
+    random_shuffle ( arr_indName_rnd_eachOrdering.begin(), arr_indName_rnd_eachOrdering.end() );
 
     //
     // reverse
     //
-    arr_ind_reverse_eachOrdering = arr_ind_rnd_eachOrdering;
-    reverse( arr_ind_reverse_eachOrdering.begin(), arr_ind_reverse_eachOrdering.end() );
+    arr_indName_reverse_eachOrdering = arr_indName_rnd_eachOrdering;
+    reverse( arr_indName_reverse_eachOrdering.begin(), arr_indName_reverse_eachOrdering.end() );
 
     //
     // output
@@ -352,14 +358,14 @@ int main(int argc, char **argv)
     outStrainOrder_reverse = outDir_reverse + ".strainOrder";
 
 #ifdef DEBUG
-    for (i=0; i<arr_ind_rnd_eachOrdering.size(); i++) {
-        printf("%s\n",arr_ind_rnd_eachOrdering[i].c_str());
+    for (i=0; i<arr_indName_rnd_eachOrdering.size(); i++) {
+        printf("%s\n",arr_indName_rnd_eachOrdering[i].c_str());
     }
 #endif
 
-    output(outDir_forward, outStrainOrder_forward, arr_ind_rnd_eachOrdering, 
+    output(outDir_forward, outStrainOrder_forward, arr_indName_rnd_eachOrdering, 
         seed, outprefix, header_line345, hash_strainIndex2hapseq, hash_strainName2Index, i_recipient);
-    output(outDir_reverse, outStrainOrder_reverse, arr_ind_reverse_eachOrdering, 
+    output(outDir_reverse, outStrainOrder_reverse, arr_indName_reverse_eachOrdering, 
         seed, outprefix, header_line345, hash_strainIndex2hapseq, hash_strainName2Index, i_recipient);
 
     //
