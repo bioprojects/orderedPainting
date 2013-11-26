@@ -2,8 +2,8 @@
 # definition for your grid engine
 #
 #   MAX_MEMORY (in GB)
-#     is used only at the step of combining orderings.
-#      (including bootstrapped values)
+#     is used only at the step of combining orderings
+#      (including bootstrapped values).
 #
 #     It depends on the number of SNPs (but not on the number of individuals).
 #       e.g., 190,000 SNPs requires about 2.6 GB 
