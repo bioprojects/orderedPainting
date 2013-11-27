@@ -619,7 +619,20 @@ if [ "${DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR}" -eq 0 ]; then
   do
     EACH_DIR_PREFIX=$(printf %s_orderedS%s_rnd%02d ${OUT_PREFIX_BASE} ${SEED} ${i_ordering})
     
-    if ls ${EACH_DIR_PREFIX}_forward/*.hap &> /dev/null; then
+    #
+    # whether painting (next step) finished or not
+    #
+    if ls ${EACH_DIR_PREFIX}_forward/*.copyprobsperlocus.out.gz &> /dev/null; then
+      NUM_PAINTED_F_R=`ls ${EACH_DIR_PREFIX}_???????/*.copyprobsperlocus.out.gz | wc -l`
+
+      let NUM_PAINTED_F_R=${NUM_PAINTED_F_R}+2
+      if [ "${NUM_PAINTED_F_R}" != "${NUM_IND_2}" ]; then
+        arr_target_ordering+=(${i_ordering})
+      fi
+    #
+    # whether preparation of hap files finished or not
+    #
+    elif ls ${EACH_DIR_PREFIX}_forward/*.hap &> /dev/null; then
       NUM_HAP_F_R=`ls ${EACH_DIR_PREFIX}_???????/*.hap | wc -l`
 
       let NUM_HAP_F_R=${NUM_HAP_F_R}+2
