@@ -53,14 +53,14 @@ const int N_BOOTSTRAP = 100;
 const int MAX_BUFFER = 10240; 
 
 // part1 - output
-const char * out_each_dir_averave_matrix       = "average.matrix.txt"; 
+const char * out_each_dir_averave_matrix       = "average.matrix.txt"; // in each ordering dir
 
 // part 2 - output
-const char * out_each_dir_site_distScore_info  = "site_distScore.txt";
+const char * out_each_dir_site_distScore_info  = "site_distScore.txt"; // in each ordering dir
 
 // part 3 - one of the inputs and ouptut
 const char * out_results_summary_pos = "results_siteStats_summary.pos.txt"; // in the results dir
-const char * out_each_dir_site_minus_average_matrix = "site_minus_average.matrix.txt"; 
+const char * out_each_dir_site_minus_average_matrix = "site_minus_average.matrix.summary"; // in each ordering dir
 
 
 // ######################################################################
