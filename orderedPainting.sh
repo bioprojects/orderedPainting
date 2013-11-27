@@ -646,7 +646,7 @@ if [ "${DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR}" -eq 0 ]; then
     ARRAY_S=1
     ARRAY_E=`wc -l ${HAP_LIST} | awk '{print $1}'`
 
-#    # arrayjob for i_recipient
+#    # arrayjob for i_recipient (can be slower if the num. of available cores is limited)
 ##    CMD=`returnQSUB_CMD ${STAMP} ${ARRAY_S} ${ARRAY_E}`
 #    CMD=${CMD}" ${SH_RANDOMIZE}"
 #    CMD=${CMD}" -h ${PHASEFILE}"
@@ -689,6 +689,39 @@ EOF
 fi
 
 
+#
+# ${ORDER_HAP_LIST} as a preparation for the next step (painting arrayjobs)
+#
+i_ordering=1
+while [ "${i_ordering}" -le "${TYPE_NUM_ORDERING}"  ]
+do
+  EACH_DIR_PREFIX=$(printf %s_orderedS%s_rnd%02d ${OUT_PREFIX_BASE} ${SEED} ${i_ordering})
+  CMD="ls ${EACH_DIR_PREFIX}_*/*.hap "
+  if [ "${i_ordering}" -eq 1 ]; then
+    CMD=${CMD}" >  ${ORDER_HAP_LIST}"
+  else
+    CMD=${CMD}" >> ${ORDER_HAP_LIST}"
+  fi
+  #echo ${CMD}
+  eval ${CMD}
+  if [ $? -ne 0 ]; then 
+    echo_fail "Error: ${CMD}  "
+  fi
+  
+  #
+  # cleaning of the tmp .sh files (for each ordering) used above
+  #
+  if [ -f "${STAMP}_${i_ordering}.sh" ];then
+    /bin/rm ${STAMP}_${i_ordering}.sh
+  fi
+  
+  let i_ordering=${i_ordering}+1
+done
+
+
+#
+# two list files
+#
 if [ ! -s "${ORDER_DIR_LIST}" ]; then
   CMD="find ./ -maxdepth 1 -type d -name ${OUT_PREFIX_BASE}_orderedS${SEED}_rnd\* | grep -v results | perl -pe 's/^\.\///g' | sort > ${ORDER_DIR_LIST}"
   #echo ${CMD}
@@ -709,35 +742,6 @@ if [ ! -s "${ORDER_STRAIN_LIST}" ]; then
   echo "${ORDER_STRAIN_LIST} was created"
 fi
 
-#
-# ${ORDER_HAP_LIST} as a preparation of the next step
-#
-i_ordering=1
-while [ "${i_ordering}" -le "${TYPE_NUM_ORDERING}"  ]
-do
-  EACH_DIR_PREFIX=$(printf %s_orderedS%s_rnd%02d ${OUT_PREFIX_BASE} ${SEED} ${i_ordering})
-  CMD="ls ${EACH_DIR_PREFIX}_*/*.hap "
-  if [ "${i_ordering}" -eq 1 ]; then
-    CMD=${CMD}" >  ${ORDER_HAP_LIST}"
-  else
-    CMD=${CMD}" >> ${ORDER_HAP_LIST}"
-  fi
-  #echo ${CMD}
-  eval ${CMD}
-  if [ $? -ne 0 ]; then 
-    echo_fail "Error: ${CMD}  "
-  fi
-  
-  #
-  # cleaning
-  #
-  if [ -f "${STAMP}_${i_ordering}.sh" ];then
-    /bin/rm ${STAMP}_${i_ordering}.sh
-  fi
-  
-  let i_ordering=${i_ordering}+1
-done
-
 
 #
 # cleaning tmp files
@@ -755,7 +759,7 @@ move_log_files "${STAMP}"
 
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-# execute chromopainter on the ordering-based condition
+# execute chromopainter for each ordered recipient haplotype
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 STEP=3
 
@@ -874,6 +878,8 @@ if [ "${i_failed}" -gt 0 ]; then
 fi
 
 move_log_files "${STAMP}"
+
+
 
 ################################################################################################################
 
