@@ -625,11 +625,11 @@ if [ "${DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR}" -eq 0 ]; then
       NUM_HAP_F_R=`ls ${EACH_DIR_PREFIX}_???????/*.hap | wc -l`
 
       let NUM_HAP_F_R=${NUM_HAP_F_R}+2
-      
       if [ "${NUM_HAP_F_R}" != "${NUM_IND_2}" ]; then
-        i_target_ordering=`echo ${EACH_DIR} | perl -pe 's/^.*rnd//g' | perl -pe 's/_.*//g'`
-        arr_target_ordering+=(i_target_ordering)
+        arr_target_ordering+=(i_ordering)
       fi
+    else
+        arr_target_ordering+=(i_ordering)
     fi
     let i_ordering=${i_ordering}+1
   done
