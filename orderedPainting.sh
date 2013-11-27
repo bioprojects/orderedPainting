@@ -617,6 +617,7 @@ if [ "${DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR}" -eq 0 ]; then
   i_ordering=1
   while [ "${i_ordering}" -le "${TYPE_NUM_ORDERING}"  ]
   do
+    echo "checking ordering ${i_ordering} ..."
     EACH_DIR_PREFIX=$(printf %s_orderedS%s_rnd%02d ${OUT_PREFIX_BASE} ${SEED} ${i_ordering})
     
     #
@@ -701,6 +702,10 @@ EOF
     if [ $? -ne 0 ]; then 
       echo_fail "Execution error: ${CMD} (step${STEP}) "
     fi
+
+    if [ -f "${QSUB_FILE}" ];then
+      /bin/rm -f ${QSUB_FILE}
+    fi
   done
 
   wait_until_finish "${STAMP}"
@@ -720,17 +725,10 @@ do
   else
     CMD=${CMD}" >> ${ORDER_HAP_LIST}"
   fi
-  #echo ${CMD}
+  echo ${CMD}
   eval ${CMD}
   if [ $? -ne 0 ]; then 
     echo_fail "Error: ${CMD}  "
-  fi
-  
-  #
-  # cleaning of the tmp .sh files (for each ordering) used above
-  #
-  if [ -f "${STAMP}_${OUT_PREFIX_BASE}_orderedS${SEED}_${i_ordering}.sh" ];then
-    /bin/rm -f ${STAMP}_${OUT_PREFIX_BASE}_orderedS${SEED}_${i_ordering}.sh
   fi
   
   let i_ordering=${i_ordering}+1
