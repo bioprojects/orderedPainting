@@ -42,7 +42,7 @@ static const char * help=
                 -l strainName.list \n\
                 -o strainName_dispOrder.list \n\
                 -t 1,...,10 (th ordering to be randomized, which is also used to run from the reverse) \n\
-                -i 0,...,n-1  (th i_recipient) \n\
+                -i 1,...,n  (th i_recipient) \n\
                 -s 1 (this value + counter of random ordering => seed of random number generator) \n\
                 \n";
 
@@ -213,6 +213,9 @@ int main(int argc, char **argv)
         default:
             abort ();
     }
+
+    // 1-indexed => 0-indexed
+    i_recipient--;
 
     //printf("%s\n",dir_ordering_listFile);
     //cout << string(dir_ordering_listFile) << endl;

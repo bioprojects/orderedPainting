@@ -41,6 +41,7 @@ if [ $# -lt 2 ] ; then
   usage
 fi
 
+# 1-indexed
 i_recipient=""
 if [ "${QUEUE_TYPE}" == "SGE" ]; then
   i_recipient=${SGE_TASK_ID}
@@ -49,7 +50,6 @@ elif [ "${QUEUE_TYPE}" == "LSF" ]; then
 else
   echo_fail "unknown QUEUE_TYPE: ${QUEUE_TYPE}"
 fi
-let i_recipient=${i_recipient}-1 # 1-indexed => 0-indexed
 
 #
 # execute
