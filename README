@@ -17,12 +17,14 @@ General Public License for more details.
 
 
 #---------------------------------------------------------
-# 1. Selection of your grid engine
+# 1. Setting of your grid engine
 #---------------------------------------------------------
 
-orderedPainting uses UGE (SGE) by default.
+orderedPainting is implemented based on a grid engine
+(UGE/SGE or LSF) which can execute array jobs.
 
-If you would like to use LSF instead, please edit "lib/env_func.bashrc" so that
+The default setting is UGE/SGE.  If you would like to use 
+LSF instead, please edit "lib/env_func.bashrc" as below
 
   #QUEUE_TYPE="SGE"                        # comment out
   #QSUB_COMMON="qsub -cwd "                # comment out
@@ -175,8 +177,9 @@ by masking columns and rows of missing individuals at a site.
 #---------------------------------------------------------
 
 If orderedPainting stoped during its computation, for example
-by an occasional problem of your grid engine, please 
-re-execute the command as previously after fixing the problem.
+by an occasional problem of your grid engine (such as incomplete
+execution of array jobs), please re-execute the command 
+as previously after fixing the problem.
 
 It should restart computation at an appropriate step
 and proceed to the end.
