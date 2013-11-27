@@ -626,10 +626,10 @@ if [ "${DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR}" -eq 0 ]; then
 
       let NUM_HAP_F_R=${NUM_HAP_F_R}+2
       if [ "${NUM_HAP_F_R}" != "${NUM_IND_2}" ]; then
-        arr_target_ordering+=(i_ordering)
+        arr_target_ordering+=(${i_ordering})
       fi
     else
-        arr_target_ordering+=(i_ordering)
+        arr_target_ordering+=(${i_ordering})
     fi
     let i_ordering=${i_ordering}+1
   done
