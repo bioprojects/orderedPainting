@@ -377,7 +377,8 @@ int main(int argc, char **argv)
     free(arr_line);
 
     timer = time(NULL); stamp = ctime(&timer); stamp[strlen(stamp)-1] = '\0';
-    printf("%s: output files are in %s/ and %s/\n", stamp, outDir_forward.c_str(), outDir_reverse.c_str());
+    printf("%s: end", stamp);
+    //printf("%s: output files are in %s/ and %s/\n", stamp, outDir_forward.c_str(), outDir_reverse.c_str());
 
     return 0;
 
