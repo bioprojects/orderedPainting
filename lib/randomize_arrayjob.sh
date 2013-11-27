@@ -13,12 +13,16 @@ usage () {
   echo " -l strainName.list "
   echo " -o strainName_dispOrder.list "
   echo " -t 1,...,10 (th ordering to be randoized, which is also used to run from the reverse) "
+  echo "(-i 1,...,n (if you don't array jobs))"
   echo " -s 1 (this value + counter of random ordering => seed of random number generator) "
 
   exit 1
 }
 
-while getopts h:p:l:o:t:s: OPTION
+# 1-indexed
+i_recipient=""
+
+while getopts h:p:l:o:t:i:s: OPTION
 do
   case $OPTION in
     h)  if [ ! -z "${OPTARG}" ];then PHASEFILE=${OPTARG} ;else usage ;fi
@@ -31,6 +35,8 @@ do
         ;;
     t)  if [ ! -z "${OPTARG}" ];then i_forward_reverse=${OPTARG} ;else usage ;fi
         ;;
+    i)  if [ ! -z "${OPTARG}" ];then i_recipient=${OPTARG} ;else usage ;fi
+        ;;
     s)  if [ ! -z "${OPTARG}" ];then SEED=${OPTARG} ;else usage ;fi
         ;;
     \?) usage ;;
@@ -41,15 +47,23 @@ if [ $# -lt 2 ] ; then
   usage
 fi
 
-# 1-indexed
-i_recipient=""
-if [ "${QUEUE_TYPE}" == "SGE" ]; then
-  i_recipient=${SGE_TASK_ID}
-elif [ "${QUEUE_TYPE}" == "LSF" ]; then
-  i_recipient=${LSB_JOBINDEX}
-else
-  echo_fail "unknown QUEUE_TYPE: ${QUEUE_TYPE}"
+if [ "${i_recipient}" == "" ]; then
+
+  if [ "${QUEUE_TYPE}" == "SGE" ]; then
+    i_recipient=${SGE_TASK_ID}
+  elif [ "${QUEUE_TYPE}" == "LSF" ]; then
+    i_recipient=${LSB_JOBINDEX}
+  else
+    echo_fail "unknown QUEUE_TYPE: ${QUEUE_TYPE}"
+  fi
+
 fi
+
+
+if [ "${i_recipient}" == "" ]; then
+  echo_fail "Error: you have to specify i_recipient as array jobs or -i option "
+fi
+
 
 #
 # execute

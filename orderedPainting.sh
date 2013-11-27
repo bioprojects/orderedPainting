@@ -166,13 +166,11 @@ submit_calcAveDist_ordering() {
 }
 
 wait_until_finish() {
-  sleep 10
   while :
   do
     QSTAT_CMD=qstat
     END_CHECK=`${QSTAT_CMD} | grep -e $1 -e 'not ready yet' | wc -l`
     if [ "${END_CHECK}" -eq 0 ]; then
-      sleep 10
       break
     fi
     sleep 10
@@ -634,57 +632,60 @@ if [ "${DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR}" -eq 0 ]; then
     let i_ordering=${i_ordering}+1
   done
 
-  
 
   #
   # execute
   #
-  for i_ordering in ${arr_target_ordering[@]}
+  for i_target_ordering in ${arr_target_ordering[@]}
   do
+    #
+    # prepare CMD
+    #
+    CMD=""
+    
     ARRAY_S=1
     ARRAY_E=`wc -l ${HAP_LIST} | awk '{print $1}'`
 
-    CMD=`returnQSUB_CMD ${STAMP} ${ARRAY_S} ${ARRAY_E}`
-    CMD=${CMD}" ${SH_RANDOMIZE}"
-    CMD=${CMD}" -h ${PHASEFILE}"
-    CMD=${CMD}" -p ${OUT_PREFIX_BASE}"
-    CMD=${CMD}" -l ${HAP_LIST}"
-    CMD=${CMD}" -o ${HAP_LIST_OUTDISP}"
-    CMD=${CMD}" -t ${i_ordering}"
-    CMD=${CMD}" -s ${SEED}" 
+#    # arrayjob for i_recipient
+##    CMD=`returnQSUB_CMD ${STAMP} ${ARRAY_S} ${ARRAY_E}`
+#    CMD=${CMD}" ${SH_RANDOMIZE}"
+#    CMD=${CMD}" -h ${PHASEFILE}"
+#    CMD=${CMD}" -p ${OUT_PREFIX_BASE}"
+#    CMD=${CMD}" -l ${HAP_LIST}"
+#    CMD=${CMD}" -o ${HAP_LIST_OUTDISP}"
+#    CMD=${CMD}" -t ${i_target_ordering}"
+#    CMD=${CMD}" -s ${SEED}" 
 
+    # qsub for each_ordering
+    QSUB_FILE=${STAMP}_${i_target_ordering}.sh
+    cat /dev/null > ${QSUB_FILE}
+    for i_recipient in `seq ${ARRAY_S} ${ARRAY_E}`
+    do
+cat >> ${QSUB_FILE} << EOF
+      ${SH_RANDOMIZE} \
+      -h ${PHASEFILE} \
+      -p ${OUT_PREFIX_BASE} \
+      -l ${HAP_LIST} \
+      -o ${HAP_LIST_OUTDISP} \
+      -t ${i_target_ordering} \
+      -i ${i_recipient} \
+      -s ${SEED} 
+EOF
+    done
+    CMD=`returnQSUB_CMD ${STAMP} `
+    CMD=${CMD}" ${QSUB_FILE}"
+
+    #
+    # submit
+    #
     echo ${CMD}
     QSUB_MSG=`${CMD}`
     if [ $? -ne 0 ]; then 
       echo_fail "Execution error: ${CMD} (step${STEP}) "
     fi
-
-    let i_ordering=${i_ordering}+1
   done
 
   wait_until_finish "${STAMP}"
-
-
-  # ${ORDER_HAP_LIST}
-  i_ordering=1
-  for i_ordering in ${arr_target_ordering[@]}
-  do
-    EACH_DIR_PREFIX=$(printf %s_orderedS%s_rnd%02d ${OUT_PREFIX_BASE} ${SEED} ${i_ordering})
-    CMD="ls ${EACH_DIR_PREFIX}_*/*.hap "
-    if [ "${i_ordering}" -eq 1 ]; then
-      CMD=${CMD}" >  ${ORDER_HAP_LIST}"
-    else
-      CMD=${CMD}" >> ${ORDER_HAP_LIST}"
-    fi
-    #echo ${CMD}
-    eval ${CMD}
-    if [ $? -ne 0 ]; then 
-      echo_fail "Error: ${CMD}  "
-    fi
-    let i_ordering=${i_ordering}+1
-  done
-  echo "${ORDER_HAP_LIST} was created"
-
 fi
 
 
@@ -708,10 +709,38 @@ if [ ! -s "${ORDER_STRAIN_LIST}" ]; then
   echo "${ORDER_STRAIN_LIST} was created"
 fi
 
-move_log_files "${STAMP}"
+#
+# ${ORDER_HAP_LIST} as a preparation of the next step
+#
+i_ordering=1
+while [ "${i_ordering}" -le "${TYPE_NUM_ORDERING}"  ]
+do
+  EACH_DIR_PREFIX=$(printf %s_orderedS%s_rnd%02d ${OUT_PREFIX_BASE} ${SEED} ${i_ordering})
+  CMD="ls ${EACH_DIR_PREFIX}_*/*.hap "
+  if [ "${i_ordering}" -eq 1 ]; then
+    CMD=${CMD}" >  ${ORDER_HAP_LIST}"
+  else
+    CMD=${CMD}" >> ${ORDER_HAP_LIST}"
+  fi
+  #echo ${CMD}
+  eval ${CMD}
+  if [ $? -ne 0 ]; then 
+    echo_fail "Error: ${CMD}  "
+  fi
+  
+  #
+  # cleaning
+  #
+  if [ -f "${STAMP}_${i_ordering}.sh" ];then
+    /bin/rm ${STAMP}_${i_ordering}.sh
+  fi
+  
+  let i_ordering=${i_ordering}+1
+done
+
 
 #
-# tmp files created at the begining
+# cleaning tmp files
 #
 if [ -f "${HAP_LIST}.names" ]; then
   /bin/rm -f ${HAP_LIST}.names
@@ -721,6 +750,8 @@ if [ -f "${HAP_LIST_OUTDISP}.names" ]; then
   /bin/rm -f ${HAP_LIST_OUTDISP}.names
 fi
 
+
+move_log_files "${STAMP}"
 
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
