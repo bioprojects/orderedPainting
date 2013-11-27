@@ -42,7 +42,7 @@ static const char * help=
                 -l strainName.list \n\
                 -o strainName_dispOrder.list \n\
                 -t 1,...,10 (th ordering to be randomized, which is also used to run from the reverse) \n\
-                -i 0,,,n-1  (th i_recipient) \n\
+                -i 0,...,n-1  (th i_recipient) \n\
                 -s 1 (this value + counter of random ordering => seed of random number generator) \n\
                 \n";
 
