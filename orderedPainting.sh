@@ -631,6 +631,7 @@ if [ "${DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR}" -eq 0 ]; then
         arr_target_ordering+=(i_target_ordering)
       fi
     fi
+    let i_ordering=${i_ordering}+1
   done
 
   
