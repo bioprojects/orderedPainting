@@ -959,11 +959,7 @@ int main(int argc, char **argv)
             //
             // read positions to be processed
             //
-            if (suffix == NULL) {
-                sprintf( fname, "%s/%s", dir_each_ordering, out_results_summary_pos ); 
-            } else {
-                sprintf( fname, "%s/%s%s", dir_each_ordering, out_results_summary_pos, suffix ); 
-            }
+            sprintf( fname, "%s/%s", dir_results, out_results_summary_pos ); 
 
             fh = fopen_wrapper(fname, "r");
             fgets(buffer, MAX_BUFFER, fh); // skip the header
@@ -997,7 +993,13 @@ int main(int argc, char **argv)
             //    only for the respresentative sites stored in hash_summaryPos2Type
             // ************************************************************************
             int i_row = 0;
-            sprintf( fname, "%s/%s", dir_each_ordering, out_each_dir_site_minus_average_matrix ); 
+
+            if (suffix == NULL) {
+                sprintf( fname, "%s/%s", dir_each_ordering, out_each_dir_site_minus_average_matrix ); 
+            } else {
+                sprintf( fname, "%s/%s%s", dir_each_ordering, out_each_dir_site_minus_average_matrix, suffix ); 
+            }
+
             fh_out = fopen_wrapper(fname, "w");
 
             while(fgets(buffer, MAX_BUFFER , stdin) != NULL) {
