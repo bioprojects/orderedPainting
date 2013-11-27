@@ -658,22 +658,27 @@ if [ "${DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR}" -eq 0 ]; then
 
     # qsub for each_ordering
     QSUB_FILE=${STAMP}_${OUT_PREFIX_BASE}_orderedS${SEED}_${i_target_ordering}.sh
-    cat /dev/null > ${QSUB_FILE}
+/bin/cat  > ${QSUB_FILE} << EOF
+#! /bin/bash
+#$ -S /bin/bash
+EOF
     for i_recipient in `seq ${ARRAY_S} ${ARRAY_E}`
     do
-cat >> ${QSUB_FILE} << EOF
-      ${SH_RANDOMIZE} \
-      -h ${PHASEFILE} \
-      -p ${OUT_PREFIX_BASE} \
-      -l ${HAP_LIST} \
-      -o ${HAP_LIST_OUTDISP} \
-      -t ${i_target_ordering} \
-      -i ${i_recipient} \
-      -s ${SEED} 
+/bin/cat >> ${QSUB_FILE} << EOF
+  ${SH_RANDOMIZE} \
+    -h ${PHASEFILE} \
+    -p ${OUT_PREFIX_BASE} \
+    -l ${HAP_LIST} \
+    -o ${HAP_LIST_OUTDISP} \
+    -t ${i_target_ordering} \
+    -i ${i_recipient} \
+    -s ${SEED} 
 EOF
     done
+
+    chmod 755 ${QSUB_FILE}
     CMD=`returnQSUB_CMD ${STAMP} `
-    CMD=${CMD}" <<< '/bin/bash ${QSUB_FILE}'"
+    CMD=${CMD}" ./${QSUB_FILE}" # " <<< /bin/bash " doesn't work in LSF
 
     #
     # submit
@@ -733,7 +738,7 @@ if [ ! -s "${ORDER_DIR_LIST}" ]; then
 fi
 
 if [ ! -s "${ORDER_STRAIN_LIST}" ]; then
-  CMD="cat ${ORDER_DIR_LIST} | perl -pe 's/\n/.strainOrder\n/g' > ${ORDER_STRAIN_LIST}"
+  CMD="/bin/cat ${ORDER_DIR_LIST} | perl -pe 's/\n/.strainOrder\n/g' > ${ORDER_STRAIN_LIST}"
   #echo ${CMD}
   eval ${CMD}
   if [ $? -ne 0 ]; then 
@@ -780,7 +785,7 @@ do
   #
   NUM_TARGET_HAP=0
   TARGET_HAP_LIST="${EACH_DIR}/${TARGET_HAP_FNANE}"
-  cat /dev/null > ${TARGET_HAP_LIST}
+  /bin/cat /dev/null > ${TARGET_HAP_LIST}
   echo "preparing ${TARGET_HAP_LIST} ... "
 
   CHECK_GZ_CAT_COPYPROB_EACH_DIR=0
@@ -910,7 +915,7 @@ do
   # prepare $TARGET_HAP_LIST, $NUM_TARGET_HAP
   #
   TARGET_GZ_LIST="${EACH_DIR}/${TARGET_GZ_FNANE}"
-  cat /dev/null > "${TARGET_GZ_LIST}"
+  /bin/cat /dev/null > "${TARGET_GZ_LIST}"
   echo "preparing ${TARGET_GZ_LIST} ... "
 
   if ls ${EACH_DIR}/*copyprobsperlocus.out.gz &> /dev/null; then
@@ -1016,7 +1021,7 @@ do
     if ls ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}.?? &> /dev/null; then
       CMD=`returnQSUB_CMD ${STAMP}`
       CMD=${CMD}" <<< '"
-      CMD=${CMD}" cat ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}.?? > ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}"
+      CMD=${CMD}" /bin/cat ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}.?? > ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}"
       CMD=${CMD}"'"
 
       echo ${CMD}
