@@ -657,7 +657,7 @@ if [ "${DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR}" -eq 0 ]; then
 #    CMD=${CMD}" -s ${SEED}" 
 
     # qsub for each_ordering
-    QSUB_FILE=${STAMP}_${i_target_ordering}.sh
+    QSUB_FILE=${STAMP}_${OUT_PREFIX_BASE}_orderedS${SEED}_${i_target_ordering}.sh
     cat /dev/null > ${QSUB_FILE}
     for i_recipient in `seq ${ARRAY_S} ${ARRAY_E}`
     do
@@ -673,7 +673,7 @@ cat >> ${QSUB_FILE} << EOF
 EOF
     done
     CMD=`returnQSUB_CMD ${STAMP} `
-    CMD=${CMD}" ${QSUB_FILE}"
+    CMD=${CMD}" <<< '/bin/bash ${QSUB_FILE}'"
 
     #
     # submit
@@ -711,8 +711,8 @@ do
   #
   # cleaning of the tmp .sh files (for each ordering) used above
   #
-  if [ -f "${STAMP}_${i_ordering}.sh" ];then
-    /bin/rm ${STAMP}_${i_ordering}.sh
+  if [ -f "${STAMP}_${OUT_PREFIX_BASE}_orderedS${SEED}_${i_ordering}.sh" ];then
+    /bin/rm -f ${STAMP}_${OUT_PREFIX_BASE}_orderedS${SEED}_${i_ordering}.sh
   fi
   
   let i_ordering=${i_ordering}+1

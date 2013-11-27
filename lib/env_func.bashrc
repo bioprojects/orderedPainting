@@ -2,7 +2,8 @@
 # definition for your grid engine
 #
 #   MAX_MEMORY (in GB)
-#     is used only at the step of combining all orderings.
+#     depends on only the number of SNPs
+#     is used only at the step of combining all orderings
 #
 #######################################################################################
 
