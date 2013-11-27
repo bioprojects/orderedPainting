@@ -55,7 +55,8 @@ each_copyprobsperlocus=`echo ${gzfile} | perl -pe 's/\.gz//g'`
 
 #
 # decompress
-# sort (maybe not needed if chromopainter was modified in the future)
+# sort (required for msort within each ordering across recipient haplotypes, 
+#       maybe not needed if chromopainter is modified in the future)
 # and split 
 #
 date +%Y%m%d_%T
