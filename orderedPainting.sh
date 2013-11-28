@@ -574,124 +574,97 @@ get_stamp ${STEP}
 #arr_STAMP=("${arr_STAMP[@]}" "${STAMP}")
 disp_punctuate ${STEP} ${STAMP}
 
-arr_target_ordering=()
+arr_s2_target_ordering=()
 
 #
-# check whether ${GZ_CAT_COPYPROB_EACH_DIR} is prepared in all orderings
+# check unfinished directories
 #
-DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR=0
-if [ -s "${ORDER_DIR_LIST}" ]; then
-  DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR=1
-  while read EACH_DIR
-  do
-    if [ ! -s "${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}" ]; then
-      DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR=0
-    else
-      CHECK_GZ_CAT_COPYPROB_EACH_DIR=`gzip -dc ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR} | head | wc -l`
-      if [ ${CHECK_GZ_CAT_COPYPROB_EACH_DIR} -eq 0 ]; then
-        DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR=0
-        
-        /bin/rm -f ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}
-        echo "incomplete ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR} was removed"
-      fi
-    fi
-  done < ${ORDER_DIR_LIST}
-fi
+i_ordering=1
+while [ "${i_ordering}" -le "${TYPE_NUM_ORDERING}"  ]
+do
+  echo "checking ordering (forward and reverse) ${i_ordering} ..."
+  EACH_DIR_PREFIX=$(printf %s_orderedS%s_rnd%02d ${OUT_PREFIX_BASE} ${SEED} ${i_ordering})
 
-#
-# prepare ordered haplotypes
-#
-if [ "${DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR}" -eq 0 ]; then
+  FINISHED_FLAG=FALSE
 
   #
-  # check unfinished directories
+  # whether preparation of hap files (STEP2) finished or not
   #
-  i_ordering=1
-  while [ "${i_ordering}" -le "${TYPE_NUM_ORDERING}"  ]
-  do
-    echo "checking ordering (forward and reverse) ${i_ordering} ..."
-    EACH_DIR_PREFIX=$(printf %s_orderedS%s_rnd%02d ${OUT_PREFIX_BASE} ${SEED} ${i_ordering})
-
-    FINISHED_FLAG=FALSE
-
-    #
-    # whether preparation of hap files (STEP2) finished or not
-    #
-    if ls ${EACH_DIR_PREFIX}_forward/*.hap &> /dev/null; then
-      CHECK=`ls ${EACH_DIR_PREFIX}_???????/*.hap | wc -l`
-      let CHECK=${CHECK}+2
-      
-      let CORRECT=${NUM_IND}+${NUM_IND}
-      if [ "${CHECK}" == "${CORRECT}" ]; then
-        FINISHED_FLAG=TRUE
-      fi
-    #
-    # whether painting (STEP3) finished or not
-    #
-    elif ls ${EACH_DIR_PREFIX}_forward/*.copyprobsperlocus.out.gz &> /dev/null; then
-      CHECK=`ls ${EACH_DIR_PREFIX}_???????/*.copyprobsperlocus.out.gz | wc -l`
-      let CHECK=${CHECK}+2
-
-      let CORRECT=${NUM_IND}+${NUM_IND}
-      if [ "${CHECK}" == "${CORRECT}" ]; then
-        FINISHED_FLAG=TRUE
-      fi
-    #
-    # whether ${GZ_CAT_COPYPROB_EACH_DIR}.?? (STEP4) exist or not
-    #
-    elif   ls ${EACH_DIR_PREFIX}_forward/${GZ_CAT_COPYPROB_EACH_DIR}.?? &> /dev/null; then
-      CHECK=`ls ${EACH_DIR_PREFIX}_???????/${GZ_CAT_COPYPROB_EACH_DIR}.?? | wc -l`
-      
-      let CORRECT=${NUM_SPLITN}+${NUM_SPLITN}
-      if [ "${CHECK}" == "${NUM_SPLITN_F_R}" ]; then
-        FINISHED_FLAG=TRUE
-      fi
-    #
-    # incomplete decompressing (STEP4) 
-    #
-    elif ls ${EACH_DIR_PREFIX}_forward/*.copyprobsperlocus.out_?? &> /dev/null; then
-      CHECK=`ls ${EACH_DIR_PREFIX}_???????/*.copyprobsperlocus.out_?? | wc -l`
-      
-      let CORRECT=${NUM_IND}-1
-      CORRECT=`expr ${CORRECT} \* ${NUM_SPLITN}`
-      let CORRECT=${CORRECT}+${CORRECT}
-      if [ "${CHECK}" == "${CORRECT}" ]; then
-        FINISHED_FLAG=TRUE
-      fi
-      
-      for aa in `ls ${EACH_DIR_PREFIX}_???????/*.copyprobsperlocus.out_??`
-      do
-        if [ ! -s "${aa}" ]; then
-          FINISHED_FLAG=FALSE
-          break
-        fi
-      done
+  if ls ${EACH_DIR_PREFIX}_forward/*.hap &> /dev/null; then
+    CHECK=`ls ${EACH_DIR_PREFIX}_???????/*.hap | wc -l`
+    let CHECK=${CHECK}+2
+    
+    let CORRECT=${NUM_IND}+${NUM_IND}
+    if [ "${CHECK}" == "${CORRECT}" ]; then
+      FINISHED_FLAG=TRUE
     fi
+  #
+  # whether painting (STEP3) finished or not
+  #
+  elif ls ${EACH_DIR_PREFIX}_forward/*.copyprobsperlocus.out.gz &> /dev/null; then
+    CHECK=`ls ${EACH_DIR_PREFIX}_???????/*.copyprobsperlocus.out.gz | wc -l`
+    let CHECK=${CHECK}+2
 
-
-    #
-    # store unfinished orderings
-    #
-    if [ "${FINISHED_FLAG}" == "FALSE" ]; then
-      arr_target_ordering+=(${i_ordering})
+    let CORRECT=${NUM_IND}+${NUM_IND}
+    if [ "${CHECK}" == "${CORRECT}" ]; then
+      FINISHED_FLAG=TRUE
+    fi
+  #
+  # whether ${GZ_CAT_COPYPROB_EACH_DIR}.?? (STEP4) exist or not
+  #
+  elif   ls ${EACH_DIR_PREFIX}_forward/${GZ_CAT_COPYPROB_EACH_DIR}.?? &> /dev/null; then
+    CHECK=`ls ${EACH_DIR_PREFIX}_???????/${GZ_CAT_COPYPROB_EACH_DIR}.?? | wc -l`
+    
+    let CORRECT=${NUM_SPLITN}+${NUM_SPLITN}
+    if [ "${CHECK}" == "${CORRECT}" ]; then
+      FINISHED_FLAG=TRUE
+    fi
+  #
+  # incomplete decompressing (STEP4) 
+  #
+  elif ls ${EACH_DIR_PREFIX}_forward/*.copyprobsperlocus.out_?? &> /dev/null; then
+    CHECK=`ls ${EACH_DIR_PREFIX}_???????/*.copyprobsperlocus.out_?? | wc -l`
+    
+    let CORRECT=${NUM_IND}-1
+    CORRECT=`expr ${CORRECT} \* ${NUM_SPLITN}`
+    let CORRECT=${CORRECT}+${CORRECT}
+    if [ "${CHECK}" == "${CORRECT}" ]; then
+      FINISHED_FLAG=TRUE
     fi
     
-    let i_ordering=${i_ordering}+1
-  done
+    for aa in `ls ${EACH_DIR_PREFIX}_???????/*.copyprobsperlocus.out_??`
+    do
+      if [ ! -s "${aa}" ]; then
+        FINISHED_FLAG=FALSE
+        break
+      fi
+    done
+  fi
 
 
   #
-  # execute
+  # store unfinished orderings
   #
-  for i_target_ordering in ${arr_target_ordering[@]}
-  do
-    #
-    # prepare CMD
-    #
-    CMD=""
-    
-    ARRAY_S=1
-    ARRAY_E=`wc -l ${HAP_LIST} | awk '{print $1}'`
+  if [ "${FINISHED_FLAG}" == "FALSE" ]; then
+    arr_s2_target_ordering+=(${i_ordering})
+  fi
+  
+  let i_ordering=${i_ordering}+1
+done
+
+
+#
+# execute
+#
+for i_s2_target_ordering in ${arr_s2_target_ordering[@]}
+do
+  #
+  # prepare CMD
+  #
+  CMD=""
+  
+  ARRAY_S=1
+  ARRAY_E=`wc -l ${HAP_LIST} | awk '{print $1}'`
 
 #    # arrayjob for i_recipient (can be slower if the num. of available cores is limited)
 ##    CMD=`returnQSUB_CMD ${STAMP} ${ARRAY_S} ${ARRAY_E}`
@@ -700,48 +673,52 @@ if [ "${DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR}" -eq 0 ]; then
 #    CMD=${CMD}" -p ${OUT_PREFIX_BASE}"
 #    CMD=${CMD}" -l ${HAP_LIST}"
 #    CMD=${CMD}" -o ${HAP_LIST_OUTDISP}"
-#    CMD=${CMD}" -t ${i_target_ordering}"
+#    CMD=${CMD}" -t ${i_s2_target_ordering}"
 #    CMD=${CMD}" -s ${SEED}" 
 
-    # qsub for each_ordering
-    QSUB_FILE=${STAMP}_${OUT_PREFIX_BASE}_orderedS${SEED}_${i_target_ordering}.sh
+  # qsub for each_ordering
+  QSUB_FILE=${STAMP}_${OUT_PREFIX_BASE}_orderedS${SEED}_${i_s2_target_ordering}.sh
 /bin/cat  > ${QSUB_FILE} << EOF
 #! /bin/bash
 #$ -S /bin/bash
 EOF
-    for i_recipient in `seq ${ARRAY_S} ${ARRAY_E}`
-    do
+  for i_recipient in `seq ${ARRAY_S} ${ARRAY_E}`
+  do
 /bin/cat >> ${QSUB_FILE} << EOF
-  ${SH_RANDOMIZE} \
-    -h ${PHASEFILE} \
-    -p ${OUT_PREFIX_BASE} \
-    -l ${HAP_LIST} \
-    -o ${HAP_LIST_OUTDISP} \
-    -t ${i_target_ordering} \
-    -i ${i_recipient} \
-    -s ${SEED} 
+${SH_RANDOMIZE} \
+  -h ${PHASEFILE} \
+  -p ${OUT_PREFIX_BASE} \
+  -l ${HAP_LIST} \
+  -o ${HAP_LIST_OUTDISP} \
+  -t ${i_s2_target_ordering} \
+  -i ${i_recipient} \
+  -s ${SEED} 
 EOF
-    done
-
-    chmod 755 ${QSUB_FILE}
-    CMD=`returnQSUB_CMD ${STAMP} `
-    CMD=${CMD}" ./${QSUB_FILE}" # " <<< /bin/bash " doesn't work in LSF
-
-    #
-    # submit
-    #
-    echo ${CMD}
-    QSUB_MSG=`${CMD}`
-    if [ $? -ne 0 ]; then 
-      echo_fail "Execution error: ${CMD} (step${STEP}) "
-    fi
-
-    if [ -f "${QSUB_FILE}" ];then
-      /bin/rm -f ${QSUB_FILE}
-    fi
   done
 
-  wait_until_finish "${STAMP}"
+  chmod 755 ${QSUB_FILE}
+  CMD=`returnQSUB_CMD ${STAMP} `
+  CMD=${CMD}" ./${QSUB_FILE}" # " <<< /bin/bash " doesn't work in LSF
+
+  #
+  # submit
+  #
+  echo ${CMD}
+  QSUB_MSG=`${CMD}`
+  if [ $? -ne 0 ]; then 
+    echo_fail "Execution error: ${CMD} (step${STEP}) "
+  fi
+
+done
+
+wait_until_finish "${STAMP}"
+
+if [ ls ${STAMP}_${OUT_PREFIX_BASE}_orderedS${SEED}_*.sh &> /dev/null; then
+  CMD="/bin/rm -f ${STAMP}_${OUT_PREFIX_BASE}_orderedS${SEED}_*.sh"
+  eval ${CMD}
+  if [ $? -ne 0 ]; then 
+    echo_fail "Error: ${CMD}  "
+  fi
 fi
 
 
@@ -978,9 +955,15 @@ do
   if [ -f "${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}" ]; then
     CHECK_GZ_CAT_COPYPROB_EACH_DIR=`gzip -dc ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR} | head | wc -l`
   fi
-  # skip this ordered directory if there is already ${GZ_CAT_COPYPROB_EACH_DIR} 
-  if [ ${CHECK_GZ_CAT_COPYPROB_EACH_DIR} -gt 0 ]; then
-    echo "  msort in ${EACH_DIR} is skipped because there is already ${GZ_CAT_COPYPROB_EACH_DIR}"
+  
+  #
+  # skip this ordered directory if there is already ${GZ_CAT_COPYPROB_EACH_DIR}.??
+  if ls ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}.?? &> /dev/null; then
+    CHECK=`ls ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}.?? | wc -l`
+
+    if [ "${CHECK}" == "${NUM_SPLITN}" ]; then
+      echo "msort in ${EACH_DIR} is skipped because there are already ${NUM_SPLITN} sorted files"
+    fi
   else
     arr_dirs_for_msort=("${arr_dirs_for_msort[@]}" "${EACH_DIR}")
     
@@ -1066,7 +1049,7 @@ wait_until_finish "${STAMP}"
 
 
 #
-# cat${GZ_CAT_COPYPROB_EACH_DIR}.?? in each dir into ${GZ_CAT_COPYPROB_EACH_DIR} 
+# cat ${GZ_CAT_COPYPROB_EACH_DIR}.?? in each dir into ${GZ_CAT_COPYPROB_EACH_DIR} 
 #   for calculating the average in the postprocessing below
 #
 while read EACH_DIR
