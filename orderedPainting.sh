@@ -740,6 +740,7 @@ fi
 #
 # create ${ORDER_HAP_LIST} as a preparation for the next step (painting as arrayjobs)
 #
+echo "listing up .hap files to ${ORDER_HAP_LIST} ..."
 /bin/cat /dev/null > ${ORDER_HAP_LIST}
 
 i_ordering=1
@@ -747,9 +748,8 @@ while [ "${i_ordering}" -le "${TYPE_NUM_ORDERING}"  ]
 do
   EACH_DIR_PREFIX=$(printf %s_orderedS%s_rnd%02d ${OUT_PREFIX_BASE} ${SEED} ${i_ordering})
 
-  CMD="ls ${EACH_DIR_PREFIX}_*/*.hap "
-  if "${CMD}" &> /dev/null; then
-    CMD=${CMD}" >> ${ORDER_HAP_LIST}"
+  if ls ${EACH_DIR_PREFIX}_*/*.hap &> /dev/null; then
+    CMD="ls ${EACH_DIR_PREFIX}_*/*.hap >> ${ORDER_HAP_LIST}"
     #echo ${CMD}
     eval ${CMD}
     if [ $? -ne 0 ]; then 
@@ -759,6 +759,8 @@ do
 
   let i_ordering=${i_ordering}+1
 done
+
+wc -l ${ORDER_HAP_LIST}
 
 #
 # two list files
