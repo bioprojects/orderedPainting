@@ -1068,15 +1068,16 @@ do
     /bin/rm -f ${EACH_DIR}/sort??????
   fi
 
+  # to be removed in chromopainter_linkage_orderings_arrayjob.sh
+  if ls ${EACH_DIR}/*.hap &> /dev/null; then
+    /bin/rm -f ${EACH_DIR}/*.hap
+  fi
+
   # to be removed in mort_each_ordering.pl
   if ls ${EACH_DIR}/*copyprobsperlocus.out_?? &> /dev/null; then # arrayjob version
     /bin/rm -f ${EACH_DIR}/*copyprobsperlocus.out_??
   fi
 
-  # to be removed in chromopainter_linkage_orderings_arrayjob.sh
-  if ls ${EACH_DIR}/*.hap &> /dev/null; then
-    /bin/rm -f ${EACH_DIR}/*.hap
-  fi
 done < ${ORDER_DIR_LIST}
 
 move_log_files "${STAMP}"
