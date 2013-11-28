@@ -884,8 +884,8 @@ done < ${ORDER_DIR_LIST}
 
 wait_until_finish "${STAMP}"
 
-# check whether there is any incomplete .copyprobsperlocus.out.gz
-echo "checking output (.copyprobsperlocus.out.gz) files of the step${STEP} ..."
+
+echo "checking whether there is any incomplete output file (.copyprobsperlocus.out.gz) of the step${STEP} ..."
 
 i_failed=0
 while read EACH_DIR
