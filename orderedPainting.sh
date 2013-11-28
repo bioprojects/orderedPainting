@@ -664,7 +664,7 @@ if [ "${DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR}" -eq 0 ]; then
     #
     # store unfinished orderings
     #
-    if [ "${INISHED_FLAG}" == "FALSE" ]; then
+    if [ "${FINISHED_FLAG}" == "FALSE" ]; then
       arr_target_ordering+=(${i_ordering})
     fi
     
