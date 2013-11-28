@@ -740,7 +740,7 @@ fi
 #
 # create ${ORDER_HAP_LIST} as a preparation for the next step (painting as arrayjobs)
 #
-echo "listing up .hap files to ${ORDER_HAP_LIST} ..."
+echo "listing up all .hap files to ${ORDER_HAP_LIST} ..."
 /bin/cat /dev/null > ${ORDER_HAP_LIST}
 
 i_ordering=1
