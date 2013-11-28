@@ -101,11 +101,17 @@ if [ $? -ne 0 ]; then
   echo_fail "Error: ${CMD} "
 fi
 
+CMD="/bin/rm -f ${each_copyprobsperlocus}.sort";
+echo ${CMD}
+eval ${CMD}
+if [ $? -ne 0 ]; then 
+  echo_fail "Error: ${CMD} "
+fi
+
+
 #
 # remove the input file
 #
-date +%Y%m%d_%T
-
 CMD="/bin/rm -f $gzfile";
 echo ${CMD}
 eval ${CMD}
@@ -113,3 +119,4 @@ if [ $? -ne 0 ]; then
   echo_fail "Error: ${CMD} "
 fi
 
+date +%Y%m%d_%T
