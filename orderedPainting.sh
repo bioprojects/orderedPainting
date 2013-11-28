@@ -609,7 +609,7 @@ if [ "${DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR}" -eq 0 ]; then
   i_ordering=1
   while [ "${i_ordering}" -le "${TYPE_NUM_ORDERING}"  ]
   do
-    echo "checking ordering ${i_ordering} ..."
+    echo "checking ordering (forward and reverse) ${i_ordering} ..."
     EACH_DIR_PREFIX=$(printf %s_orderedS%s_rnd%02d ${OUT_PREFIX_BASE} ${SEED} ${i_ordering})
 
     FINISHED_FLAG=FALSE
@@ -740,6 +740,8 @@ fi
 #
 # create ${ORDER_HAP_LIST} as a preparation for the next step (painting as arrayjobs)
 #
+/bin/cat /dev/null > ${ORDER_HAP_LIST}
+
 i_ordering=1
 while [ "${i_ordering}" -le "${TYPE_NUM_ORDERING}"  ]
 do
@@ -747,11 +749,7 @@ do
 
   CMD="ls ${EACH_DIR_PREFIX}_*/*.hap "
   if "${CMD}" &> /dev/null; then
-    if [ "${i_ordering}" -eq 1 ]; then
-      CMD=${CMD}" >  ${ORDER_HAP_LIST}"
-    else
-      CMD=${CMD}" >> ${ORDER_HAP_LIST}"
-    fi
+    CMD=${CMD}" >> ${ORDER_HAP_LIST}"
     #echo ${CMD}
     eval ${CMD}
     if [ $? -ne 0 ]; then 
