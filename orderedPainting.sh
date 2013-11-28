@@ -14,8 +14,10 @@ usage () {
   echo "/bin/bash $0 "
   echo "  -g file.hap "
   echo "  -l strainName.list (individual name in the hap file)" 
+  echo " [-n 20 (num. of dirs where uncompressed tmp files are processed simultaneously: default=20) ]"
   echo " [-m pos2missingInd.txt (pos[tab]missing_individual_name]"
   echo " [-o strainName.list (individual name in an order for output: default is the file specified by -l) ]"
+  
   echo " [-t 10 (num. of orderings and the reverse, default=10) ]"
   echo " [-s 1  (seed of random number generator: default=1) ]"
 
@@ -42,7 +44,7 @@ SH_RANDOMIZE=./${LIB_DIR}/randomize_arrayjob.sh
 SH_PAINT_QSUB=./${LIB_DIR}/chromopainter_linkage_orderings_arrayjob.sh
 PL_SITE_BY_SITE=./${LIB_DIR}/create_examine_site_by_site_matrices.pl
 SH_DECOMPRESS_SORT_SPLIT_EACH_ORDERING=./${LIB_DIR}/decompress_sort_split_gz_arrayjob.sh
-PL_MSORT_CLEAN_EACH_ORDERING=./${LIB_DIR}/msort_each_ordering.pl
+PL_MSORT_EACH_ORDERING=./${LIB_DIR}/msort_each_ordering.pl
 EXE_SORT=./${LIB_DIR}/sort 
 EXE_SPLITN=./${LIB_DIR}/splitN/sp
 EXE_PP=./${LIB_DIR}/postprocess/pp
@@ -67,7 +69,7 @@ arr_executable_files=(
   $EXE_PAINT
   $PL_SITE_BY_SITE
   $SH_DECOMPRESS_SORT_SPLIT_EACH_ORDERING
-  $PL_MSORT_CLEAN_EACH_ORDERING
+  $PL_MSORT_EACH_ORDERING
   $EXE_SORT
   $EXE_SPLITN
   $EXE_PP
@@ -84,6 +86,7 @@ arr_R_files=(
 # constant
 #
 NUM_EM=30 # 0-indexed. 10 is sometimes not enough for convergence
+NUM_SPLITN=9
 
 #
 # rule
@@ -186,16 +189,7 @@ submit_msort_each_ordering() {
     ARRAY_E=9
 
     CMD=`returnQSUB_CMD ${STAMP} ${ARRAY_S} ${ARRAY_E}`
-    CMD=${CMD}" ${PL_MSORT_CLEAN_EACH_ORDERING} -d ${arr_dirs_being_decompressed[$i_dir]} -g ${PHASEFILE} "
-    #
-    # non-arrayjob version
-    #   msort
-    #     25min per an ordering for N=200, P=222717 (with | gzip), temporary 60GB
-    #     11min per an ordering for N=200, P=222717 (without | gzip)
-    #
-    #   check whether the output file (copyprobsperlocus.cat.gz) is incomplete or not
-    #   and re-execute it until the complete output file is obtained
-    #
+    CMD=${CMD}" ${PL_MSORT_EACH_ORDERING} -d ${arr_dirs_being_decompressed[$i_dir]} -g ${PHASEFILE} "
     echo ${CMD}
     eval ${CMD}
     if [ $? -ne 0 ]; then 
@@ -240,8 +234,6 @@ TYPE_NUM_ORDERING=10
 VERBOSE=FALSE
 CONTRAST_MAX=-9999
 MAX_PARALLEL_DECOMPRESS=20 
-# -n: num. of dirs where large tmp files (output of chromopainter) are processed simultaneously,
-#     which can be increased when you use a large disk: default=20
 
 MISSING_POS_IND_FILE=""
 CONSTRAINT_FILE=""
@@ -354,7 +346,6 @@ if [ "${WC_UQ_HAP_LEN}" -gt 1 ]; then
 fi
 
 NUM_IND=`head -2 ${PHASEFILE} | tail -1`
-let NUM_IND_2=${NUM_IND}+${NUM_IND}
 
 if [ ! -f "${HAP_LIST}" ]; then
   echo_fail "Error: ${HAP_LIST} doesn't exist"
@@ -583,8 +574,10 @@ get_stamp ${STEP}
 #arr_STAMP=("${arr_STAMP[@]}" "${STAMP}")
 disp_punctuate ${STEP} ${STAMP}
 
+arr_target_ordering=()
+
 #
-# check (in case of re-execution)
+# check whether ${GZ_CAT_COPYPROB_EACH_DIR} is prepared in all orderings
 #
 DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR=0
 if [ -s "${ORDER_DIR_LIST}" ]; then
@@ -613,36 +606,68 @@ if [ "${DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR}" -eq 0 ]; then
   #
   # check unfinished directories
   #
-  arr_target_ordering=()
   i_ordering=1
   while [ "${i_ordering}" -le "${TYPE_NUM_ORDERING}"  ]
   do
     echo "checking ordering ${i_ordering} ..."
     EACH_DIR_PREFIX=$(printf %s_orderedS%s_rnd%02d ${OUT_PREFIX_BASE} ${SEED} ${i_ordering})
-    
-    #
-    # whether painting (next step) finished or not
-    #
-    if ls ${EACH_DIR_PREFIX}_forward/*.copyprobsperlocus.out.gz &> /dev/null; then
-      NUM_PAINTED_F_R=`ls ${EACH_DIR_PREFIX}_???????/*.copyprobsperlocus.out.gz | wc -l`
 
-      let NUM_PAINTED_F_R=${NUM_PAINTED_F_R}+2
-      if [ "${NUM_PAINTED_F_R}" != "${NUM_IND_2}" ]; then
-        arr_target_ordering+=(${i_ordering})
+    FINISHED_FLAG=FALSE
+
+    #
+    # whether preparation of hap files (STEP2) finished or not
+    #
+    if ls ${EACH_DIR_PREFIX}_forward/*.hap &> /dev/null; then
+      CHECK=`ls ${EACH_DIR_PREFIX}_???????/*.hap | wc -l`
+      let CHECK=${CHECK}+2
+      
+      let CORRECT=${NUM_IND}+${NUM_IND}
+      if [ "${CHECK}" == "${CORRECT}" ]; then
+        FINISHED_FLAG=TRUE
       fi
     #
-    # whether preparation of hap files finished or not
+    # whether painting (STEP3) finished or not
     #
-    elif ls ${EACH_DIR_PREFIX}_forward/*.hap &> /dev/null; then
-      NUM_HAP_F_R=`ls ${EACH_DIR_PREFIX}_???????/*.hap | wc -l`
+    elif ls ${EACH_DIR_PREFIX}_forward/*.copyprobsperlocus.out.gz &> /dev/null; then
+      CHECK=`ls ${EACH_DIR_PREFIX}_???????/*.copyprobsperlocus.out.gz | wc -l`
+      let CHECK=${CHECK}+2
 
-      let NUM_HAP_F_R=${NUM_HAP_F_R}+2
-      if [ "${NUM_HAP_F_R}" != "${NUM_IND_2}" ]; then
-        arr_target_ordering+=(${i_ordering})
+      let CORRECT=${NUM_IND}+${NUM_IND}
+      if [ "${CHECK}" == "${CORRECT}" ]; then
+        FINISHED_FLAG=TRUE
       fi
-    else
-        arr_target_ordering+=(${i_ordering})
+    #
+    # whether ${GZ_CAT_COPYPROB_EACH_DIR}.?? (STEP4) exist or not
+    #
+    elif   ls ${EACH_DIR_PREFIX}_forward/${GZ_CAT_COPYPROB_EACH_DIR}.?? &> /dev/null; then
+      CHECK=`ls ${EACH_DIR_PREFIX}_???????/${GZ_CAT_COPYPROB_EACH_DIR}.?? | wc -l`
+      
+      let CORRECT=${NUM_SPLITN}+${NUM_SPLITN}
+      if [ "${CHECK}" == "${NUM_SPLITN_F_R}" ]; then
+        FINISHED_FLAG=TRUE
+      fi
+    #
+    # incomplete decompressing (STEP4) 
+    #
+    elif ls ${EACH_DIR_PREFIX}_forward/*.copyprobsperlocus.out_?? &> /dev/null; then
+      CHECK=`ls ${EACH_DIR_PREFIX}_???????/*.copyprobsperlocus.out_?? | wc -l`
+      
+      let CORRECT=${NUM_IND}-1
+      CORRECT=`expr ${CORRECT} \* ${NUM_SPLITN}`
+      let CORRECT=${CORRECT}+${CORRECT}
+      if [ "${CHECK}" == "${CORRECT}" ]; then
+        FINISHED_FLAG=TRUE
+      fi
     fi
+
+
+    #
+    # store unfinished orderings
+    #
+    if [ "${INISHED_FLAG}" == "FALSE" ]; then
+      arr_target_ordering+=(${i_ordering})
+    fi
+    
     let i_ordering=${i_ordering}+1
   done
 
@@ -713,25 +738,23 @@ fi
 
 
 #
-# ${ORDER_HAP_LIST} as a preparation for the next step (painting arrayjobs)
+# ${ORDER_HAP_LIST} as a preparation for the next step (painting as arrayjobs)
 #
-i_ordering=1
-while [ "${i_ordering}" -le "${TYPE_NUM_ORDERING}"  ]
+echo /dev/null > ${ORDER_HAP_LIST}
+for i_target_ordering in ${arr_target_ordering[@]}
 do
-  EACH_DIR_PREFIX=$(printf %s_orderedS%s_rnd%02d ${OUT_PREFIX_BASE} ${SEED} ${i_ordering})
-  CMD="ls ${EACH_DIR_PREFIX}_*/*.hap "
-  if [ "${i_ordering}" -eq 1 ]; then
-    CMD=${CMD}" >  ${ORDER_HAP_LIST}"
-  else
-    CMD=${CMD}" >> ${ORDER_HAP_LIST}"
-  fi
-  echo ${CMD}
-  eval ${CMD}
-  if [ $? -ne 0 ]; then 
-    echo_fail "Error: ${CMD}  "
-  fi
+  EACH_DIR_PREFIX=$(printf %s_orderedS%s_rnd%02d ${OUT_PREFIX_BASE} ${SEED} ${i_target_ordering})
   
-  let i_ordering=${i_ordering}+1
+  CMD="ls ${EACH_DIR_PREFIX}*/*.hap "
+  if "${CMD}" &> /dev/null; then
+    CMD=${CMD}" >> ${ORDER_HAP_LIST}"
+    
+    echo ${CMD}
+    eval ${CMD}
+    if [ $? -ne 0 ]; then 
+      echo_fail "Error: ${CMD}  "
+    fi
+  fi
 done
 
 
@@ -906,8 +929,6 @@ move_log_files "${STAMP}"
 #     cat to ${GZ_CAT_COPYPROB_EACH_DIR}
 #
 #     it can require a large temporary disk in each ordering
-#     (e.g., N=500, SNP=100,000 => about 100GB per ordering
-#            N=200, SNP=222,717 =>        60GB per ordering)
 #
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 STEP=4

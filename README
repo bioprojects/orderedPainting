@@ -37,29 +37,7 @@ LSF instead, please edit "lib/env_func.bashrc" as below
 
 
 #---------------------------------------------------------
-# 2. Disk and memory usage
-#---------------------------------------------------------
-
-As an example, 200 genomes with 100,000 SNPs require
-
-  about 400GB temporary disk space 
-  (for 10 orderings and their reverse) 
-
-  6GB RAM
-
-The disk space is required to store raw uncompressed data 
-of ChromoPainter (although these data are compressed 
-during post-processing).
-
-The RAM is required to combine results of the orderings.
-
-The upper limit of memory usage for your grid engine can 
-be speficied by "MAX_MEMORY" in "lib/env_func.bashrc" above.
-
-
-
-#---------------------------------------------------------
-# 3. Setup
+# 2. Setup
 #---------------------------------------------------------
 
 Please execute "setup.sh" as follows.
@@ -74,7 +52,7 @@ Please wait during that time.
 
 
 #---------------------------------------------------------
-# 4. Basic usage
+# 3. Basic usage
 #---------------------------------------------------------
 
 The following is the most basic example which uses files in the "example1" directory.
@@ -90,7 +68,7 @@ The ".list" is a 1-column file which indicates name of each strain in the ".hap"
 
 
 #---------------------------------------------------------
-# 5. Output
+# 4. Output
 #---------------------------------------------------------
 
 Please check the log file you specified above.
@@ -110,9 +88,9 @@ The following files and directories will be seen.
 
   |
   |-- results_siteStats.txt.gz
+  |-- results_siteStats_along_seq.png
   |-- results_siteStats_hist.png
   |-- results_siteStats_summary.pos.txt
-  |-- results_siteStats_along_seq.png
   |
   |-- (results_siteStats_missingCnt.png)
   |
@@ -132,13 +110,13 @@ The following files and directories will be seen.
 
 "results_siteStats.txt.gz" contains values of the distance statistic and bootstrap support of each site.
 
-"results_siteStats_hist.png" shows histgram of the distance statistic.
+"results_siteStats_along_seq.png" shows intensity of recombination (distribution of the distance statistic) 
+along the genome.  Two recombination hot regions should be seen.
+
+"results_siteStats_hist.png" shows a histogram of the distance statistic.
 
 "results_siteStats_summary.pos.txt" contains information of representative sites picked up from
 the top/middle/bottom of the distribution.
-
-"results_siteStats_along_seq.png" shows distribution of the distance statistic along the genome.
-Two recombiantion hot regions should be seen.
 
 
 
@@ -149,7 +127,7 @@ there is no need to check these additional log files.
 
 
 #---------------------------------------------------------
-# 6. Usage for imputed data
+# 5. Usage for imputed data
 #---------------------------------------------------------
 
 If you would like to use imputed data, please prepare a file which indicates
@@ -173,16 +151,51 @@ by masking columns and rows of missing individuals at a site.
 
 
 #---------------------------------------------------------
-# 7. Re-execution
+# 6. Re-execution
 #---------------------------------------------------------
 
-If orderedPainting stoped during its computation, for example
+If orderedPainting stopped during its computation, for example
 by an occasional problem of your grid engine (such as incomplete
-execution of array jobs), please re-execute the command 
+execution of a part of array jobs), please re-execute the command 
 as previously after fixing the problem.
 
 It should restart computation at an appropriate step
 and proceed to the end.
+
+
+
+#---------------------------------------------------------
+# 7. Disk and memory usage
+#---------------------------------------------------------
+
+The disk usage of orderedPainting depends on both the number of 
+SNPs and individuals, and it can produce a large amount of
+temporary data from a large input dataset.
+
+For example, 200 genomes with 100,000 SNPs require about 
+20GB per ordering (forward or reverse) and 400GB in total 
+(20 orderings by default).
+
+The temporary disk space is required to store raw uncompressed 
+output of ChromoPainter, although they are compressed during 
+post-processing.
+
+The number of orderings processed simultaneously in the step
+can be specified by "-n" option (default is 20).
+If you specify a smaller number, the disk usage decreases,
+although it takes longer time to process all of the orderings.
+
+
+Meanwhile, the memory usage of orderedPainting depends on 
+only the number of SNPs but not on that of individuals.
+
+For example, about 360,000 SNPs require about 5.5GB RAM,
+which is used to combine results of all orderings and 
+examine each SNP in terms of intensity of recombination
+(the distance statistic and bootstrap support).
+
+The upper limit of memory usage for your grid engine can 
+be speficied by "MAX_MEMORY" in "lib/env_func.bashrc" above.
 
 
 
