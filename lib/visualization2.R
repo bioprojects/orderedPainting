@@ -4,7 +4,7 @@
 library(MASS)
 
 c_args <- commandArgs(trailingOnly=T)
-if (length(c_args) >= 4) {
+if (length(c_args) < 4) {
   stop("Error: num of command line args must be >= 4")
 }
 
