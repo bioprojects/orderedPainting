@@ -44,7 +44,7 @@ my $phasefile           = $opt_g or die $usage;
 # env
 #
 my $sort_path = "lib/sort"; # FindBin doesn't work in arrayjob in UGE
-my $sort_opt = " -n -m --batch-size=100 --parallel=8"; 
+my $sort_opt = " -n -m --batch-size=300"; # Don't use --parallel option here because it is already parallelized
 # "-n" is required to cat across recipient individuals sorted by position
 # "-m" makes the sorting much faster when all input files are sorted (ascending order)
 
@@ -121,9 +121,19 @@ if ($arrayJobID > 0) {
   #
   $cmd  = "$sort_path $sort_opt ";
   $cmd .= " -T $dir_each_ordering $dir_each_ordering/*.copyprobsperlocus.out_$each_suffix";
-  $cmd .= " | gzip > $dir_each_ordering/$gz_cat_copyprob_each_dir" . "." . "$each_suffix"; # split gz files
+  $cmd .= " | gzip > $dir_each_ordering/$gz_cat_copyprob_each_dir.$each_suffix"; # split gz files
+  #$cmd .= "       > $dir_each_ordering/$gz_cat_copyprob_each_dir.$each_suffix";
   print "$cmd\n";
   if( system("$cmd") != 0) { die("Error: $cmd failed"); };
+
+#  $cmd  = "gzip $dir_each_ordering/$gz_cat_copyprob_each_dir.$each_suffix";
+#  print "$cmd\n";
+#  if( system("$cmd") != 0) { die("Error: $cmd failed"); };
+#
+#  $cmd  = "/bin/mv $dir_each_ordering/$gz_cat_copyprob_each_dir.$each_suffix.gz";
+#  $cmd  = "        $dir_each_ordering/$gz_cat_copyprob_each_dir.$each_suffix";
+#  print "$cmd\n";
+#  if( system("$cmd") != 0) { die("Error: $cmd failed"); };
 
   #
   # remove the uncompressed files required for msort

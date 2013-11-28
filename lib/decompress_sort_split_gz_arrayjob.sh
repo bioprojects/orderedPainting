@@ -55,14 +55,46 @@ each_copyprobsperlocus=`echo ${gzfile} | perl -pe 's/\.gz//g'`
 
 #
 # decompress
-# sort (required for msort within each ordering across recipient haplotypes, 
-#       maybe not needed if chromopainter is modified in the future)
+# sort (required for msort within each ordering across recipient haplotypes)
+#       ChromoPainter prints its output in the backward loop
 # and split 
+#
+# each step is quick
 #
 date +%Y%m%d_%T
 
-CMD="gzip -dc ${gzfile} | grep -v '^pos' | grep -v '^HAP' | sort -n | ${EXE_SPLITN} -p ${each_copyprobsperlocus}_"
-#CMD="gzip -dc ${gzfile} | grep -v '^pos' | grep -v '^HAP' | sort -n | split -50000 - ${each_copyprobsperlocus}_"
+#CMD="gzip -dc ${gzfile} | sort -n | ${EXE_SPLITN} -p ${each_copyprobsperlocus}_"
+#echo ${CMD}
+#eval ${CMD}
+#if [ $? -ne 0 ]; then 
+#  echo_fail "Error: ${CMD} "
+#fi
+
+#
+# by using only one CPU for each array job (gzfile, the size of which is not so large)
+#
+CMD="gunzip ${gzfile}"
+echo ${CMD}
+eval ${CMD}
+if [ $? -ne 0 ]; then 
+  echo_fail "Error: ${CMD} "
+fi
+
+CMD="sort -n ${each_copyprobsperlocus} > ${each_copyprobsperlocus}.sort"
+echo ${CMD}
+eval ${CMD}
+if [ $? -ne 0 ]; then 
+  echo_fail "Error: ${CMD} "
+fi
+
+CMD="/bin/rm ${each_copyprobsperlocus}"
+echo ${CMD}
+eval ${CMD}
+if [ $? -ne 0 ]; then 
+  echo_fail "Error: ${CMD} "
+fi
+
+CMD="${EXE_SPLITN} -f ${each_copyprobsperlocus}.sort -p ${each_copyprobsperlocus}_"
 echo ${CMD}
 eval ${CMD}
 if [ $? -ne 0 ]; then 
@@ -70,7 +102,7 @@ if [ $? -ne 0 ]; then
 fi
 
 #
-# rm ${gzfile}
+# remove the input file
 #
 date +%Y%m%d_%T
 

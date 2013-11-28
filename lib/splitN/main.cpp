@@ -27,10 +27,11 @@ using namespace std;
 
 static const char * help=
         "\
-        Usage: gzip -dc file.gz | sp [OPTIONS] \n\
+        Usage: ./sp [OPTIONS] \n\
             \n\
             Options:\n\
                 -p outPrefix_ \n\
+               [-f infile] \n\
                 \n";
 
 
@@ -44,12 +45,14 @@ int main(int argc, char **argv)
     int c;
     bool verbose=false;
     char * outPrefix=NULL;
+    char * inFile=NULL;
 
     if (argc==1) {printf("%s",help);exit(0);}
-    while ((c = getopt (argc, argv, "p:v")) != -1)
+    while ((c = getopt (argc, argv, "p:f:v")) != -1)
         switch (c)
     {
         case('p'):outPrefix=optarg;break;
+        case('f'):inFile=optarg;break;
         case '?':
             if (isprint (optopt))
                 fprintf (stderr, "Unknown option `-%c'.\n", optopt);
@@ -171,31 +174,63 @@ int main(int argc, char **argv)
     timer = time(NULL); stamp = ctime(&timer); stamp[strlen(stamp)-1] = '\0';
     printf("%s: start\n", stamp);
 
-    while (getline(cin, line)) {
+    if (inFile == NULL) {
+        while (getline(cin, line)) {
 
-        if (!regexec(&regst1, line.c_str(), 1, match, 0)) {
-            ofs1 << line << endl;
-        } else if (!regexec(&regst2, line.c_str(), 1, match, 0)) {
-            ofs2 << line << endl;
-        } else if (!regexec(&regst3, line.c_str(), 1, match, 0)) {
-            ofs3 << line << endl;
-        } else if (!regexec(&regst4, line.c_str(), 1, match, 0)) {
-            ofs4 << line << endl;
-        } else if (!regexec(&regst5, line.c_str(), 1, match, 0)) {
-            ofs5 << line << endl;
-        } else if (!regexec(&regst6, line.c_str(), 1, match, 0)) {
-            ofs6 << line << endl;
-        } else if (!regexec(&regst7, line.c_str(), 1, match, 0)) {
-            ofs7 << line << endl;
-        } else if (!regexec(&regst8, line.c_str(), 1, match, 0)) {
-            ofs8 << line << endl;
-        } else if (!regexec(&regst9, line.c_str(), 1, match, 0)) {
-            ofs9 << line << endl;
-        } else {
-           // do nothing for "pos" or "HAP"
+            if (!regexec(&regst1, line.c_str(), 1, match, 0)) {
+                ofs1 << line << endl;
+            } else if (!regexec(&regst2, line.c_str(), 1, match, 0)) {
+                ofs2 << line << endl;
+            } else if (!regexec(&regst3, line.c_str(), 1, match, 0)) {
+                ofs3 << line << endl;
+            } else if (!regexec(&regst4, line.c_str(), 1, match, 0)) {
+                ofs4 << line << endl;
+            } else if (!regexec(&regst5, line.c_str(), 1, match, 0)) {
+                ofs5 << line << endl;
+            } else if (!regexec(&regst6, line.c_str(), 1, match, 0)) {
+                ofs6 << line << endl;
+            } else if (!regexec(&regst7, line.c_str(), 1, match, 0)) {
+                ofs7 << line << endl;
+            } else if (!regexec(&regst8, line.c_str(), 1, match, 0)) {
+                ofs8 << line << endl;
+            } else if (!regexec(&regst9, line.c_str(), 1, match, 0)) {
+                ofs9 << line << endl;
+            } else {
+               // do nothing for "pos" or "HAP"
+            }
+
+        } // while read line
+    } else {
+
+        ifstream cin_file (inFile);
+        if (cin_file.is_open()) {
+            while (getline(cin_file, line)) {
+                 if (!regexec(&regst1, line.c_str(), 1, match, 0)) {
+                     ofs1 << line << endl;
+                 } else if (!regexec(&regst2, line.c_str(), 1, match, 0)) {
+                     ofs2 << line << endl;
+                 } else if (!regexec(&regst3, line.c_str(), 1, match, 0)) {
+                     ofs3 << line << endl;
+                 } else if (!regexec(&regst4, line.c_str(), 1, match, 0)) {
+                     ofs4 << line << endl;
+                 } else if (!regexec(&regst5, line.c_str(), 1, match, 0)) {
+                     ofs5 << line << endl;
+                 } else if (!regexec(&regst6, line.c_str(), 1, match, 0)) {
+                     ofs6 << line << endl;
+                 } else if (!regexec(&regst7, line.c_str(), 1, match, 0)) {
+                     ofs7 << line << endl;
+                 } else if (!regexec(&regst8, line.c_str(), 1, match, 0)) {
+                     ofs8 << line << endl;
+                 } else if (!regexec(&regst9, line.c_str(), 1, match, 0)) {
+                     ofs9 << line << endl;
+                 } else {
+                    // do nothing for "pos" or "HAP"
+                 }
+            } // while read line
+            cin_file.close();
         }
 
-    } // while read line
+    }
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // finish

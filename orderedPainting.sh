@@ -182,14 +182,14 @@ wait_until_finish() {
 
 submit_msort_each_ordering() {
   i_dir=0
-  while [ "$i_dir" -lt ${#arr_dirs_being_decompressed[@]} ]; do
+  while [ "$i_dir" -lt ${#arr_dirs_for_msort[@]} ]; do
     date +%Y%m%d_%T
 
     ARRAY_S=1
     ARRAY_E=9
 
     CMD=`returnQSUB_CMD ${STAMP} ${ARRAY_S} ${ARRAY_E}`
-    CMD=${CMD}" ${PL_MSORT_EACH_ORDERING} -d ${arr_dirs_being_decompressed[$i_dir]} -g ${PHASEFILE} "
+    CMD=${CMD}" ${PL_MSORT_EACH_ORDERING} -d ${arr_dirs_for_msort[$i_dir]} -g ${PHASEFILE} "
     echo ${CMD}
     eval ${CMD}
     if [ $? -ne 0 ]; then 
@@ -199,8 +199,8 @@ submit_msort_each_ordering() {
     #
     # update the array by removing the submitted dir
     #
-    unset arr_dirs_being_decompressed[$i_dir]
-    arr_dirs_being_decompressed=(${arr_dirs_being_decompressed[@]})
+    unset arr_dirs_for_msort[$i_dir]
+    arr_dirs_for_msort=(${arr_dirs_for_msort[@]})
   done
   # this loop automatically ends after submitting msort jobs for the decompressed dirs
 }
@@ -658,6 +658,14 @@ if [ "${DONE_ALL_GZ_CAT_COPYPROB_EACH_DIR}" -eq 0 ]; then
       if [ "${CHECK}" == "${CORRECT}" ]; then
         FINISHED_FLAG=TRUE
       fi
+      
+      for aa in `ls ${EACH_DIR_PREFIX}_???????/*.copyprobsperlocus.out_??`
+      do
+        if [ ! -s "${aa}" ]; then
+          FINISHED_FLAG=FALSE
+          break
+        fi
+      done
     fi
 
 
@@ -740,7 +748,7 @@ fi
 #
 # create ${ORDER_HAP_LIST} as a preparation for the next step (painting as arrayjobs)
 #
-echo "listing up all .hap files to ${ORDER_HAP_LIST} ..."
+echo "listing up all .hap files to be processed into ${ORDER_HAP_LIST} ..."
 /bin/cat /dev/null > ${ORDER_HAP_LIST}
 
 i_ordering=1
@@ -927,7 +935,8 @@ move_log_files "${STAMP}"
 ################################################################################################################
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-# postprocessing 1
+# Formatting outout files of ChromoPainter
+#
 #   for each ordering,
 #     split
 #     cat to ${GZ_CAT_COPYPROB_EACH_DIR}
@@ -943,7 +952,7 @@ disp_punctuate ${STEP} ${STAMP}
 
 TARGET_GZ_FNANE="target_gz.list"
 
-declare -a arr_dirs_being_decompressed
+declare -a arr_dirs_for_msort
 
 while read EACH_DIR
 do
@@ -973,10 +982,13 @@ do
   if [ ${CHECK_GZ_CAT_COPYPROB_EACH_DIR} -gt 0 ]; then
     echo "  msort in ${EACH_DIR} is skipped because there is already ${GZ_CAT_COPYPROB_EACH_DIR}"
   else
+    arr_dirs_for_msort=("${arr_dirs_for_msort[@]}" "${EACH_DIR}")
+    
     #
-    # decompress each .copyprobsperlocus.out.gz file,
+    # if there are .copyprobsperlocus.out.gz files to be decompressed,
+    #
+    # decompress
     # split
-    # cat to copyprobsperlocus.out
     #
     ARRAY_S=1
     ARRAY_E=${NUM_TARGET_GZ}
@@ -992,7 +1004,6 @@ do
       if [ $? -ne 0 ]; then 
         echo_fail "Execution error: ${CMD} (step${STEP}) "
       fi
-      arr_dirs_being_decompressed=("${arr_dirs_being_decompressed[@]}" "${EACH_DIR}")
     else
       echo "${SH_DECOMPRESS_SORT_SPLIT_EACH_ORDERING} was not executed for ${EACH_DIR} (no *.gz file) "
     fi
@@ -1002,7 +1013,7 @@ do
       #
       # when the number of dirs to be processed > ${MAX_PARALLEL_DECOMPRESS}
       #
-      if [ "${#arr_dirs_being_decompressed[@]}" -ge "${MAX_PARALLEL_DECOMPRESS}" ]; then
+      if [ "${#arr_dirs_for_msort[@]}" -ge "${MAX_PARALLEL_DECOMPRESS}" ]; then
         #
         # wait decompression (for dirs submitted above)
         #
@@ -1030,26 +1041,33 @@ do
 done < ${ORDER_DIR_LIST}
 
 #
-# wait decompression (for dirs submitted above)
-#   if ${MAX_PARALLEL_DECOMPRESS} >= 2*NUM_ORDERING, 
-#   the program waits decompression only at this point
-#   (decompresss all dirs at the same time)
+# wait decompression
+#   (used only if ${MAX_PARALLEL_DECOMPRESS} was not used above)
 #
 wait_until_finish "${STAMP}"
 
 
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-# submit msort for each ordering (decompressed dir)
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+#
+# submit msort for dirs recorded in arr_dirs_for_msort
+#    if ${MAX_PARALLEL_DECOMPRESS} was not used above, 
+#      all dirs are submitted here
+#
+#    if ${MAX_PARALLEL_DECOMPRESS} was used above, 
+#      no dir is submitted here 
+#      because arr_dirs_for_msort is already empty
+#
 submit_msort_each_ordering "${STAMP}"
 #
 # wait until the submitted msort jobs are finished
 #
 wait_until_finish "${STAMP}"
 
+
+
 #
-# cat gzfiles (obtained by array job) in each dir into ${GZ_CAT_COPYPROB_EACH_DIR} 
+# cat${GZ_CAT_COPYPROB_EACH_DIR}.?? in each dir into ${GZ_CAT_COPYPROB_EACH_DIR} 
+#   for calculating the average in the postprocessing below
 #
 while read EACH_DIR
 do
@@ -1108,8 +1126,9 @@ done < ${ORDER_DIR_LIST}
 move_log_files "${STAMP}"
 
 
+
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-# postprocessing 2 (l1,l2)
+# postprocessing (l1,l2)
 #   calculate average, and distance to the average for each ordering
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 STEP=5
