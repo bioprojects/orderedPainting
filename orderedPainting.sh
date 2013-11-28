@@ -365,7 +365,7 @@ fi
 #
 # check ${HAP_LIST}
 #
-CHECK_CR=`od -c "${HAP_LIST}" | grep "\r"`
+CHECK_CR=`head -1 "${HAP_LIST}" | od -c | grep "\r"`
 if [ "${CHECK_CR}" != "" ]; then
   perl -i -pe 's/\r//g' ${HAP_LIST}
 fi
@@ -384,7 +384,7 @@ fi
 # check ${HAP_LIST_OUTDISP}
 #
 if [ "${HAP_LIST}" != "${HAP_LIST_OUTDISP}" ]; then
-  CHECK_CR=`od -c "${HAP_LIST_OUTDISP}" | grep "\r"`
+  CHECK_CR=`head -1 "${HAP_LIST_OUTDISP}" | od -c | grep "\r"`
   if [ "${CHECK_CR}" != "" ]; then
     perl -i -pe 's/\r//g' ${HAP_LIST_OUTDISP}
   fi
@@ -413,7 +413,7 @@ fi
 # check ${MISSING_POS_IND_FILE}
 #
 if [ "${MISSING_POS_IND_FILE}" != "" ]; then
-  CHECK_CR=`od -c "${MISSING_POS_IND_FILE}" | grep "\r"`
+  CHECK_CR=`head -1 "${MISSING_POS_IND_FILE}" | od -c | grep "\r"`
   if [ "${CHECK_CR}" != "" ]; then
     perl -i -pe 's/\r//g' ${MISSING_POS_IND_FILE}
   fi
