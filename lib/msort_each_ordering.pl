@@ -94,7 +94,8 @@ if ($type_painting == 1) {
 }
 
 #
-# remove unnecessary .out files in each ordering dir
+# if unnecessary .out files are remained in each ordering dir, remove them
+#   (they are supposed to be removed just after painting)
 # 
 my @arr_dotout_files = glob("$dir_each_ordering/*.out");
 foreach my $each_dotout_file (@arr_dotout_files) {
@@ -115,11 +116,22 @@ if ($arrayJobID > 0) {
   chomp($stamp);
   print "$stamp $each_suffix\n";
   
+  #
+  # msort and create split gz files
+  #
   $cmd  = "$sort_path $sort_opt ";
   $cmd .= " -T $dir_each_ordering $dir_each_ordering/*.copyprobsperlocus.out_$each_suffix";
   $cmd .= " | gzip > $dir_each_ordering/$gz_cat_copyprob_each_dir" . "." . "$each_suffix"; # split gz files
   print "$cmd\n";
-  system("$cmd");
+  f( system("$cmd") != 0) { die("Error: $cmd failed"); };
+
+  #
+  # remove the uncompressed files required for msort
+  #    which can be large for a large dataset
+  #
+  $cmd = "/bin/rm $dir_each_ordering/*.copyprobsperlocus.out_$each_suffix";
+  print "$cmd\n";
+  f( system("$cmd") != 0) { die("Error: $cmd failed"); };
 
 #
 # msort (non-arrayjob)
@@ -174,7 +186,7 @@ if ($arrayJobID > 0) {
       $cmd .= " -T $dir_each_ordering $dir_each_ordering/*.copyprobsperlocus.out_$each_suffix";
       $cmd .= " | gzip -c >> $dir_each_ordering/$gz_cat_copyprob_each_dir";
       print "$cmd\n";
-      system("$cmd");
+      f( system("$cmd") != 0) { die("Error: $cmd failed"); };
 
     }
 

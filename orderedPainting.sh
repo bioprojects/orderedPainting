@@ -903,7 +903,7 @@ move_log_files "${STAMP}"
 # postprocessing 1
 #   for each ordering,
 #     split
-#     sort -m *.copyprobsperlocus.out > ${GZ_CAT_COPYPROB_EACH_DIR}
+#     cat to ${GZ_CAT_COPYPROB_EACH_DIR}
 #
 #     it can require a large temporary disk in each ordering
 #     (e.g., N=500, SNP=100,000 => about 100GB per ordering
@@ -1062,19 +1062,18 @@ do
   fi
 
   #
-  # remove temporary files in each ordering dir
+  # temporary files, if they remain for some reason
   #
   if ls ${EACH_DIR}/sort?????? &> /dev/null; then # old (non-arrayjob) version
     /bin/rm -f ${EACH_DIR}/sort??????
   fi
 
+  # to be removed in mort_each_ordering.pl
   if ls ${EACH_DIR}/*copyprobsperlocus.out_?? &> /dev/null; then # arrayjob version
     /bin/rm -f ${EACH_DIR}/*copyprobsperlocus.out_??
   fi
-  #if ls ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}_?? &> /dev/null; then
-  #  /bin/rm -f ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}_??
-  #fi
 
+  # to be removed in chromopainter_linkage_orderings_arrayjob.sh
   if ls ${EACH_DIR}/*.hap &> /dev/null; then
     /bin/rm -f ${EACH_DIR}/*.hap
   fi

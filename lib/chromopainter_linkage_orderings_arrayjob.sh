@@ -73,12 +73,20 @@ eval ${CMD}
 if [ $? -ne 0 ]; then 
   echo_fail "Error: ${CMD} "
 else
-  echo "$phasefile was painted, so it is removed here."
-  # remove the input .hap file created by step2 (to save disk space)
+  echo "$phasefile was painted.  Following input and .out files are removed to save disk space."
+
   if [ -f "$phasefile" ]; then
     CMD="/bin/rm -f $phasefile"
     echo ${CMD}
     eval ${CMD}
   fi
+  
+  for aa in `ls ${OUT_PREFIX}*.out` 
+  do
+    CMD="/bin/rm -f $aa"
+    echo ${CMD}
+    eval ${CMD}
+  done
+  # only ".copyprobsperlocus.out.gz" files are saved
 fi
 
