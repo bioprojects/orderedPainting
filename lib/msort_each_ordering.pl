@@ -123,7 +123,7 @@ if ($arrayJobID > 0) {
   $cmd .= " -T $dir_each_ordering $dir_each_ordering/*.copyprobsperlocus.out_$each_suffix";
   $cmd .= " | gzip > $dir_each_ordering/$gz_cat_copyprob_each_dir" . "." . "$each_suffix"; # split gz files
   print "$cmd\n";
-  f( system("$cmd") != 0) { die("Error: $cmd failed"); };
+  if( system("$cmd") != 0) { die("Error: $cmd failed"); };
 
   #
   # remove the uncompressed files required for msort
@@ -131,7 +131,7 @@ if ($arrayJobID > 0) {
   #
   $cmd = "/bin/rm $dir_each_ordering/*.copyprobsperlocus.out_$each_suffix";
   print "$cmd\n";
-  f( system("$cmd") != 0) { die("Error: $cmd failed"); };
+  if( system("$cmd") != 0) { die("Error: $cmd failed"); };
 
 #
 # msort (non-arrayjob)
