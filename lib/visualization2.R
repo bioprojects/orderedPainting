@@ -1,11 +1,11 @@
 #
-# R --vanilla --quiet < lib/visualization.R --args lib/plotHeatmap.R  pos_matrix.txt  min  max [ visualStrainOrder.list ]
+# R --vanilla --quiet < lib/visualization2.R --args lib/plotHeatmap.R  pos_matrix.txt  min  max [ visualStrainOrder.list ]
 #
 library(MASS)
 
 c_args <- commandArgs(trailingOnly=T)
-if (length(c_args) != 4) {
-  stop("Error: num of command line args must be 4")
+if (length(c_args) >= 4) {
+  stop("Error: num of command line args must be >= 4")
 }
 
 source(c_args[1])
