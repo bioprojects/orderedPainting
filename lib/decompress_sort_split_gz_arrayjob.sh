@@ -71,7 +71,7 @@ date +%Y%m%d_%T
 #fi
 
 #
-# by using only one CPU in each array job 
+# by using only one CPU core in each array job 
 #
 #   each command is quick
 #
