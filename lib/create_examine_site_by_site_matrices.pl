@@ -372,7 +372,10 @@ if (!$opt_r) {
       #
       # parallelize within an ordering
       #
-      my $p2_job_name = "p2_" . $stamp;
+      my $p2_job_name = $stamp;
+         $p2_job_name =~ s/^[0-9]+_//g;
+         $p2_job_name =~ s/://g;
+         $p2_job_name = "p2_" . $p2_job_name;
 
       my @arr_divided_gz_cat_copyprob = glob("$dir_each_ordering/$gz_cat_copyprob_each_dir.??");
       foreach my $each_gz_cat_copyprob (@arr_divided_gz_cat_copyprob) {
