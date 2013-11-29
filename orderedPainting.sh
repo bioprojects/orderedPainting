@@ -842,7 +842,10 @@ do
         echo ${EACH_HAP} >> ${TARGET_HAP_LIST}
         let NUM_TARGET_HAP=${NUM_TARGET_HAP}+1
       else
-        echo "${EACH_COPYPROB_GZ} already exists and is not empty.  Skipped."
+        echo "${EACH_COPYPROB_GZ} already exists.  ${EACH_HAP} is skipped and removed."
+        if [ -f "${EACH_HAP}" ]; then
+          /bin/rm -f ${EACH_HAP}
+        fi
       fi
     done
   fi
