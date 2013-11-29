@@ -912,7 +912,7 @@ move_log_files "${STAMP}"
 ################################################################################################################
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-# Formatting outout files of ChromoPainter
+# Formatting output files of ChromoPainter
 #
 #   for each ordering,
 #     split
