@@ -168,21 +168,22 @@ and proceed to the end.
 # 7. Disk and memory usage
 #---------------------------------------------------------
 
-The disk usage of orderedPainting depends on both the number of 
-SNPs and individuals, and it can produce a large amount of
-temporary data from a large input dataset.
+The disk usage of orderedPainting depends on the number of 
+SNPs and *squared* number of individuals, and it can produce 
+a large amount of temporary data from a large input dataset.
 
 For example, 200 genomes with 100,000 SNPs require about 
-20GB per ordering (forward or reverse) and 400GB in total 
-(20 orderings by default).
+20GB per ordering (forward or reverse).
 
-The temporary disk space is required to store raw uncompressed 
-output of ChromoPainter, although they are compressed during 
-post-processing.
+The temporary disk space is required to store and format
+uncompressed output files of ChromoPainter without using
+a large memory.  The files are compressed during post-processing.
 
 The number of orderings processed simultaneously in the step
 can be specified by "-n" option (default is 20).
-If you specify a smaller number, the disk usage decreases,
+
+Depending on limitation of disk in your environment,
+please use the "-n" option to specify a smaller number,
 although it takes longer time to process all of the orderings.
 
 
