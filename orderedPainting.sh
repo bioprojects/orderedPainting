@@ -811,13 +811,15 @@ do
   /bin/cat /dev/null > ${TARGET_HAP_LIST}
   echo "preparing ${TARGET_HAP_LIST} ... "
 
-  CHECK_GZ_CAT_COPYPROB_EACH_DIR=0
-  if [ -f "${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}" ]; then
-    CHECK_GZ_CAT_COPYPROB_EACH_DIR=`gzip -dc ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR} | head | wc -l`
-  fi
-  # skip this ordered directory if there is ${GZ_CAT_COPYPROB_EACH_DIR} created by the next step
-  if [ ${CHECK_GZ_CAT_COPYPROB_EACH_DIR} -gt 0 ]; then
-    echo "  painting in ${EACH_DIR} is skipped because there is already ${GZ_CAT_COPYPROB_EACH_DIR}"
+  #
+  # skip this ordered directory if there is already ${GZ_CAT_COPYPROB_EACH_DIR}.??
+  #
+  if ls ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}.?? &> /dev/null; then
+    CHECK=`ls ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}.?? | wc -l`
+
+    if [ "${CHECK}" == "${NUM_SPLITN}" ]; then
+      echo "painting in ${EACH_DIR} is skipped because there are already ${NUM_SPLITN} ${GZ_CAT_COPYPROB_EACH_DIR}. files"
+    fi
   else
     for EACH_HAP in `grep ${EACH_DIR} ${ORDER_HAP_LIST}`
     do
@@ -951,18 +953,13 @@ do
 
   NUM_TARGET_GZ=`wc -l ${TARGET_GZ_LIST} | awk '{print $1}'`
 
-  CHECK_GZ_CAT_COPYPROB_EACH_DIR=0
-  if [ -f "${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}" ]; then
-    CHECK_GZ_CAT_COPYPROB_EACH_DIR=`gzip -dc ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR} | head | wc -l`
-  fi
-  
   #
   # skip this ordered directory if there is already ${GZ_CAT_COPYPROB_EACH_DIR}.??
   if ls ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}.?? &> /dev/null; then
     CHECK=`ls ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}.?? | wc -l`
 
     if [ "${CHECK}" == "${NUM_SPLITN}" ]; then
-      echo "msort in ${EACH_DIR} is skipped because there are already ${NUM_SPLITN} sorted files"
+      echo "msort in ${EACH_DIR} is skipped because there are already ${NUM_SPLITN} ${GZ_CAT_COPYPROB_EACH_DIR}. files"
     fi
   else
     arr_dirs_for_msort=("${arr_dirs_for_msort[@]}" "${EACH_DIR}")
