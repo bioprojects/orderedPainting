@@ -768,6 +768,7 @@ fi
 #
 if ls ${STAMP}_${OUT_PREFIX_BASE}_orderedS${SEED}_*.sh &> /dev/null; then
   CMD="/bin/rm -f ${STAMP}_${OUT_PREFIX_BASE}_orderedS${SEED}_*.sh"
+  echo ${CMD}
   eval ${CMD}
   if [ $? -ne 0 ]; then 
     echo_fail "Error: ${CMD}  "
