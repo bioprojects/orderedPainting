@@ -71,7 +71,9 @@ date +%Y%m%d_%T
 #fi
 
 #
-# by using only one CPU for each array job (gzfile, the size of which is not so large)
+# by using only one CPU in each array job 
+#
+#   each command is quick
 #
 CMD="gunzip ${gzfile}"
 echo ${CMD}
