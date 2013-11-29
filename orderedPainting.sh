@@ -713,14 +713,6 @@ done
 
 wait_until_finish "${STAMP}"
 
-if [ ls ${STAMP}_${OUT_PREFIX_BASE}_orderedS${SEED}_*.sh &> /dev/null; then
-  CMD="/bin/rm -f ${STAMP}_${OUT_PREFIX_BASE}_orderedS${SEED}_*.sh"
-  eval ${CMD}
-  if [ $? -ne 0 ]; then 
-    echo_fail "Error: ${CMD}  "
-  fi
-fi
-
 
 #
 # create ${ORDER_HAP_LIST} as a preparation for the next step (painting as arrayjobs)
@@ -774,12 +766,28 @@ fi
 #
 # cleaning tmp files
 #
+if ls ${STAMP}_${OUT_PREFIX_BASE}_orderedS${SEED}_*.sh &> /dev/null; then
+  CMD="/bin/rm -f ${STAMP}_${OUT_PREFIX_BASE}_orderedS${SEED}_*.sh"
+  eval ${CMD}
+  if [ $? -ne 0 ]; then 
+    echo_fail "Error: ${CMD}  "
+  fi
+fi
+
 if [ -f "${HAP_LIST}.names" ]; then
-  /bin/rm -f ${HAP_LIST}.names
+  CMD="/bin/rm -f ${HAP_LIST}.names"
+  eval ${CMD}
+  if [ $? -ne 0 ]; then 
+    echo_fail "Error: ${CMD}  "
+  fi
 fi
 
 if [ -f "${HAP_LIST_OUTDISP}.names" ]; then
-  /bin/rm -f ${HAP_LIST_OUTDISP}.names
+  CMD="/bin/rm -f ${HAP_LIST_OUTDISP}.names"
+  eval ${CMD}
+  if [ $? -ne 0 ]; then 
+    echo_fail "Error: ${CMD}  "
+  fi
 fi
 
 
