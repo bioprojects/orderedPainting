@@ -53,7 +53,6 @@ my $postprocess_path = "$FindBin::Bin/postprocess/pp";
 #
 # output to each ordering dir
 #
-my $cat_copyprob_each_dir    = "copyprobsperlocus.cat";
 my $gz_cat_copyprob_each_dir = "copyprobsperlocus.cat.gz";
 
 my $out_each_dir_averave_matrix  = "average.matrix.txt"; # part 1 of postprocessing
@@ -303,7 +302,8 @@ if (!$opt_r) {
 
     $cmd_ppGz  = "";
 
-    $cmd_ppGz  = "gzip -dc $dir_each_ordering/$gz_cat_copyprob_each_dir |";
+    #$cmd_ppGz  = "gzip -dc $dir_each_ordering/$gz_cat_copyprob_each_dir |";
+    $cmd_ppGz  = "zcat $dir_each_ordering/$gz_cat_copyprob_each_dir.?? |";
     $cmd_ppGz .= $cmd_ppGz_common;
 
     my $nrow_ave_matrix = 0;

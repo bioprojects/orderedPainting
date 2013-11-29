@@ -91,7 +91,7 @@ NUM_SPLITN=9
 #
 # rule
 #
-GZ_CAT_COPYPROB_EACH_DIR=copyprobsperlocus.cat.gz
+GZ_CAT_COPYPROB_EACH_DIR=copyprobsperlocus.cat.gz 
 
 #
 # vars
@@ -176,7 +176,7 @@ wait_until_finish() {
     if [ "${END_CHECK}" -eq 0 ]; then
       break
     fi
-    sleep 10
+    sleep 3
   done
 }
 
@@ -921,7 +921,7 @@ move_log_files "${STAMP}"
 #
 #   for each ordering,
 #     split
-#     cat to ${GZ_CAT_COPYPROB_EACH_DIR}
+#     msort to ${GZ_CAT_COPYPROB_EACH_DIR}.??
 #
 #     it can require a large temporary disk in each ordering
 #
@@ -1049,43 +1049,21 @@ wait_until_finish "${STAMP}"
 
 
 #
-# cat ${GZ_CAT_COPYPROB_EACH_DIR}.?? in each dir into ${GZ_CAT_COPYPROB_EACH_DIR} 
-#   for calculating the average in the postprocessing below
-#
-while read EACH_DIR
-do
-  if [ ! -s "${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}" ]; then
-    if ls ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}.?? &> /dev/null; then
-      CMD=`returnQSUB_CMD ${STAMP}`
-      CMD=${CMD}" <<< '"
-      CMD=${CMD}" /bin/cat ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}.?? > ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}"
-      CMD=${CMD}"'"
-
-      echo ${CMD}
-      eval ${CMD}
-      if [ $? -ne 0 ]; then 
-        echo_fail "Execution error: ${CMD} (step${STEP})"
-      fi
-    fi
-  fi
-done < ${ORDER_DIR_LIST}
-
-wait_until_finish "${STAMP}"
-
-
-#
 # check ${GZ_CAT_COPYPROB_EACH_DIR} in each dir
 #
 while read EACH_DIR
 do
-  if [ ! -s "${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}" ]; then
-    echo_fail "Error: ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR} doesn't exist or empty"
-  else
-    CHECK_HEAD=`gzip -dc ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR} | head | wc -l`
-    if [ $? -ne 0 -o "${CHECK_HEAD}" -eq 0 ]; then
-      echo_fail "Error: ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR} is an incomplete file"
-    fi
+  CHECK=`ls ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}.?? | wc -l`
+  if [ "${CHECK}" != "${NUM_SPLITN}" ]; then
+    echo_fail "Error: ${EACH_DIR} must have ${NUM_SPLITN} ${GZ_CAT_COPYPROB_EACH_DIR}. files "
   fi
+
+  for aa in `ls ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}.??`
+  do
+    if [ ! -s "${aa}" ]; then
+      echo_fail "Error: ${aa} is empty"
+    fi
+  done
 
   #
   # temporary files, if they remain for some reason
