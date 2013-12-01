@@ -281,7 +281,7 @@ OUTF_SITE_DISTSCORE=site_distScore.txt
 # COMBINED_RES_DIR
 OUTF_SITE_STATS=results_siteStats.txt.gz
 OUTF_SUMMARY_POS=results_siteStats_summary.pos.txt
-OUTF_SUMMARY_TXT=sum_site_minus_average.summary.txt.gz
+OUTF_SUMMARY_SITE_MINUS_AVERAGE=sum_site_minus_average.summary.txt.gz
 OUTF_SUMMARY_RANGE=sum_site_minus_average.summary.range.txt
 
 PNG_HIST=results_siteStats_hist.png
@@ -1093,7 +1093,31 @@ do
 
 done < ${ORDER_DIR_LIST}
 
-move_log_files "${STAMP}"
+
+
+#
+# cat ${GZ_CAT_COPYPROB_EACH_DIR}.?? in each dir into ${GZ_CAT_COPYPROB_EACH_DIR} 
+#   for calculating the average in the postprocessing below without using another process (zcat))
+#
+while read EACH_DIR
+do
+  if [ ! -s "${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}" ]; then
+    if ls ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}.?? &> /dev/null; then
+      CMD=`returnQSUB_CMD ${STAMP}`
+      CMD=${CMD}" <<< '"
+      CMD=${CMD}" /bin/cat ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}.?? > ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}"
+      CMD=${CMD}"'"
+
+      echo ${CMD}
+      eval ${CMD}
+      if [ $? -ne 0 ]; then 
+        echo_fail "Execution error: ${CMD} (step${STEP})"
+      fi
+    fi
+  fi
+done < ${ORDER_DIR_LIST}
+
+wait_until_finish "${STAMP}"
 
 
 
@@ -1156,7 +1180,7 @@ COMBINED_RES_DIR=`echo ${ORDER_DIR_LIST} | perl -pe 's/\.list/_results/g'`
 SKIP_FLAG=0
 if [ -s "${COMBINED_RES_DIR}/${OUTF_SITE_STATS}" ]; then
   if [ -s "${COMBINED_RES_DIR}/${OUTF_SUMMARY_POS}" ]; then
-    if [ -s "${COMBINED_RES_DIR}/${OUTF_SUMMARY_TXT}" ]; then
+    if [ `gzip -dc "${COMBINED_RES_DIR}/${OUTF_SUMMARY_SITE_MINUS_AVERAGE}" | wc -l` -gt 2 ]; then
       if [ -s "${COMBINED_RES_DIR}/${OUTF_SUMMARY_RANGE}" ]; then
         DIRS_OK_FLAG=1
         for VISUALIZE_TYPE_DIR in `find ${COMBINED_RES_DIR} -type d -name visualize\*`
@@ -1207,8 +1231,8 @@ if [ "${SKIP_FLAG}" -eq 0 ]; then
     echo_fail "Error (step${STEP}): ${COMBINED_RES_DIR}/${OUTF_SUMMARY_POS} doesn't exist or empty "
   fi
 
-  if [ `gzip -dc "${COMBINED_RES_DIR}/${OUTF_SUMMARY_TXT}" | wc -l` -le 1 ]; then
-    echo_fail "Error (step${STEP}): ${COMBINED_RES_DIR}/${OUTF_SUMMARY_TXT} is empty "
+  if [ `gzip -dc "${COMBINED_RES_DIR}/${OUTF_SUMMARY_SITE_MINUS_AVERAGE}" | wc -l` -le 2 ]; then
+    echo_fail "Error (step${STEP}): ${COMBINED_RES_DIR}/${OUTF_SUMMARY_SITE_MINUS_AVERAGE} is empty "
   fi
 
   if [ ! -s "${COMBINED_RES_DIR}/${OUTF_SUMMARY_RANGE}" ]; then

@@ -303,8 +303,8 @@ if (!$opt_r) {
     $cmd_ppGz  = "";
 
     #$cmd_ppGz  = "gzip -dc $dir_each_ordering/$gz_cat_copyprob_each_dir |";
-    $cmd_ppGz  = "zcat $dir_each_ordering/$gz_cat_copyprob_each_dir.?? |";
-    $cmd_ppGz .= $cmd_ppGz_common;
+    #$cmd_ppGz  = "zcat $dir_each_ordering/$gz_cat_copyprob_each_dir.?? |";
+    $cmd_ppGz .= $cmd_ppGz_common . " -g $dir_each_ordering/$gz_cat_copyprob_each_dir ";
 
     my $nrow_ave_matrix = 0;
     if (-s "$dir_each_ordering/$out_each_dir_averave_matrix") {
@@ -337,8 +337,6 @@ if (!$opt_r) {
     #   for each site (long loop, parallelized)
     #############################################################################
     $loop_part = 2;
-
-    $cmd_ppGz  = "";
 
     $stamp = `date +%Y%m%d_%T`;
     chomp($stamp);
@@ -382,8 +380,10 @@ if (!$opt_r) {
         my $suffix = $each_gz_cat_copyprob;
            $suffix =~ s/^.*(\.[a-z0-9]{2})$/$1/g;
 
-        $cmd_ppGz  = "gzip -dc $each_gz_cat_copyprob |";
+        #$cmd_ppGz  = "gzip -dc $each_gz_cat_copyprob |";
+        $cmd_ppGz  = "";
         $cmd_ppGz .= $cmd_ppGz_common;
+        $cmd_ppGz .= " -g $each_gz_cat_copyprob ";
         $cmd_ppGz .= " -s $suffix";
         $cmd_ppGz .= " -p $loop_part";
         if ($opt_c) {
@@ -762,6 +762,8 @@ if ($opt_n) {
 
     my $p3_job_name = `date +%d%H%S`;
     chomp($p3_job_name);
+    $p3_job_name =~ s/^[0-9]+_//g;
+    $p3_job_name =~ s/://g;
     $p3_job_name = "p3_" . $p3_job_name;
 
     $stamp = `date +%Y%m%d_%T`;
@@ -797,9 +799,10 @@ if ($opt_n) {
           my $suffix = $each_gz_cat_copyprob;
              $suffix =~ s/^.*(\.[a-z0-9]{2})$/$1/g;
 
-          $cmd_ppGz  = "gzip -dc $each_gz_cat_copyprob | "; 
-
+          #$cmd_ppGz  = "gzip -dc $each_gz_cat_copyprob | "; 
+          $cmd_ppGz  = "";
           $cmd_ppGz .= " $postprocess_path ";
+          $cmd_ppGz .= " -g $each_gz_cat_copyprob";
           $cmd_ppGz .= " -d $dir_each_ordering ";
           $cmd_ppGz .= " -l $strainHapOrderFile ";
           $cmd_ppGz .= " -o $strainFineOrderFile ";
@@ -847,7 +850,7 @@ if ($opt_n) {
       chomp($dir_each_ordering);
       my @arr_outfiles = glob("$dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary.??");
       if (scalar(@arr_outfiles) == $N_PARALLEL_P2P3) {
-        if (! -f "$dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary") {
+        if (! -s "$dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary") {
           my $cmd_cat_sort  = "/bin/cat $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary.?? | ";
              $cmd_cat_sort .= "/bin/sort -n > $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary";
           
@@ -897,7 +900,9 @@ if ($opt_n) {
     my $i_this_pos = 0;
     my %hash_sum_site_minus_ave = ();
 
-    if (-s "$out_dir_results/$out_sum_site_minus_average_summary.gz") {
+    my $check_nrow = `gzip -dc $out_dir_results/$out_sum_site_minus_average_summary.gz | wc -l`;
+    chomp($check_nrow);
+    if ($check_nrow > 2) {
       print "$out_dir_results/$out_sum_site_minus_average_summary.gz already exists. Skipped\n";
     } else {
       open(OUT_SUM_DIST_SUMMARY_MATRIX, "> $out_dir_results/$out_sum_site_minus_average_summary");

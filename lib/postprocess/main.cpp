@@ -28,9 +28,10 @@ using namespace std;
 
 static const char * help=
         "\
-        Usage: gzip -dc file.gz | postprocess [OPTIONS] \n\
+        Usage: postprocess [OPTIONS] \n\
             \n\
             Options:\n\
+                -g file.gz \n\
                 -d dir_each_ordering \n\
                 -l strainHapOrderFile \n\
                 -o strainFineOrderFile \n\
@@ -94,6 +95,7 @@ int main(int argc, char **argv)
     // getopt
     int c;
     bool verbose=false;
+    char * gzFileName=NULL;
     char * dir_each_ordering=NULL;
     char * strainHapOrderFile=NULL;
     char * dir_results=NULL;
@@ -106,9 +108,10 @@ int main(int argc, char **argv)
     char * donor_recipient_constraintFile=NULL;
 
     if (argc==1) {printf("%s",help);exit(0);}
-    while ((c = getopt (argc, argv, "d:l:r:o:t:p:s:m:c:v")) != -1)
+    while ((c = getopt (argc, argv, "g:d:l:r:o:t:p:s:m:c:v")) != -1)
         switch (c)
     {
+        case('g'):gzFileName=optarg;break;
         case('d'):dir_each_ordering=optarg;break;
         case('l'):strainHapOrderFile=optarg;break;
         case('o'):strainFineOrderFile=optarg;break;
@@ -331,7 +334,12 @@ int main(int argc, char **argv)
         timer = time(NULL); stamp = ctime(&timer); stamp[strlen(stamp)-1] = '\0';
         printf("%s: preparation of average matrix of this ordering started\n", stamp);
 
-        while(fgets(buffer, MAX_BUFFER , stdin) != NULL) {
+        gzFile fileStream;
+        openFile (gzFileName, fileStream, "rb"); // works also if file not compressed
+        string line;
+        while (getline (fileStream, line)) {
+            strcpy(buffer, line.c_str());
+        //while(fgets(buffer, MAX_BUFFER , stdin) != NULL) {
 
             buffer[strlen(buffer) - 1] =  '\0'; // do it before strtok
             memcpy(buffer2, buffer, sizeof(buffer2));
@@ -650,7 +658,12 @@ int main(int argc, char **argv)
             int i_row = 0;
             int i_recipient_strain_of_this_pos = 0;
 
-            while(fgets(buffer, MAX_BUFFER , stdin) != NULL) {
+            gzFile fileStream;
+            openFile (gzFileName, fileStream, "rb"); // works also if file not compressed
+            string line;
+            while (getline (fileStream, line)) {
+                strcpy(buffer, line.c_str());
+            //while(fgets(buffer, MAX_BUFFER , stdin) != NULL) {
 
                 buffer[strlen(buffer) - 1] =  '\0'; // do it before strtok
                 memcpy(buffer2, buffer, sizeof(buffer2));
@@ -1002,7 +1015,12 @@ int main(int argc, char **argv)
 
             fh_out = fopen_wrapper(fname, "w");
 
-            while(fgets(buffer, MAX_BUFFER , stdin) != NULL) {
+            gzFile fileStream;
+            openFile (gzFileName, fileStream, "rb"); // works also if file not compressed
+            string line;
+            while (getline (fileStream, line)) {
+                strcpy(buffer, line.c_str());
+            //while(fgets(buffer, MAX_BUFFER , stdin) != NULL) {
 
                 buffer[strlen(buffer) - 1] =  '\0'; // do it before strtok
                 memcpy(buffer2, buffer, sizeof(buffer2));
