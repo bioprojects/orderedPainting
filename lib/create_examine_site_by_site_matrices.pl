@@ -55,6 +55,7 @@ my $postprocess_path = "$FindBin::Bin/postprocess/pp";
 #
 my $gz_cat_copyprob_each_dir = "copyprobsperlocus.cat.gz";
 
+my $out_each_dir_sum             = "sum.txt";            # part 1 of postprocessing
 my $out_each_dir_averave_matrix  = "average.matrix.txt"; # part 1 of postprocessing
 my $out_each_dir_site_distScore  = "site_distScore.txt"; # part 2 of postprocessing
 my $out_each_dir_site_minus_average_matrix_summary = "site_minus_average.matrix.summary"; # -r (part 3 of postprocessing)
@@ -69,7 +70,15 @@ my $out_sum_site_minus_average_summary        = "sum_site_minus_average.summary.
 my $out_sum_site_minus_average_summary_range  = "sum_site_minus_average.summary.range.txt";
 
 #
-# parallelization for 01,..,09 (constant)
+# type of postprocessing loop
+#
+my $LOOP_010 = "010";
+my $LOOP_011 = "011";
+my $LOOP_020 = "020";
+my $LOOP_030 = "030";
+
+#
+# parallelization in each ordering for 01,..,09 (constant)
 #
 my $N_PARALLEL_P2P3 = 9;
 
@@ -298,13 +307,6 @@ if (!$opt_r) {
     # part1: 
     #   calculate average matrix (long loop)
     ################################################################
-    $loop_part = 1;
-
-    $cmd_ppGz  = "";
-
-    #$cmd_ppGz  = "gzip -dc $dir_each_ordering/$gz_cat_copyprob_each_dir |";
-    #$cmd_ppGz  = "zcat $dir_each_ordering/$gz_cat_copyprob_each_dir.?? |";
-    $cmd_ppGz .= $cmd_ppGz_common . " -g $dir_each_ordering/$gz_cat_copyprob_each_dir ";
 
     my $nrow_ave_matrix = 0;
     if (-s "$dir_each_ordering/$out_each_dir_averave_matrix") {
@@ -313,22 +315,86 @@ if (!$opt_r) {
     }
 
     if ($nrow_ave_matrix == scalar(@arr_ind_fineOrdering)+1) {
-      print "$dir_each_ordering/$out_each_dir_averave_matrix already exists. Skipped.\n";
+      print "$dir_each_ordering/$out_each_dir_averave_matrix.?? already exists. Skipped.\n";
     } else {
       #
-      # calculate an average matrix by processing each site in $gz_cat_copyprob_each_dir
+      # calculate summation
       #
-      $stamp = `date +%Y%m%d_%T`;
-      chomp($stamp);
-      print "$stamp preparation of average matrix of this ordering started\n";
-
-      $cmd = $cmd_ppGz . " -p $loop_part";
-      print("$cmd\n");
-      if( system("$cmd") != 0) { die("Error: $cmd failed"); };
+      $loop_part = $LOOP_010;
 
       $stamp = `date +%Y%m%d_%T`;
       chomp($stamp);
-      print "$stamp preparation of average matrix of this ordering ended\n";
+      print "$stamp summation of this ordering started\n";
+
+      #
+      # parallelize within an ordering
+      #
+      my $p1_job_name = $stamp;
+         $p1_job_name =~ s/^[0-9]+_//g;
+         $p1_job_name =~ s/://g;
+         $p1_job_name = "p1_" . $p1_job_name;
+
+      my @arr_divided_gz_cat_copyprob = glob("$dir_each_ordering/$gz_cat_copyprob_each_dir.??");
+      foreach my $each_gz_cat_copyprob (@arr_divided_gz_cat_copyprob) {
+        my $suffix = $each_gz_cat_copyprob;
+           $suffix =~ s/^.*(\.[a-z0-9]{2})$/$1/g;
+
+        $cmd_ppGz  = "";
+        #$cmd_ppGz  = "gzip -dc $dir_each_ordering/$gz_cat_copyprob_each_dir |";
+        #$cmd_ppGz  = "zcat $dir_each_ordering/$gz_cat_copyprob_each_dir.?? |";
+        $cmd_ppGz .= $cmd_ppGz_common;
+        $cmd_ppGz .= " -i $each_gz_cat_copyprob ";
+        $cmd_ppGz .= " -s $suffix";
+        $cmd_ppGz .= " -p $loop_part";
+        # no "-c" here
+
+        $cmd = "$QSUB $p1_job_name <<< '$cmd_ppGz '";
+        print("$cmd\n");
+        if( system("$cmd") != 0) { die("Error: $cmd failed"); };
+      }
+
+      while () {
+        my $check = `$QSTAT | grep $p1_job_name | wc -l`;
+        #print "$check";
+        chomp($check);
+        
+        if ($check == 0) {
+          my @arr_outfiles = glob("$dir_each_ordering/$out_each_dir_sum.??");
+          if (scalar(@arr_outfiles) == $N_PARALLEL_P2P3) {
+            $cmd = "/bin/cat $dir_each_ordering/$out_each_dir_sum.?? > $dir_each_ordering/$out_each_dir_sum";
+            print("$cmd\n");
+            if( system("$cmd") != 0) { die("Error: $cmd failed"); };
+            last;
+          }
+        }
+        sleep 10;
+      }
+      
+      my @arr_p1_job_logs = glob("$p1_job_name.*");
+      foreach my $each_p1_job_log (@arr_p1_job_logs) {
+        unlink($each_p1_job_log);
+      }
+
+      $stamp = `date +%Y%m%d_%T`;
+      chomp($stamp);
+      print "$stamp calculate summation of this ordering ended\n";
+      
+      
+      #
+      # calculate average
+      #
+      $loop_part = $LOOP_011;
+      
+      $cmd_ppGz  = "";
+      $cmd_ppGz .= $cmd_ppGz_common . " -i $dir_each_ordering/$out_each_dir_sum ";
+      $cmd_ppGz .= " -p $loop_part";
+      print("$cmd_ppGz\n");
+      if( system("$cmd_ppGz") != 0) { die("Error: $cmd_ppGz failed"); };
+
+      $stamp = `date +%Y%m%d_%T`;
+      chomp($stamp);
+      print "$stamp calculate average of this ordering ended\n";
+
     }
 
     #############################################################################
@@ -336,7 +402,7 @@ if (!$opt_r) {
     #   calculate the distance statistic and its bootstrappd samples
     #   for each site (long loop, parallelized)
     #############################################################################
-    $loop_part = 2;
+    $loop_part = $LOOP_020;
 
     $stamp = `date +%Y%m%d_%T`;
     chomp($stamp);
@@ -356,7 +422,7 @@ if (!$opt_r) {
     }
 
     if ($nrow_distScore == $num_site) {
-      print "$dir_each_ordering/$out_each_dir_site_distScore already exists. Skipped.\n";
+      print "$dir_each_ordering/$out_each_dir_site_distScore.?? already exists. Skipped.\n";
     } else {
       #
       # calculate distance statistic and its bootstrappd samples 
@@ -383,7 +449,7 @@ if (!$opt_r) {
         #$cmd_ppGz  = "gzip -dc $each_gz_cat_copyprob |";
         $cmd_ppGz  = "";
         $cmd_ppGz .= $cmd_ppGz_common;
-        $cmd_ppGz .= " -g $each_gz_cat_copyprob ";
+        $cmd_ppGz .= " -i $each_gz_cat_copyprob ";
         $cmd_ppGz .= " -s $suffix";
         $cmd_ppGz .= " -p $loop_part";
         if ($opt_c) {
@@ -758,7 +824,7 @@ if ($opt_n) {
     #   (long loop, parallelized)
     #
     #######################################################################################################################
-    $loop_part = 3;
+    $loop_part = $LOOP_030;
 
     my $p3_job_name = `date +%d%H%S`;
     chomp($p3_job_name);
@@ -802,7 +868,7 @@ if ($opt_n) {
           #$cmd_ppGz  = "gzip -dc $each_gz_cat_copyprob | "; 
           $cmd_ppGz  = "";
           $cmd_ppGz .= " $postprocess_path ";
-          $cmd_ppGz .= " -g $each_gz_cat_copyprob";
+
           $cmd_ppGz .= " -d $dir_each_ordering ";
           $cmd_ppGz .= " -l $strainHapOrderFile ";
           $cmd_ppGz .= " -o $strainFineOrderFile ";
@@ -812,6 +878,7 @@ if ($opt_n) {
           $cmd_ppGz .= " -r $out_dir_results ";
           $cmd_ppGz .= " -t $type_painting ";
 
+          $cmd_ppGz .= " -i $each_gz_cat_copyprob";
           $cmd_ppGz .= " -s $suffix";
           $cmd_ppGz .= " -p $loop_part";
           if ($opt_c) {

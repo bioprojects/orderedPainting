@@ -31,13 +31,13 @@ static const char * help=
         Usage: postprocess [OPTIONS] \n\
             \n\
             Options:\n\
-                -g file.gz \n\
+                -i file.gz \n\
                 -d dir_each_ordering \n\
                 -l strainHapOrderFile \n\
                 -o strainFineOrderFile \n\
                 -r dir_results \n\
                 -t 1|2 \n\
-                -p 1|2|3 \n\
+                -p 010|011|020|030 \n\
                 -s .01 (suffix added to the the output file) \n\
                 [-m pos2missingInd.txt] \n\
                 [-c donor_recipient_constraint.txt] \n\
@@ -53,14 +53,20 @@ const int N_BOOTSTRAP = 100;
 
 const int MAX_BUFFER = 10240; 
 
-// part1 - output
+const char * LOOP_010 = "010";
+const char * LOOP_011 = "011";
+const char * LOOP_020 = "020";
+const char * LOOP_030 = "030";
+
+// part1 - output and input
+const char * out_each_dir_sum                  = "sum.txt"; // in each ordering dir
 const char * out_each_dir_averave_matrix       = "average.matrix.txt"; // in each ordering dir
 
 // part 2 - output
 const char * out_each_dir_site_distScore_info  = "site_distScore.txt"; // in each ordering dir
 
 // part 3 - one of the inputs and ouptut
-const char * out_results_summary_pos = "results_siteStats_summary.pos.txt"; // in the results dir
+const char * results_summary_pos                    = "results_siteStats_summary.pos.txt"; // in the results dir
 const char * out_each_dir_site_minus_average_matrix = "site_minus_average.matrix.summary"; // in each ordering dir
 
 
@@ -95,29 +101,29 @@ int main(int argc, char **argv)
     // getopt
     int c;
     bool verbose=false;
-    char * gzFileName=NULL;
+    char * inFileName=NULL;
     char * dir_each_ordering=NULL;
     char * strainHapOrderFile=NULL;
     char * dir_results=NULL;
     char * strainFineOrderFile=NULL;
     char * suffix=NULL;
     int type_painting=-1;
-    int loop_part=-1;
+    char * loop_part=NULL;
     int seed=-1; // constant
     char * pos2missingIndFile=NULL;
     char * donor_recipient_constraintFile=NULL;
 
     if (argc==1) {printf("%s",help);exit(0);}
-    while ((c = getopt (argc, argv, "g:d:l:r:o:t:p:s:m:c:v")) != -1)
+    while ((c = getopt (argc, argv, "i:d:l:r:o:t:p:s:m:c:v")) != -1)
         switch (c)
     {
-        case('g'):gzFileName=optarg;break;
+        case('i'):inFileName=optarg;break;
         case('d'):dir_each_ordering=optarg;break;
         case('l'):strainHapOrderFile=optarg;break;
         case('o'):strainFineOrderFile=optarg;break;
-        case('r'):dir_results=optarg;break; // used only in loop_part == 3
+        case('r'):dir_results=optarg;break; // used only in loop_part is 030
         case('t'):type_painting=atoi(optarg);break;
-        case('p'):loop_part=atoi(optarg);break;
+        case('p'):loop_part=optarg;break;
         case('s'):suffix=optarg;break;
         case('m'):pos2missingIndFile=optarg;break;
         case('c'):donor_recipient_constraintFile=optarg;break;
@@ -186,6 +192,7 @@ int main(int argc, char **argv)
 
     vector<string> arr_indName_fineOrdering; 
 
+    map<pair<int, int>, double> hash_summation; 
     map<pair<int, int>, double> hash_average_prob; 
     //map<pair<int, int>, string> hash_average_probStr; // double or NA
     map<pair<int, int>, double> hash_site_by_site_prob; 
@@ -320,22 +327,19 @@ int main(int argc, char **argv)
 
     // ########################################################################################
 
-    if (loop_part == 1) {
+    if ( strcmp(loop_part,LOOP_010) == 0 ) {
 
-        // ************************************************************************
-        // calculate average matrix
-        // ************************************************************************
-        sprintf( fname, "%s/%s", dir_each_ordering, out_each_dir_averave_matrix ); 
-        fh_out = fopen_wrapper(fname, "w");
-
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // calculate summation
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         int i_row = 0;
         int i_recipient_strain_of_this_pos = 0;
 
         timer = time(NULL); stamp = ctime(&timer); stamp[strlen(stamp)-1] = '\0';
-        printf("%s: preparation of average matrix of this ordering started\n", stamp);
+        printf("%s: summation of this ordering started\n", stamp);
 
         gzFile fileStream;
-        openFile (gzFileName, fileStream, "rb"); // works also if file not compressed
+        openFile (inFileName, fileStream, "rb"); // works also if file not compressed
         string line;
         while (getline (fileStream, line)) {
             strcpy(buffer, line.c_str());
@@ -434,14 +438,14 @@ int main(int argc, char **argv)
                     }
 
                     if (exclude_ind_flag == false) {
-                        if ( !has_pairkey_int2double( hash_average_prob, pair<int,int>(cnt_recipient,cnt_donor) ) ) {
-                            hash_average_prob[pair<int,int>(cnt_recipient,cnt_donor)] = atof(*(arr_line+i));
+                        if ( !has_pairkey_int2double( hash_summation, pair<int,int>(cnt_recipient,cnt_donor) ) ) {
+                            hash_summation[pair<int,int>(cnt_recipient,cnt_donor)] = atof(*(arr_line+i));
                         } else {
-                            hash_average_prob[pair<int,int>(cnt_recipient,cnt_donor)] += atof(*(arr_line+i));
+                            hash_summation[pair<int,int>(cnt_recipient,cnt_donor)] += atof(*(arr_line+i));
                         }
                     } else {
-                        if ( !has_pairkey_int2double( hash_average_prob, pair<int,int>(cnt_recipient,cnt_donor) ) ) {
-                            hash_average_prob[pair<int,int>(cnt_recipient,cnt_donor)] = 0;
+                        if ( !has_pairkey_int2double( hash_summation, pair<int,int>(cnt_recipient,cnt_donor) ) ) {
+                            hash_summation[pair<int,int>(cnt_recipient,cnt_donor)] = 0;
                         }
                     }
 
@@ -455,12 +459,122 @@ int main(int argc, char **argv)
 
         } // while read line
 
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // output summation
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        if (suffix == NULL) {
+            sprintf( fname, "%s/%s", dir_each_ordering, out_each_dir_sum ); 
+        } else {
+            sprintf( fname, "%s/%s%s", dir_each_ordering, out_each_dir_sum, suffix ); 
+        }
+        fh_out = fopen_wrapper(fname, "w");
+
+        for (i=0; i<arr_indName_eachOrdering.size(); i++) {
+            if (type_painting == 2) {
+              cnt_recipient = i+1;
+            } else if (type_painting == 1) {
+              cnt_recipient = hash_strainName2IND[arr_indName_fineOrdering[i]];
+            }
+
+            // diagonal is always zero
+            hash_summation[pair<int,int>(cnt_recipient,cnt_recipient)] = 0;
+
+            // output 
+            for (j=0; j<arr_indName_eachOrdering.size(); j++) {
+                if (type_painting == 2) {
+                  cnt_donor = j+1;
+                } else if (type_painting == 1) {
+                  cnt_donor = hash_strainName2IND[arr_indName_fineOrdering[j]];
+                }
+
+                if (j==0) {
+                    fprintf(fh_out, "%d %.15lf", cnt_recipient, hash_summation[pair<int,int>(cnt_recipient,cnt_donor)]);
+                } else {
+                    fprintf(fh_out, " %.15lf", hash_summation[pair<int,int>(cnt_recipient,cnt_donor)]);
+                }
+            }
+
+            fprintf(fh_out, "\n");
+        }
+
+        fprintf(fh_out, "num_site %d\n", num_site);
+
+        timer = time(NULL); stamp = ctime(&timer); stamp[strlen(stamp)-1] = '\0';
+        printf("%s: summation was written to %s\n", stamp, fname);
+
+
+    } else if ( strcmp(loop_part,LOOP_011) == 0 ) {
 
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-        // output average matrix
+        // load summation to hash_average_prob
+        // load num_site
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+        fh = fopen_wrapper(inFileName, "r");
+        while (!feof(fh)) {
+            int tmp_num_site;
+
+            if (fgets(buffer, MAX_BUFFER, fh) != NULL) {
+                buffer[strlen(buffer) - 1] =  '\0';
+
+                *arr_line = strtok(buffer , " ");
+                if (string(*arr_line) == "num_site") {
+
+                    for (i = 1; ; i++) { // always use this loop to get information
+                        if (NULL == (*(arr_line+i) = strtok(NULL , " "))){
+                            break;
+                        }
+
+                        if (i == 1) {
+                            num_site += atoi(*(arr_line+i));
+                            break;
+                        }
+                    }
+
+                } else {
+                    cnt_recipient = atoi(*(arr_line));
+
+                    for (i = 1; ; i++) { 
+                        if (NULL == (*(arr_line+i) = strtok(NULL , " "))){
+                            break;
+                        }
+
+                        if (type_painting == 2) {
+                          cnt_donor = i;
+                        } else if (type_painting == 1) {
+                          cnt_donor = hash_strainName2IND[arr_indName_fineOrdering[i]];
+                        }
+
+                        if (atof(*(arr_line+i)) > 0) {
+                            if ( has_pairkey_int2double( hash_average_prob, pair<int,int>(cnt_recipient,cnt_donor)) ) {
+                                hash_average_prob[pair<int,int>(cnt_recipient,cnt_donor)] += atof(*(arr_line+i));
+                            } else {
+                                hash_average_prob[pair<int,int>(cnt_recipient,cnt_donor)] = atof(*(arr_line+i));
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+        fclose(fh);
+
+#ifdef DEBUG
+        printf("num_site=%d\n", num_site);
+        for (int ii=1; ii<=arr_indName_eachOrdering.size(); ii++) {
+            for (int jj=1; jj<=arr_indName_eachOrdering.size(); jj++) {
+                printf("%lf ",hash_average_prob[pair<int,int>(ii,jj)]);
+            }
+            printf("\n");
+        }
+#endif
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+        // calculate average matrix (summation/num_site)
         //   format
         //   by using cnt_recipient, cnt_donor (of this ordering or of display ordering)
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+        sprintf( fname, "%s/%s", dir_each_ordering, out_each_dir_averave_matrix ); 
+        fh_out = fopen_wrapper(fname, "w");
 
         out_header == "";
         for (i=0; i<arr_indName_eachOrdering.size(); i++) {
@@ -479,6 +593,7 @@ int main(int argc, char **argv)
         fprintf(fh_out, "%s\n", out_header.c_str());
 
         for (i=0; i<arr_indName_eachOrdering.size(); i++) {
+
             if (type_painting == 2) {
               cnt_recipient = i+1;
             } else if (type_painting == 1) {
@@ -583,7 +698,8 @@ int main(int argc, char **argv)
 
         } // recipient loop
 
-    } else if (loop_part == 2 || loop_part == 3) {
+
+    } else {
 
         if (verbose) {
             sprintf( fname_verbose, "%s/verbose_inc_exc.txt", dir_each_ordering ); 
@@ -643,7 +759,7 @@ int main(int argc, char **argv)
         //
         // loop 2 or 3, separately
         //
-        if (loop_part == 2) {
+        if (strcmp(loop_part,LOOP_020) == 0) {
 
             // ************************************************************************
             // calculate the distance statistic for each site
@@ -659,7 +775,7 @@ int main(int argc, char **argv)
             int i_recipient_strain_of_this_pos = 0;
 
             gzFile fileStream;
-            openFile (gzFileName, fileStream, "rb"); // works also if file not compressed
+            openFile (inFileName, fileStream, "rb"); // works also if file not compressed
             string line;
             while (getline (fileStream, line)) {
                 strcpy(buffer, line.c_str());
@@ -967,12 +1083,12 @@ int main(int argc, char **argv)
 
             } // read lines
 
-        } else if (loop_part == 3) {
+        } else if (strcmp(loop_part,LOOP_030) == 0) {
 
             //
             // read positions to be processed
             //
-            sprintf( fname, "%s/%s", dir_results, out_results_summary_pos ); 
+            sprintf( fname, "%s/%s", dir_results, results_summary_pos ); 
 
             fh = fopen_wrapper(fname, "r");
             fgets(buffer, MAX_BUFFER, fh); // skip the header
@@ -1016,7 +1132,7 @@ int main(int argc, char **argv)
             fh_out = fopen_wrapper(fname, "w");
 
             gzFile fileStream;
-            openFile (gzFileName, fileStream, "rb"); // works also if file not compressed
+            openFile (inFileName, fileStream, "rb"); // works also if file not compressed
             string line;
             while (getline (fileStream, line)) {
                 strcpy(buffer, line.c_str());
