@@ -390,7 +390,7 @@ if (!$opt_r) {
           $cmd_ppGz .= " -c $constraint_File";
         }
         
-        $cmd = "$QSUB $p2_job_name <<< '$cmd_ppGz -p $loop_part'";
+        $cmd = "$QSUB $p2_job_name <<< '$cmd_ppGz '";
         print("$cmd\n");
         if( system("$cmd") != 0) { die("Error: $cmd failed"); };
       }
@@ -595,16 +595,12 @@ if ($opt_n) {
       chomp($stamp);
       print("$stamp output $out_dir_results/$out_results_summary_pos ... \n");
 
+      my @arr_summary_pos_type = ('top','middle','bottom');
+
       #
       # extract position of summary sites and record the threshold of "top"
       #
-      my @arr_type = ('top','middle','bottom');
-      foreach my $each_type (@arr_type) {
-        my $dir = $prefix_of_dirs_for_visualization . $each_type; 
-        if (! -d $dir) {
-          mkdir("$dir");
-          print("$dir was created\n")
-        }
+      foreach my $each_type (@arr_summary_pos_type) {
         $hash_visType_count{$each_type} = 0;
       }
 
@@ -819,7 +815,7 @@ if ($opt_n) {
             $cmd_ppGz .= " -c $constraint_File";
           }
           
-          $cmd = "$QSUB $p3_job_name <<< '$cmd_ppGz -p $loop_part'";
+          $cmd = "$QSUB $p3_job_name <<< '$cmd_ppGz '";
           print("$cmd\n");
           if( system("$cmd") != 0) { die("Error: $cmd failed"); };
         }
@@ -1003,7 +999,16 @@ if ($opt_n) {
              $out_rank_pos_file .= "_";
              $out_rank_pos_file .= "$pos.txt";
 
-          open(OUT_SUM_DIST_SITE, "> $prefix_of_dirs_for_visualization".$hash_summaryPos2Type{$pos}."/$out_rank_pos_file");
+          #
+          # visualize_top or middle or bottom
+          #
+          my $dir_visType = $prefix_of_dirs_for_visualization . $hash_summaryPos2Type{$pos};
+          if (! -d "$dir_visType") {
+            mkdir("$dir_visType");
+            print("$dir_visType was created\n")
+          }
+
+          open(OUT_SUM_DIST_SITE, "> $dir_visType"."/"."$out_rank_pos_file");
           print OUT_SUM_DIST_SITE "type distRankDesc pos $out_fine_header\n";
 
           # output matrix of this site
