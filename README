@@ -159,8 +159,9 @@ by an occasional problem of your grid engine (such as incomplete
 execution of a part of array jobs), please re-execute the command 
 as previously after fixing the problem.
 
-It should restart computation at an appropriate step
-and proceed to the end.
+It should restart computation at an appropriate step and 
+proceed to the end.  If there are incomplete temporary files
+in output directories, please remove them before re-execution.
 
 
 

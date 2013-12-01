@@ -18,7 +18,6 @@ usage () {
   echo " [-m pos2missingInd.txt (pos[tab]missing_individual_name]"
   echo " [-o strainName.list (individual name in an order for output: default is the file specified by -l) ]"
   
-  echo " [-t 10 (num. of orderings and the reverse, default=10) ]"
   echo " [-s 1  (seed of random number generator: default=1) ]"
 
   echo "' "
@@ -230,7 +229,8 @@ disp_punctuate() {
 # args
 #
 SEED=1
-TYPE_NUM_ORDERING=10
+TYPE_NUM_ORDERING=10 # 20 in total (forward & reverse) 
+                     #  9 parallelization for each ordering in the postprocessing
 VERBOSE=FALSE
 CONTRAST_MAX=-9999
 MAX_PARALLEL_DECOMPRESS=20 
