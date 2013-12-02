@@ -24,6 +24,7 @@ echo_fail(){
   exit 1
 }
 
+VISUAL_LIST=""
 while getopts a:b:l: OPTION
 do
   case $OPTION in
@@ -67,7 +68,11 @@ else
   echo_fail "unknown QUEUE_TYPE: ${QUEUE_TYPE}"
 fi
 
-CMD="R --vanilla --quiet < ${R_MAIN2} --args ${R_LIB} ${POS_MATRIXFILE} ${MIN} ${MAX} > /dev/null 2>&1"
+CMD="R --vanilla --quiet < ${R_MAIN2} --args ${R_LIB} ${POS_MATRIXFILE} ${MIN} ${MAX} "
+if [ "${VISUAL_LIST}" != "" ]; then
+  CMD=${CMD}" ${VISUAL_LIST} "
+fi
+CMD=${CMD}" > /dev/null 2>&1"
 echo ${CMD}
 eval ${CMD}
 
