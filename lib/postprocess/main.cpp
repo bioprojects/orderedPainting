@@ -509,6 +509,21 @@ int main(int argc, char **argv)
         // load summation to hash_average_prob
         // load num_site
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+        // initialize
+        for (int ii=1; ii<=arr_indName_eachOrdering.size(); ii++) {
+            for (int jj=1; jj<=arr_indName_eachOrdering.size(); jj++) {
+                if (type_painting == 2) {
+                    if (ii >= jj) {
+                        hash_average_prob[pair<int,int>(ii,jj)] = 0;
+                    }
+                } else {
+                        hash_average_prob[pair<int,int>(ii,jj)] = 0;
+                }
+                
+            }
+        }
+
         fh = fopen_wrapper(inFileName, "r");
         while (!feof(fh)) {
             int tmp_num_site;
@@ -550,9 +565,12 @@ int main(int argc, char **argv)
                             } else {
                                 hash_average_prob[pair<int,int>(cnt_recipient,cnt_donor)] = atof(*(arr_line+i));
                             }
+                        } else {
+                            // do nothing 
+                            // (in the ordered condition, 0 or undefined)
                         }
-
                     }
+
                 }
             }
         }
@@ -657,7 +675,6 @@ int main(int argc, char **argv)
                     }
                 } else {
                     if ( has_pairkey_int2double( hash_average_prob, pair<int,int>(cnt_recipient,cnt_donor) ) ) {
-
                         // adjust
 
                         // if there is no missing individual, rowsum_prob must be larger than 0
