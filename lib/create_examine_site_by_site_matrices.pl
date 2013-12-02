@@ -80,7 +80,7 @@ my $LOOP_030 = "030";
 #
 # parallelization in each ordering for 01,..,09 (constant)
 #
-my $N_PARALLEL_P2P3 = 9;
+my $PARALLEL_PER_ORDERING = 9;
 
 #
 # number of sites in sum_site_minus_average.summary.txt and for visualization
@@ -348,7 +348,7 @@ if (!$opt_r) {
         $cmd_ppGz .= " -p $loop_part";
         # no "-c" here
 
-        $cmd = "$QSUB $p1_job_name <<< '$cmd_ppGz '";
+        $cmd = "$QSUB $p1_job_name -e $p1_job_name.log -o $p1_job_name.log <<< '$cmd_ppGz '";
         print("$cmd\n");
         if( system("$cmd") != 0) { die("Error: $cmd failed"); };
       }
@@ -360,7 +360,7 @@ if (!$opt_r) {
         
         if ($check == 0) {
           my @arr_outfiles = glob("$dir_each_ordering/$out_each_dir_sum.??");
-          if (scalar(@arr_outfiles) == $N_PARALLEL_P2P3) {
+          if (scalar(@arr_outfiles) == $PARALLEL_PER_ORDERING) {
             $cmd = "/bin/cat $dir_each_ordering/$out_each_dir_sum.?? > $dir_each_ordering/$out_each_dir_sum";
             print("$cmd\n");
             if( system("$cmd") != 0) { die("Error: $cmd failed"); };
@@ -456,7 +456,7 @@ if (!$opt_r) {
           $cmd_ppGz .= " -c $constraint_File";
         }
         
-        $cmd = "$QSUB $p2_job_name <<< '$cmd_ppGz '";
+        $cmd = "$QSUB $p2_job_name -e $p2_job_name.log -o $p2_job_name.log <<< '$cmd_ppGz '";
         print("$cmd\n");
         if( system("$cmd") != 0) { die("Error: $cmd failed"); };
       }
@@ -468,7 +468,7 @@ if (!$opt_r) {
         
         if ($check == 0) {
           my @arr_outfiles = glob("$dir_each_ordering/$out_each_dir_site_distScore.??");
-          if (scalar(@arr_outfiles) == $N_PARALLEL_P2P3) {
+          if (scalar(@arr_outfiles) == $PARALLEL_PER_ORDERING) {
             $cmd = "/bin/cat $dir_each_ordering/$out_each_dir_site_distScore.?? > $dir_each_ordering/$out_each_dir_site_distScore";
             print("$cmd\n");
             if( system("$cmd") != 0) { die("Error: $cmd failed"); };
@@ -583,6 +583,9 @@ if ($opt_n) {
         $cmd_cat .= " $dir_each_ordering/$out_each_dir_site_distScore ";
       }
       close(DIR_ORDERING);
+      $cmd_cat .= "> $out_dir_results/$out_each_dir_site_distScore.cat"; # tmp file
+      print("$cmd_cat\n");
+      if( system("$cmd_cat") != 0) { die("Error: $cmd_cat failed"); };
 
       #
       # prepare %hash_sum_site_distScore (pos=>value)
@@ -594,8 +597,7 @@ if ($opt_n) {
       chomp($stamp);
       print("$stamp calculating sum of distScore across the orderings ... \n");
 
-      print "$cmd_cat\n";
-      open(SITE_DIST_CAT, "$cmd_cat |");
+      open(SITE_DIST_CAT, "$out_dir_results/$out_each_dir_site_distScore.cat");
       while (my $line = <SITE_DIST_CAT>) {
         #if ($line !~ /^[0-9]/) { # not required
         #  next;
@@ -645,6 +647,7 @@ if ($opt_n) {
 
       }
       close(SITE_DIST_CAT);
+      unlink("$out_dir_results/$out_each_dir_site_distScore.cat"); # remove tmp file
 
       $stamp = `date +%Y%m%d_%T`;
       chomp($stamp);
@@ -857,8 +860,8 @@ if ($opt_n) {
       # parallelize within an ordering
       #
       my @arr_outfiles = glob("$dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary.??");
-      if (scalar(@arr_outfiles) == $N_PARALLEL_P2P3) {
-        print "$dir_each_ordering is skipped because there are already $N_PARALLEL_P2P3 $out_each_dir_site_minus_average_matrix_summary.?? files\n";
+      if (scalar(@arr_outfiles) == $PARALLEL_PER_ORDERING) {
+        print "$dir_each_ordering is skipped because there are already $PARALLEL_PER_ORDERING $out_each_dir_site_minus_average_matrix_summary.?? files\n";
       } else {
         my @arr_divided_gz_cat_copyprob = glob("$dir_each_ordering/$gz_cat_copyprob_each_dir.??");
         foreach my $each_gz_cat_copyprob (@arr_divided_gz_cat_copyprob) {
@@ -885,7 +888,7 @@ if ($opt_n) {
             $cmd_ppGz .= " -c $constraint_File";
           }
           
-          $cmd = "$QSUB $p3_job_name <<< '$cmd_ppGz '";
+          $cmd = "$QSUB $p3_job_name -e $p3_job_name.log -o $p3_job_name.log <<< '$cmd_ppGz '";
           print("$cmd\n");
           if( system("$cmd") != 0) { die("Error: $cmd failed"); };
         }
@@ -906,7 +909,7 @@ if ($opt_n) {
     }
 
     #
-    # cat and sort (to save memory in the next step)
+    # sort (not to store positions in RAM in the next step)
     #
     # (this sorting is only for the representative sites, which is thus quick)
     #
@@ -916,17 +919,17 @@ if ($opt_n) {
     while (my $dir_each_ordering = <DIR_ORDERING>) {
       chomp($dir_each_ordering);
       my @arr_outfiles = glob("$dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary.??");
-      if (scalar(@arr_outfiles) == $N_PARALLEL_P2P3) {
+      if (scalar(@arr_outfiles) == $PARALLEL_PER_ORDERING) {
         if (! -s "$dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary") {
-          my $cmd_cat_sort  = "/bin/cat $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary.?? | ";
-             $cmd_cat_sort .= "/bin/sort -n > $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary";
+          my $cmd_cat_sort  = "/bin/sort -n $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary.?? ";
+             $cmd_cat_sort .= " > $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary";
           
-          $cmd = "$QSUB $p3_job_name <<< '$cmd_cat_sort'";
+          $cmd = "$QSUB $p3_job_name -e $p3_job_name.log -o $p3_job_name.log <<< '$cmd_cat_sort'";
           print("$cmd\n");
           if( system("$cmd") != 0) { die("Error: $cmd failed"); };
         }
       } else {
-        die "Error: the number of $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary.?? must be $N_PARALLEL_P2P3 files";
+        die "Error: the number of $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary.?? must be $PARALLEL_PER_ORDERING files";
       }
     }
     close(DIR_ORDERING);
@@ -1033,9 +1036,11 @@ if ($opt_n) {
         $cmd_sort_p3 .= " $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary ";
       }
       close(DIR_ORDERING);
+      $cmd_sort_p3 .= " > $out_dir_results/$out_each_dir_site_minus_average_matrix_summary.msort"; # tmp file
+      print("$cmd_sort_p3\n");
+      if( system("$cmd_sort_p3") != 0) { die("Error: $cmd_sort_p3 failed"); };
 
-      print "$cmd_sort_p3\n";
-      open(SITE_DIST_SORT, "$cmd_sort_p3 |");
+      open(SITE_DIST_SORT, "$out_dir_results/$out_each_dir_site_minus_average_matrix_summary.msort");
       while (my $line = <SITE_DIST_SORT>) {
         chomp $line;
 
@@ -1121,6 +1126,7 @@ if ($opt_n) {
 
       } # msort 
       close(SITE_DIST_SORT);
+      unlink("$out_dir_results/$out_each_dir_site_minus_average_matrix_summary.msort"); # remove tmp file
 
       close(OUT_SUM_DIST_SUMMARY_MATRIX);
 
