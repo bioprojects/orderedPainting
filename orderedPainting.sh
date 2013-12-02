@@ -1095,32 +1095,6 @@ done < ${ORDER_DIR_LIST}
 
 
 
-#
-# cat ${GZ_CAT_COPYPROB_EACH_DIR}.?? in each dir into ${GZ_CAT_COPYPROB_EACH_DIR} 
-#   for calculating the average in the postprocessing below without using another process (zcat))
-#
-while read EACH_DIR
-do
-  if [ ! -s "${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}" ]; then
-    if ls ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}.?? &> /dev/null; then
-      CMD=`returnQSUB_CMD ${STAMP}`
-      CMD=${CMD}" <<< '"
-      CMD=${CMD}" /bin/cat ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}.?? > ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}"
-      CMD=${CMD}"'"
-
-      echo ${CMD}
-      eval ${CMD}
-      if [ $? -ne 0 ]; then 
-        echo_fail "Execution error: ${CMD} (step${STEP})"
-      fi
-    fi
-  fi
-done < ${ORDER_DIR_LIST}
-
-wait_until_finish "${STAMP}"
-
-
-
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 # postprocessing (l1,l2)
 #   calculate average, and distance to the average for each ordering
