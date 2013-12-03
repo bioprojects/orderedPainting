@@ -17,6 +17,7 @@ usage () {
   echo " [-n 20 (num. of dirs where uncompressed tmp files are processed simultaneously: default=20) ]"
   echo " [-m pos2missingInd.txt (pos[tab]missing_individual_name]"
   echo " [-o strainName.list (individual name in an order for output: default is the file specified by -l) ]"
+  echo " [-x (output matrix files for top/middle/bottom sites) ]"
   
   echo " [-s 1  (seed of random number generator: default=1) ]"
 
@@ -237,7 +238,8 @@ MAX_PARALLEL_DECOMPRESS=20
 
 MISSING_POS_IND_FILE=""
 CONSTRAINT_FILE=""
-while getopts g:t:s:l:o:n:m:c:v OPTION
+OUTPUT_REPRESENTATIVES=FALSE
+while getopts g:t:s:l:o:n:m:c:xv OPTION
 do
   case $OPTION in
     g)  if [ ! -z "${OPTARG}" ];then PHASEFILE=${OPTARG} ;else usage ;fi
@@ -265,6 +267,8 @@ do
     c)  if [ ! -z "${OPTARG}" ];then CONSTRAINT_FILE=${OPTARG} ;else usage ;fi
         ;;
 
+    x)  OUTPUT_REPRESENTATIVES=TRUE
+        ;;
     v)  VERBOSE=TRUE
         ;;
     \?) usage ;;
@@ -281,6 +285,7 @@ OUTF_SITE_DISTSCORE=site_distScore.txt
 # COMBINED_RES_DIR
 OUTF_SITE_STATS=results_siteStats.txt.gz
 OUTF_SUMMARY_POS=results_siteStats_summary.pos.txt
+
 OUTF_SUMMARY_SITE_MINUS_AVERAGE=sum_site_minus_average.summary.txt.gz
 OUTF_SUMMARY_RANGE=sum_site_minus_average.summary.range.txt
 
@@ -1152,25 +1157,36 @@ disp_punctuate ${STEP} ${STAMP}
 COMBINED_RES_DIR=`echo ${ORDER_DIR_LIST} | perl -pe 's/\.list/_results/g'`
 
 SKIP_FLAG=0
-if [ -s "${COMBINED_RES_DIR}/${OUTF_SITE_STATS}" ]; then
-  if [ -s "${COMBINED_RES_DIR}/${OUTF_SUMMARY_POS}" ]; then
-    if [ `gzip -dc "${COMBINED_RES_DIR}/${OUTF_SUMMARY_SITE_MINUS_AVERAGE}" | wc -l` -gt 2 ]; then
-      if [ -s "${COMBINED_RES_DIR}/${OUTF_SUMMARY_RANGE}" ]; then
-        DIRS_OK_FLAG=1
-        for VISUALIZE_TYPE_DIR in `find ${COMBINED_RES_DIR} -type d -name visualize\*`
-        do
-          if [ ! -d "${VISUALIZE_TYPE_DIR}" ]; then
-            DIRS_OK_FLAG=0
-          fi
-        done
+if [ "${OUTPUT_REPRESENTATIVES}" == "TRUE" ]; then
+  if [ -s "${COMBINED_RES_DIR}/${OUTF_SITE_STATS}" ]; then
+    if [ -s "${COMBINED_RES_DIR}/${OUTF_SUMMARY_POS}" ]; then
+      
+      if [ `gzip -dc "${COMBINED_RES_DIR}/${OUTF_SUMMARY_SITE_MINUS_AVERAGE}" | wc -l` -gt 2 ]; then
+        if [ -s "${COMBINED_RES_DIR}/${OUTF_SUMMARY_RANGE}" ]; then
+          DIRS_OK_FLAG=1
+          for VISUALIZE_TYPE_DIR in `find ${COMBINED_RES_DIR} -type d -name visualize\*`
+          do
+            if [ ! -d "${VISUALIZE_TYPE_DIR}" ]; then
+              DIRS_OK_FLAG=0
+            fi
+          done
 
-        if [ "${DIRS_OK_FLAG}" -eq 1 ]; then
-          SKIP_FLAG=1
+          if [ "${DIRS_OK_FLAG}" -eq 1 ]; then
+            SKIP_FLAG=1
+          fi
         fi
       fi
+      
+    fi
+  fi
+else
+  if [ -s "${COMBINED_RES_DIR}/${OUTF_SITE_STATS}" ]; then
+    if [ -s "${COMBINED_RES_DIR}/${OUTF_SUMMARY_POS}" ]; then
+      SKIP_FLAG=1
     fi
   fi
 fi
+
 
 if [ "${SKIP_FLAG}" -eq 0 ]; then
 
@@ -1186,6 +1202,9 @@ if [ "${SKIP_FLAG}" -eq 0 ]; then
   #fi
   CMD=${CMD}" -s ${HAP_LIST_OUTDISP} "
   CMD=${CMD}" -r "   # only one difference from the previous step
+  if [ "${OUTPUT_REPRESENTATIVES}" == "TRUE" ]; then
+    CMD=${CMD}" -x "
+  fi
   CMD=${CMD}"'"
   
   echo ${CMD}
@@ -1205,14 +1224,15 @@ if [ "${SKIP_FLAG}" -eq 0 ]; then
     echo_fail "Error (step${STEP}): ${COMBINED_RES_DIR}/${OUTF_SUMMARY_POS} doesn't exist or empty "
   fi
 
-  if [ `gzip -dc "${COMBINED_RES_DIR}/${OUTF_SUMMARY_SITE_MINUS_AVERAGE}" | wc -l` -le 2 ]; then
-    echo_fail "Error (step${STEP}): ${COMBINED_RES_DIR}/${OUTF_SUMMARY_SITE_MINUS_AVERAGE} is empty "
-  fi
+  if [ "${OUTPUT_REPRESENTATIVES}" == "TRUE" ]; then
+    if [ `gzip -dc "${COMBINED_RES_DIR}/${OUTF_SUMMARY_SITE_MINUS_AVERAGE}" | wc -l` -le 2 ]; then
+      echo_fail "Error (step${STEP}): ${COMBINED_RES_DIR}/${OUTF_SUMMARY_SITE_MINUS_AVERAGE} is empty "
+    fi
 
-  if [ ! -s "${COMBINED_RES_DIR}/${OUTF_SUMMARY_RANGE}" ]; then
-    echo_fail "Error (step${STEP}): ${COMBINED_RES_DIR}/${OUTF_SUMMARY_RANGE} doesn't exist or empty "
+    if [ ! -s "${COMBINED_RES_DIR}/${OUTF_SUMMARY_RANGE}" ]; then
+      echo_fail "Error (step${STEP}): ${COMBINED_RES_DIR}/${OUTF_SUMMARY_RANGE} doesn't exist or empty "
+    fi
   fi
-
 
   echo "The step${STEP} normally finished."
 
@@ -1259,41 +1279,44 @@ if [ "${MISSING_POS_IND_FILE}" != "" ]; then
   fi
 fi
 
+
 #
 # heatmaps of summary sites (not executed by default)
 #
-MIN=`awk '{print $1}' "${COMBINED_RES_DIR}/${OUTF_SUMMARY_RANGE}"`
-MAX=`awk '{print $2}' "${COMBINED_RES_DIR}/${OUTF_SUMMARY_RANGE}"`
+if [ "${OUTPUT_REPRESENTATIVES}" == "TRUE" ]; then
+  MIN=`awk '{print $1}' "${COMBINED_RES_DIR}/${OUTF_SUMMARY_RANGE}"`
+  MAX=`awk '{print $2}' "${COMBINED_RES_DIR}/${OUTF_SUMMARY_RANGE}"`
 
-echo "If you would like to visualize representative sites, please execute the following commands"
+  echo "If you would like to visualize representative sites, please execute the following commands"
 
-for VISUALIZE_TYPE_DIR in `find ${COMBINED_RES_DIR} -type d -name visualize\*`
-do
-  if [ -d "${VISUALIZE_TYPE_DIR}" ]; then
-    ls ${VISUALIZE_TYPE_DIR}/* > ${VISUALIZE_TYPE_DIR}.list
+  for VISUALIZE_TYPE_DIR in `find ${COMBINED_RES_DIR} -type d -name visualize\*`
+  do
+    if [ -d "${VISUALIZE_TYPE_DIR}" ]; then
+      ls ${VISUALIZE_TYPE_DIR}/* > ${VISUALIZE_TYPE_DIR}.list
 
-    NUM_TARGET_POS=`wc -l ${VISUALIZE_TYPE_DIR}.list | awk '{print $1}'`
+      NUM_TARGET_POS=`wc -l ${VISUALIZE_TYPE_DIR}.list | awk '{print $1}'`
 
-    ARRAY_S=1
-    ARRAY_E=${NUM_TARGET_POS}
+      ARRAY_S=1
+      ARRAY_E=${NUM_TARGET_POS}
 
-    CMD=`returnQSUB_CMD ${STAMP} ${ARRAY_S} ${ARRAY_E}`
-    #CMD=${CMD}" -t 1:${NUM_TARGET_POS} "
-    CMD=${CMD}" ${SH_R_MAIN2}"
-    CMD=${CMD}"  -a ${MIN}"
-    CMD=${CMD}"  -b ${MAX}"
-    CMD=${CMD}"  -l ${VISUALIZE_TYPE_DIR}.list"
- 
-    echo ${CMD}
-    #QSUB_MSG=`${CMD}`
-    if [ $? -ne 0 ]; then 
-      echo_fail "Execution error: ${CMD} (step${STEP}, ${SH_R_MAIN2}) "
+      CMD=`returnQSUB_CMD ${STAMP} ${ARRAY_S} ${ARRAY_E}`
+      #CMD=${CMD}" -t 1:${NUM_TARGET_POS} "
+      CMD=${CMD}" ${SH_R_MAIN2}"
+      CMD=${CMD}"  -a ${MIN}"
+      CMD=${CMD}"  -b ${MAX}"
+      CMD=${CMD}"  -l ${VISUALIZE_TYPE_DIR}.list"
+   
+      echo ${CMD}
+      #QSUB_MSG=`${CMD}`
+      if [ $? -ne 0 ]; then 
+        echo_fail "Execution error: ${CMD} (step${STEP}, ${SH_R_MAIN2}) "
+      fi
+      #QSUB_ID=`echo ${QSUB_MSG} | perl -pe 's/ \(.*$//g' | perl -pe 's/^.* //g' | perl -pe 's/\..*$//g'`
+    else
+      echo_fail "Error: ${VISUALIZE_TYPE_DIR} doesn't exist"
     fi
-    #QSUB_ID=`echo ${QSUB_MSG} | perl -pe 's/ \(.*$//g' | perl -pe 's/^.* //g' | perl -pe 's/\..*$//g'`
-  else
-    echo_fail "Error: ${VISUALIZE_TYPE_DIR} doesn't exist"
-  fi
-done
+  done
+fi
 
 #wait_until_finish "${STAMP}"
 #move_log_files "${STAMP}"

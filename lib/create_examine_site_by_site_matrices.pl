@@ -7,8 +7,8 @@ use FindBin;
 use strict;
 use warnings;
 
-use vars qw ($opt_d $opt_l $opt_t $opt_s $opt_c $opt_n $opt_r $opt_m $opt_g $opt_v);
-&getopts('d:l:t:s:c:n:rm:g:v');
+use vars qw ($opt_d $opt_l $opt_t $opt_s $opt_c $opt_n $opt_r $opt_m $opt_g $opt_x $opt_v);
+&getopts('d:l:t:s:c:n:rm:g:xv');
 
 my $usage = <<_EOH_;
 
@@ -28,6 +28,7 @@ my $usage = <<_EOH_;
 # -r               (final step)
 #
 # [-m pos2missingInd.txt]
+# [-x]
 #
 
 _EOH_
@@ -816,215 +817,31 @@ if ($opt_n) {
     ###################################################################################################################################
 
 
+    if ($opt_x) {
 
-    #######################################################################################################################
-    # part 3:
-    #   For the top and middle/bottom positions extracted above,
-    #
-    #     calculate Sij - Mj in each ordering
-    #
-    #   as a preparation to calcualte its summation across the orderings in the next step 
-    #   (long loop, parallelized)
-    #
-    #######################################################################################################################
-    $loop_part = $LOOP_030;
-
-    my $p3_job_name = `date +%d%H%S`;
-    chomp($p3_job_name);
-    $p3_job_name =~ s/^[0-9]+_//g;
-    $p3_job_name =~ s/://g;
-    $p3_job_name = "p3_" . $p3_job_name;
-
-    $stamp = `date +%Y%m%d_%T`;
-    chomp($stamp);
-    print("$stamp output $out_each_dir_site_minus_average_matrix_summary for each ordering  ... \n");
-
-    my $cnt_in_ordering_listFile = 0;
-    open(DIR_ORDERING, $dir_ordering_listFile);
-    while (my $dir_each_ordering = <DIR_ORDERING>) {
-      print("$dir_each_ordering");
-      chomp($dir_each_ordering);
-      $dir_each_ordering  =~ s/\/$//g;
-      if (! -d $dir_each_ordering) {
-        die "Error: $dir_each_ordering doesn't exist";
-      }
-
-      $cnt_in_ordering_listFile++;
-      my $strainHapOrderFile = `head -$cnt_in_ordering_listFile $strainHapOrder_listFile | tail -1`;
-      chomp($strainHapOrderFile);
-      if (! -s $strainHapOrderFile) {
-        die "Error: $strainHapOrderFile doesn't exist or empty";
-      }
-
+      #######################################################################################################################
+      # part 3:
+      #   For the top and middle/bottom positions extracted above,
       #
-      # parallelize within an ordering
+      #     calculate Sij - Mj in each ordering
       #
-      my @arr_outfiles = glob("$dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary.??");
-      if (scalar(@arr_outfiles) == $PARALLEL_PER_ORDERING) {
-        print "$dir_each_ordering is skipped because there are already $PARALLEL_PER_ORDERING $out_each_dir_site_minus_average_matrix_summary.?? files\n";
-      } else {
-        my @arr_divided_gz_cat_copyprob = glob("$dir_each_ordering/$gz_cat_copyprob_each_dir.??");
-        foreach my $each_gz_cat_copyprob (@arr_divided_gz_cat_copyprob) {
-          my $suffix = $each_gz_cat_copyprob;
-             $suffix =~ s/^.*(\.[a-z0-9]{2})$/$1/g;
+      #   as a preparation to calcualte its summation across the orderings in the next step 
+      #   (long loop, parallelized)
+      #
+      #######################################################################################################################
+      $loop_part = $LOOP_030;
 
-          #$cmd_ppGz  = "gzip -dc $each_gz_cat_copyprob | "; 
-          $cmd_ppGz  = "";
-          $cmd_ppGz .= " $postprocess_path ";
-
-          $cmd_ppGz .= " -d $dir_each_ordering ";
-          $cmd_ppGz .= " -l $strainHapOrderFile ";
-          $cmd_ppGz .= " -o $strainFineOrderFile ";
-          if ($opt_m) {
-            $cmd_ppGz .= " -m $pos2missingInd_File ";
-          }
-          $cmd_ppGz .= " -r $out_dir_results ";
-          $cmd_ppGz .= " -t $type_painting ";
-
-          $cmd_ppGz .= " -i $each_gz_cat_copyprob";
-          $cmd_ppGz .= " -s $suffix";
-          $cmd_ppGz .= " -p $loop_part";
-          if ($opt_c) {
-            $cmd_ppGz .= " -c $constraint_File";
-          }
-          
-          $cmd = "$QSUB $p3_job_name -e $p3_job_name.log -o $p3_job_name.log <<< '$cmd_ppGz '";
-          print("$cmd\n");
-          if( system("$cmd") != 0) { die("Error: $cmd failed"); };
-        }
-      }
-
-    } # dir_each_ordering
-    close(DIR_ORDERING);
-
-    while () {
-      my $check = `$QSTAT | grep $p3_job_name | wc -l`;
-      #print "$check";
-      chomp($check);
-      
-      if ($check == 0) {
-        last;
-      }
-      sleep 10;
-    }
-
-    #
-    # sort (not to store positions in RAM in the next step)
-    #
-    # (this sorting is only for the representative sites, which is thus quick)
-    #
-    # parallelize for each ordering
-    #
-    open(DIR_ORDERING, $dir_ordering_listFile);
-    while (my $dir_each_ordering = <DIR_ORDERING>) {
-      chomp($dir_each_ordering);
-      my @arr_outfiles = glob("$dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary.??");
-      if (scalar(@arr_outfiles) == $PARALLEL_PER_ORDERING) {
-        if (! -s "$dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary") {
-          my $cmd_cat_sort  = "/bin/sort -n $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary.?? ";
-             $cmd_cat_sort .= " > $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary";
-          
-          $cmd = "$QSUB $p3_job_name -e $p3_job_name.log -o $p3_job_name.log <<< '$cmd_cat_sort'";
-          print("$cmd\n");
-          if( system("$cmd") != 0) { die("Error: $cmd failed"); };
-        }
-      } else {
-        die "Error: the number of $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary.?? must be $PARALLEL_PER_ORDERING files";
-      }
-    }
-    close(DIR_ORDERING);
-
-    while () {
-      my $check = `$QSTAT | grep $p3_job_name | wc -l`;
-      #print "$check";
-      chomp($check);
-      
-      if ($check == 0) {
-        last;
-      }
-      sleep 10;
-    }
-
-    #
-    # cleaning
-    #
-    my @arr_p3_job_logs = glob("$p3_job_name.*");
-    foreach my $each_p3_job_log (@arr_p3_job_logs) {
-      unlink($each_p3_job_log);
-    }
-
-    $stamp = `date +%Y%m%d_%T`;
-    chomp($stamp);
-    print("$stamp output $out_each_dir_site_minus_average_matrix_summary for each ordering  ... finished \n");
-
-
-
-    ######################################################################################
-    #
-    # combine $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary 
-    #
-    #   %hash_sum_site_minus_ave (recipient_name=>donor_name)
-    #                               * fine ordering * 
-    #
-    ######################################################################################
-    my $i_this_pos = 0;
-    my %hash_sum_site_minus_ave = ();
-
-    my $check_nrow = `gzip -dc $out_dir_results/$out_sum_site_minus_average_summary.gz | wc -l`;
-    chomp($check_nrow);
-    if ($check_nrow > 2) {
-      print "$out_dir_results/$out_sum_site_minus_average_summary.gz already exists. Skipped\n";
-    } else {
-      open(OUT_SUM_DIST_SUMMARY_MATRIX, "> $out_dir_results/$out_sum_site_minus_average_summary");
-      print OUT_SUM_DIST_SUMMARY_MATRIX "type distRankDesc pos $out_fine_header\n";
+      my $p3_job_name = `date +%d%H%S`;
+      chomp($p3_job_name);
+      $p3_job_name =~ s/^[0-9]+_//g;
+      $p3_job_name =~ s/://g;
+      $p3_job_name = "p3_" . $p3_job_name;
 
       $stamp = `date +%Y%m%d_%T`;
       chomp($stamp);
-      print("$stamp output $out_dir_results/$out_sum_site_minus_average_summary ... \n");
+      print("$stamp output $out_each_dir_site_minus_average_matrix_summary for each ordering  ... \n");
 
-      my $max = 0;
-      my $min = 0;
-
-      #
-      # In a case of re-execution, restore 
-      #    %hash_summaryPos2Type
-      #    %hash_summaryPos2Rank
-      #
-      if (!%hash_summaryPos2Type) {
-        open(IN_SUMMARY_POS, "$out_dir_results/$out_results_summary_pos");
-        my $line_heaer = <IN_SUMMARY_POS>;
-        chomp($line_heaer);
-        my @arr_line_header = split(/\t/, $line_heaer);
-        
-        my $i=0;
-        my %hash_header2colIndex = ();
-        foreach my $each_column (@arr_line_header) {
-          $hash_header2colIndex{$each_column} = $i;
-          $i++;
-        }
-        
-        while (my $line = <IN_SUMMARY_POS>) {
-          chomp $line;
-          my @arr_line = split(/\t/, $line);
-          if ($line =~ /^[0-9]+/) {
-            my $pos = $arr_line[ $hash_header2colIndex{'pos'} ];
-            my $type = $arr_line[ $hash_header2colIndex{'type'} ];
-            my $rank = $arr_line[ $hash_header2colIndex{'rank'} ];
-            $hash_summaryPos2Type{$pos} = $type;
-            $hash_summaryPos2Rank{$pos} = $rank;
-          }
-        }
-        close(IN_SUMMARY_POS);
-      }
-
-      #
-      # msort across orderings is possible 
-      # for files in which sites are sorted by positions (by using "sort -n" above)
-      #
-      #   note that for each pos, the number of lines = (scalar(@arr_ind_fineOrdering)-1) * $num_dir_orderings 
-      #
-      my $cmd_sort_p3  = "$sort_path $sort_opt "; 
-         $cmd_sort_p3 .= " -T $out_dir_results ";
+      my $cnt_in_ordering_listFile = 0;
       open(DIR_ORDERING, $dir_ordering_listFile);
       while (my $dir_each_ordering = <DIR_ORDERING>) {
         print("$dir_each_ordering");
@@ -1033,123 +850,310 @@ if ($opt_n) {
         if (! -d $dir_each_ordering) {
           die "Error: $dir_each_ordering doesn't exist";
         }
-        $cmd_sort_p3 .= " $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary ";
+
+        $cnt_in_ordering_listFile++;
+        my $strainHapOrderFile = `head -$cnt_in_ordering_listFile $strainHapOrder_listFile | tail -1`;
+        chomp($strainHapOrderFile);
+        if (! -s $strainHapOrderFile) {
+          die "Error: $strainHapOrderFile doesn't exist or empty";
+        }
+
+        #
+        # parallelize within an ordering
+        #
+        my @arr_outfiles = glob("$dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary.??");
+        if (scalar(@arr_outfiles) == $PARALLEL_PER_ORDERING) {
+          print "$dir_each_ordering is skipped because there are already $PARALLEL_PER_ORDERING $out_each_dir_site_minus_average_matrix_summary.?? files\n";
+        } else {
+          my @arr_divided_gz_cat_copyprob = glob("$dir_each_ordering/$gz_cat_copyprob_each_dir.??");
+          foreach my $each_gz_cat_copyprob (@arr_divided_gz_cat_copyprob) {
+            my $suffix = $each_gz_cat_copyprob;
+               $suffix =~ s/^.*(\.[a-z0-9]{2})$/$1/g;
+
+            #$cmd_ppGz  = "gzip -dc $each_gz_cat_copyprob | "; 
+            $cmd_ppGz  = "";
+            $cmd_ppGz .= " $postprocess_path ";
+
+            $cmd_ppGz .= " -d $dir_each_ordering ";
+            $cmd_ppGz .= " -l $strainHapOrderFile ";
+            $cmd_ppGz .= " -o $strainFineOrderFile ";
+            if ($opt_m) {
+              $cmd_ppGz .= " -m $pos2missingInd_File ";
+            }
+            $cmd_ppGz .= " -r $out_dir_results ";
+            $cmd_ppGz .= " -t $type_painting ";
+
+            $cmd_ppGz .= " -i $each_gz_cat_copyprob";
+            $cmd_ppGz .= " -s $suffix";
+            $cmd_ppGz .= " -p $loop_part";
+            if ($opt_c) {
+              $cmd_ppGz .= " -c $constraint_File";
+            }
+            
+            $cmd = "$QSUB $p3_job_name -e $p3_job_name.log -o $p3_job_name.log <<< '$cmd_ppGz '";
+            print("$cmd\n");
+            if( system("$cmd") != 0) { die("Error: $cmd failed"); };
+          }
+        }
+
+      } # dir_each_ordering
+      close(DIR_ORDERING);
+
+      while () {
+        my $check = `$QSTAT | grep $p3_job_name | wc -l`;
+        #print "$check";
+        chomp($check);
+        
+        if ($check == 0) {
+          last;
+        }
+        sleep 10;
+      }
+
+      #
+      # sort (not to store positions in RAM in the next step)
+      #
+      # (this sorting is only for the representative sites, which is thus quick)
+      #
+      # parallelize for each ordering
+      #
+      open(DIR_ORDERING, $dir_ordering_listFile);
+      while (my $dir_each_ordering = <DIR_ORDERING>) {
+        chomp($dir_each_ordering);
+        my @arr_outfiles = glob("$dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary.??");
+        if (scalar(@arr_outfiles) == $PARALLEL_PER_ORDERING) {
+          if (! -s "$dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary") {
+            my $cmd_cat_sort  = "/bin/sort -n $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary.?? ";
+               $cmd_cat_sort .= " > $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary";
+            
+            $cmd = "$QSUB $p3_job_name -e $p3_job_name.log -o $p3_job_name.log <<< '$cmd_cat_sort'";
+            print("$cmd\n");
+            if( system("$cmd") != 0) { die("Error: $cmd failed"); };
+          }
+        } else {
+          die "Error: the number of $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary.?? must be $PARALLEL_PER_ORDERING files";
+        }
       }
       close(DIR_ORDERING);
-      $cmd_sort_p3 .= " > $out_dir_results/$out_each_dir_site_minus_average_matrix_summary.msort"; # tmp file
-      print("$cmd_sort_p3\n");
-      if( system("$cmd_sort_p3") != 0) { die("Error: $cmd_sort_p3 failed"); };
 
-      open(SITE_DIST_SORT, "$out_dir_results/$out_each_dir_site_minus_average_matrix_summary.msort");
-      while (my $line = <SITE_DIST_SORT>) {
-        chomp $line;
-
-        my @arr_line = split(/ /, $line);
-        my $pos = $arr_line[0];
-
-        if (!defined($hash_summaryPos2Type{$pos})) {
-          next;
+      while () {
+        my $check = `$QSTAT | grep $p3_job_name | wc -l`;
+        #print "$check";
+        chomp($check);
+        
+        if ($check == 0) {
+          last;
         }
-
-        $i_this_pos++;
-
-        my $recipient_name = $arr_line[1]; # 2nd column is required to distinguish rows with the same recipient
-
-        for (my $i_donor=0; $i_donor<scalar(@arr_ind_fineOrdering); $i_donor++) { 
-          my $donor_name     = $arr_ind_fineOrdering[$i_donor];
-          
-          if (!defined($hash_sum_site_minus_ave{$recipient_name}{$donor_name})) {
-            $hash_sum_site_minus_ave{$recipient_name}{$donor_name}  = $arr_line[$i_donor+2]; # note: pos recipient_name values ... (num_dir_orderings lines)
-          } else {
-            $hash_sum_site_minus_ave{$recipient_name}{$donor_name} += $arr_line[$i_donor+2]; # note: pos recipient_name values ... (num_dir_orderings lines)
-          }
-        }
-
-        # 
-        # output this site
-        #
-        if ($i_this_pos == (scalar(@arr_ind_fineOrdering)-1)*$num_dir_orderings ) {
-
-          my $type = $hash_summaryPos2Type{$pos};
-          
-          my $out_rank_pos_file  = "rank" . sprintf("%.5d", $hash_summaryPos2Rank{$pos});
-             $out_rank_pos_file .= "_";
-             $out_rank_pos_file .= "$pos.txt";
-
-          #
-          # visualize_top or middle or bottom
-          #
-          my $dir_visType = $prefix_of_dirs_for_visualization . $hash_summaryPos2Type{$pos};
-          if (! -d "$dir_visType") {
-            mkdir("$dir_visType");
-            print("$dir_visType was created\n")
-          }
-
-          open(OUT_SUM_DIST_SITE, "> $dir_visType"."/"."$out_rank_pos_file");
-          print OUT_SUM_DIST_SITE "type distRankDesc pos $out_fine_header\n";
-
-          # output matrix of this site
-          foreach my $recipient_name (@arr_ind_fineOrdering) {
-            if (!defined($hash_summaryPos2Type{$pos})) {
-              die "Error: $pos is not defined in hash_summaryPos2Type";
-            }
-            my $out_line_pos_recipient = $type . " " . $hash_summaryPos2Rank{$pos} . " $pos ";
-            foreach my $donor_name (@arr_ind_fineOrdering) {
-              if (!defined($hash_sum_site_minus_ave{$recipient_name}{$donor_name})) {
-                print Dumper(\%hash_sum_site_minus_ave);
-                die "Error: hash_sum_site_minus_ave of pos=$pos, recipient=$recipient_name, donor=$donor_name is undefined";
-              }
-              $out_line_pos_recipient .= $hash_sum_site_minus_ave{$recipient_name}{$donor_name} . " ";
-              
-              if ($hash_sum_site_minus_ave{$recipient_name}{$donor_name} > $max) {
-                $max = $hash_sum_site_minus_ave{$recipient_name}{$donor_name};
-              }
-
-              if ($hash_sum_site_minus_ave{$recipient_name}{$donor_name} < $min) {
-                $min = $hash_sum_site_minus_ave{$recipient_name}{$donor_name};
-              }
-            } # donor
-            
-            $out_line_pos_recipient =~ s/ $//g;
-            print OUT_SUM_DIST_SITE $out_line_pos_recipient . "\n";
-
-            print OUT_SUM_DIST_SUMMARY_MATRIX $out_line_pos_recipient . "\n";
-
-          } # recipient
-
-          close(OUT_SUM_DIST_SITE);
-          $i_this_pos = 0;
-          
-          %hash_sum_site_minus_ave = ();
-
-        } # output this site
-
-      } # msort 
-      close(SITE_DIST_SORT);
-      unlink("$out_dir_results/$out_each_dir_site_minus_average_matrix_summary.msort"); # remove tmp file
-
-      close(OUT_SUM_DIST_SUMMARY_MATRIX);
-
-      $stamp = `date +%Y%m%d_%T`;
-      chomp($stamp);
-      print("$stamp output $out_dir_results/$out_sum_site_minus_average_summary ... finished \n");
-
-
-      $cmd = "gzip -f $out_dir_results/$out_sum_site_minus_average_summary";
-      if( system("$cmd") != 0) { die("Error: $cmd failed"); };
-      
-      $stamp = `date +%Y%m%d_%T`;
-      chomp($stamp);
-      if (-s "$out_dir_results/$out_sum_site_minus_average_summary.gz") {
-        print("$stamp gzipping to $out_dir_results/$out_sum_site_minus_average_summary.gz finished \n");
-      } else {
-        print("Error: gzipping to $out_dir_results/$out_sum_site_minus_average_summary.gz failed");
+        sleep 10;
       }
 
-      $cmd = "echo '$min $max' > $out_dir_results/$out_sum_site_minus_average_summary_range";
-      print("$cmd\n");
-      if( system("$cmd") != 0) { die("Error: $cmd failed"); };
-    }
+      #
+      # cleaning
+      #
+      my @arr_p3_job_logs = glob("$p3_job_name.*");
+      foreach my $each_p3_job_log (@arr_p3_job_logs) {
+        unlink($each_p3_job_log);
+      }
+
+      $stamp = `date +%Y%m%d_%T`;
+      chomp($stamp);
+      print("$stamp output $out_each_dir_site_minus_average_matrix_summary for each ordering  ... finished \n");
+
+
+
+      ######################################################################################
+      #
+      # combine $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary 
+      #
+      #   %hash_sum_site_minus_ave (recipient_name=>donor_name)
+      #                               * fine ordering * 
+      #
+      ######################################################################################
+      my $i_this_pos = 0;
+      my %hash_sum_site_minus_ave = ();
+
+      my $check_nrow = `gzip -dc $out_dir_results/$out_sum_site_minus_average_summary.gz | wc -l`;
+      chomp($check_nrow);
+      if ($check_nrow > 2) {
+        print "$out_dir_results/$out_sum_site_minus_average_summary.gz already exists. Skipped\n";
+      } else {
+        open(OUT_SUM_DIST_SUMMARY_MATRIX, "> $out_dir_results/$out_sum_site_minus_average_summary");
+        print OUT_SUM_DIST_SUMMARY_MATRIX "type distRankDesc pos $out_fine_header\n";
+
+        $stamp = `date +%Y%m%d_%T`;
+        chomp($stamp);
+        print("$stamp output $out_dir_results/$out_sum_site_minus_average_summary ... \n");
+
+        my $max = 0;
+        my $min = 0;
+
+        #
+        # In a case of re-execution, restore 
+        #    %hash_summaryPos2Type
+        #    %hash_summaryPos2Rank
+        #
+        if (!%hash_summaryPos2Type) {
+          open(IN_SUMMARY_POS, "$out_dir_results/$out_results_summary_pos");
+          my $line_heaer = <IN_SUMMARY_POS>;
+          chomp($line_heaer);
+          my @arr_line_header = split(/\t/, $line_heaer);
+          
+          my $i=0;
+          my %hash_header2colIndex = ();
+          foreach my $each_column (@arr_line_header) {
+            $hash_header2colIndex{$each_column} = $i;
+            $i++;
+          }
+          
+          while (my $line = <IN_SUMMARY_POS>) {
+            chomp $line;
+            my @arr_line = split(/\t/, $line);
+            if ($line =~ /^[0-9]+/) {
+              my $pos = $arr_line[ $hash_header2colIndex{'pos'} ];
+              my $type = $arr_line[ $hash_header2colIndex{'type'} ];
+              my $rank = $arr_line[ $hash_header2colIndex{'rank'} ];
+              $hash_summaryPos2Type{$pos} = $type;
+              $hash_summaryPos2Rank{$pos} = $rank;
+            }
+          }
+          close(IN_SUMMARY_POS);
+        }
+
+        #
+        # msort across orderings is possible 
+        # for files in which sites are sorted by positions (by using "sort -n" above)
+        #
+        #   note that for each pos, the number of lines = (scalar(@arr_ind_fineOrdering)-1) * $num_dir_orderings 
+        #
+        my $cmd_sort_p3  = "$sort_path $sort_opt "; 
+           $cmd_sort_p3 .= " -T $out_dir_results ";
+        open(DIR_ORDERING, $dir_ordering_listFile);
+        while (my $dir_each_ordering = <DIR_ORDERING>) {
+          print("$dir_each_ordering");
+          chomp($dir_each_ordering);
+          $dir_each_ordering  =~ s/\/$//g;
+          if (! -d $dir_each_ordering) {
+            die "Error: $dir_each_ordering doesn't exist";
+          }
+          $cmd_sort_p3 .= " $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary ";
+        }
+        close(DIR_ORDERING);
+        $cmd_sort_p3 .= " > $out_dir_results/$out_each_dir_site_minus_average_matrix_summary.msort"; # tmp file
+        print("$cmd_sort_p3\n");
+        if( system("$cmd_sort_p3") != 0) { die("Error: $cmd_sort_p3 failed"); };
+
+        open(SITE_DIST_SORT, "$out_dir_results/$out_each_dir_site_minus_average_matrix_summary.msort");
+        while (my $line = <SITE_DIST_SORT>) {
+          chomp $line;
+
+          my @arr_line = split(/ /, $line);
+          my $pos = $arr_line[0];
+
+          if (!defined($hash_summaryPos2Type{$pos})) {
+            next;
+          }
+
+          $i_this_pos++;
+
+          my $recipient_name = $arr_line[1]; # 2nd column is required to distinguish rows with the same recipient
+
+          for (my $i_donor=0; $i_donor<scalar(@arr_ind_fineOrdering); $i_donor++) { 
+            my $donor_name     = $arr_ind_fineOrdering[$i_donor];
+            
+            if (!defined($hash_sum_site_minus_ave{$recipient_name}{$donor_name})) {
+              $hash_sum_site_minus_ave{$recipient_name}{$donor_name}  = $arr_line[$i_donor+2]; # note: pos recipient_name values ... (num_dir_orderings lines)
+            } else {
+              $hash_sum_site_minus_ave{$recipient_name}{$donor_name} += $arr_line[$i_donor+2]; # note: pos recipient_name values ... (num_dir_orderings lines)
+            }
+          }
+
+          # 
+          # output this site
+          #
+          if ($i_this_pos == (scalar(@arr_ind_fineOrdering)-1)*$num_dir_orderings ) {
+
+            my $type = $hash_summaryPos2Type{$pos};
+            
+            my $out_rank_pos_file  = "rank" . sprintf("%.5d", $hash_summaryPos2Rank{$pos});
+               $out_rank_pos_file .= "_";
+               $out_rank_pos_file .= "$pos.txt";
+
+            #
+            # visualize_top or middle or bottom
+            #
+            my $dir_visType = $prefix_of_dirs_for_visualization . $hash_summaryPos2Type{$pos};
+            if (! -d "$dir_visType") {
+              mkdir("$dir_visType");
+              print("$dir_visType was created\n")
+            }
+
+            open(OUT_SUM_DIST_SITE, "> $dir_visType"."/"."$out_rank_pos_file");
+            print OUT_SUM_DIST_SITE "type distRankDesc pos $out_fine_header\n";
+
+            # output matrix of this site
+            foreach my $recipient_name (@arr_ind_fineOrdering) {
+              if (!defined($hash_summaryPos2Type{$pos})) {
+                die "Error: $pos is not defined in hash_summaryPos2Type";
+              }
+              my $out_line_pos_recipient = $type . " " . $hash_summaryPos2Rank{$pos} . " $pos ";
+              foreach my $donor_name (@arr_ind_fineOrdering) {
+                if (!defined($hash_sum_site_minus_ave{$recipient_name}{$donor_name})) {
+                  print Dumper(\%hash_sum_site_minus_ave);
+                  die "Error: hash_sum_site_minus_ave of pos=$pos, recipient=$recipient_name, donor=$donor_name is undefined";
+                }
+                $out_line_pos_recipient .= $hash_sum_site_minus_ave{$recipient_name}{$donor_name} . " ";
+                
+                if ($hash_sum_site_minus_ave{$recipient_name}{$donor_name} > $max) {
+                  $max = $hash_sum_site_minus_ave{$recipient_name}{$donor_name};
+                }
+
+                if ($hash_sum_site_minus_ave{$recipient_name}{$donor_name} < $min) {
+                  $min = $hash_sum_site_minus_ave{$recipient_name}{$donor_name};
+                }
+              } # donor
+              
+              $out_line_pos_recipient =~ s/ $//g;
+              print OUT_SUM_DIST_SITE $out_line_pos_recipient . "\n";
+
+              print OUT_SUM_DIST_SUMMARY_MATRIX $out_line_pos_recipient . "\n";
+
+            } # recipient
+
+            close(OUT_SUM_DIST_SITE);
+            $i_this_pos = 0;
+            
+            %hash_sum_site_minus_ave = ();
+
+          } # output this site
+
+        } # msort 
+        close(SITE_DIST_SORT);
+        unlink("$out_dir_results/$out_each_dir_site_minus_average_matrix_summary.msort"); # remove tmp file
+
+        close(OUT_SUM_DIST_SUMMARY_MATRIX);
+
+        $stamp = `date +%Y%m%d_%T`;
+        chomp($stamp);
+        print("$stamp output $out_dir_results/$out_sum_site_minus_average_summary ... finished \n");
+
+
+        $cmd = "gzip -f $out_dir_results/$out_sum_site_minus_average_summary";
+        if( system("$cmd") != 0) { die("Error: $cmd failed"); };
+        
+        $stamp = `date +%Y%m%d_%T`;
+        chomp($stamp);
+        if (-s "$out_dir_results/$out_sum_site_minus_average_summary.gz") {
+          print("$stamp gzipping to $out_dir_results/$out_sum_site_minus_average_summary.gz finished \n");
+        } else {
+          print("Error: gzipping to $out_dir_results/$out_sum_site_minus_average_summary.gz failed");
+        }
+
+        $cmd = "echo '$min $max' > $out_dir_results/$out_sum_site_minus_average_summary_range";
+        print("$cmd\n");
+        if( system("$cmd") != 0) { die("Error: $cmd failed"); };
+      }
+
+    } # if ($opt_x)
 
     $stamp = `date +%Y%m%d_%T`;
     chomp($stamp);

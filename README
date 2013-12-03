@@ -92,7 +92,12 @@ The following files and directories will be seen.
   |-- results_siteStats_hist.png
   |-- results_siteStats_summary.pos.txt
   |
-  |-- (results_siteStats_missingCnt.png)
+  |-- (results_siteStats_missingCnt.png
+       , which will be produced only if imputed data are analyzed)
+
+
+If "-x" was specified, the following files and directories are also created.
+
   |
   |-- sum_site_minus_average.summary.range.txt
   |-- sum_site_minus_average.summary.txt.gz
@@ -104,8 +109,6 @@ The following files and directories will be seen.
   |-- visualize_top/
   |-- visualize_top.list
 
-     ("results_siteStats_missingCnt.png"
-       will be produced only if imputed data are analyzed)
 
 
 "results_siteStats.txt.gz" contains values of the distance statistic and bootstrap support of each site.
