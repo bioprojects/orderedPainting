@@ -121,19 +121,19 @@ if ($arrayJobID > 0) {
   #
   $cmd  = "$sort_path $sort_opt ";
   $cmd .= " -T $dir_each_ordering $dir_each_ordering/*.copyprobsperlocus.out_$each_suffix";
-  $cmd .= " | gzip > $dir_each_ordering/$gz_cat_copyprob_each_dir.$each_suffix"; # split gz files
-  #$cmd .= "       > $dir_each_ordering/$gz_cat_copyprob_each_dir.$each_suffix";
+  #$cmd .= " | gzip > $dir_each_ordering/$gz_cat_copyprob_each_dir.$each_suffix"; # split gz files
+  $cmd .= "       > $dir_each_ordering/$gz_cat_copyprob_each_dir.$each_suffix"; # split gz files
   print "$cmd\n";
   if( system("$cmd") != 0) { die("Error: $cmd failed"); };
 
-#  $cmd  = "gzip $dir_each_ordering/$gz_cat_copyprob_each_dir.$each_suffix";
-#  print "$cmd\n";
-#  if( system("$cmd") != 0) { die("Error: $cmd failed"); };
-#
-#  $cmd  = "/bin/mv $dir_each_ordering/$gz_cat_copyprob_each_dir.$each_suffix.gz";
-#  $cmd  = "        $dir_each_ordering/$gz_cat_copyprob_each_dir.$each_suffix";
-#  print "$cmd\n";
-#  if( system("$cmd") != 0) { die("Error: $cmd failed"); };
+  $cmd  = "gzip     $dir_each_ordering/$gz_cat_copyprob_each_dir.$each_suffix";
+  print "$cmd\n";
+  if( system("$cmd") != 0) { die("Error: $cmd failed"); };
+
+  $cmd  = "/bin/mv  $dir_each_ordering/$gz_cat_copyprob_each_dir.$each_suffix.gz";
+  $cmd  = "         $dir_each_ordering/$gz_cat_copyprob_each_dir.$each_suffix";
+  print "$cmd\n";
+  if( system("$cmd") != 0) { die("Error: $cmd failed"); };
 
   #
   # remove the uncompressed files required for msort
