@@ -131,7 +131,7 @@ if ($arrayJobID > 0) {
   if( system("$cmd") != 0) { die("Error: $cmd failed"); };
 
   $cmd  = "/bin/mv  $dir_each_ordering/$gz_cat_copyprob_each_dir.$each_suffix.gz";
-  $cmd  = "         $dir_each_ordering/$gz_cat_copyprob_each_dir.$each_suffix";
+  $cmd .= "         $dir_each_ordering/$gz_cat_copyprob_each_dir.$each_suffix";
   print "$cmd\n";
   if( system("$cmd") != 0) { die("Error: $cmd failed"); };
 
