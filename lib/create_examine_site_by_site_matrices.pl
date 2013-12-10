@@ -45,7 +45,7 @@ my $env_file = "$FindBin::Bin/env_func.bashrc";
 # path of commands/scripts
 #
 my $sort_path = "$FindBin::Bin/sort";
-my $sort_opt = " -n -m --batch-size=300 --parallel=8"; # "-m" makes the sorting much faster when all input files are sorted (ascending order)
+my $sort_opt = " -n -m --batch-size=100 --parallel=8"; # "-m" makes the sorting much faster when all input files are sorted (ascending order)
                                                        # --batch-size=100 is enough for 10 orderings
                                                        # --batch-size=300 is required for more than 50 orderings
 

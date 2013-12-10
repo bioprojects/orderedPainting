@@ -44,7 +44,7 @@ my $phasefile           = $opt_g or die $usage;
 # env
 #
 my $sort_path = "lib/sort"; # FindBin doesn't work in arrayjob in UGE
-my $sort_opt = " -n -m --batch-size=300"; # Don't use --parallel option here because it is already parallelized
+my $sort_opt = " -n -m --batch-size=100"; # Don't use --parallel option here because it is already parallelized
 # "-n" is required to cat across recipient individuals sorted by position
 # "-m" makes the sorting much faster when all input files are sorted (ascending order)
 
