@@ -1118,6 +1118,7 @@ do
   if [ ! -s "${EACH_DIR}/${OUTF_SITE_DISTSCORE}" ]; then # doesn't exist or empty
     submit_calcAveDist_ordering "${i_ordering}"
     let i_submitted=${i_submitted}+1
+    sleep 2
   else
     echo "step${STEP} of ${EACH_DIR} was skipped, because ${OUTF_SITE_DISTSCORE} already exists there";
   fi
