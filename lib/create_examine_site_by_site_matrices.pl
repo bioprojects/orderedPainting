@@ -318,8 +318,9 @@ if (!$opt_r) {
     if ($nrow_ave_matrix == scalar(@arr_ind_fineOrdering)+1) {
       print "$dir_each_ordering/$out_each_dir_averave_matrix.?? already exists. Skipped.\n";
     } else {
+      
       #
-      # calculate summation
+      # calculate summation (in parallel)
       #
       $loop_part = $LOOP_010;
 
@@ -340,18 +341,33 @@ if (!$opt_r) {
         my $suffix = $each_gz_cat_copyprob;
            $suffix =~ s/^.*(\.[a-z0-9]{2})$/$1/g;
 
-        $cmd_ppGz  = "";
-        #$cmd_ppGz  = "gzip -dc $dir_each_ordering/$gz_cat_copyprob_each_dir |";
-        #$cmd_ppGz  = "zcat $dir_each_ordering/$gz_cat_copyprob_each_dir.?? |";
-        $cmd_ppGz .= $cmd_ppGz_common;
-        $cmd_ppGz .= " -i $each_gz_cat_copyprob ";
-        $cmd_ppGz .= " -s $suffix";
-        $cmd_ppGz .= " -p $loop_part";
-        # no "-c" here
+        my $divided_sum_file = "$dir_each_ordering/$out_each_dir_sum.$suffix";
+        my $nrow_divided_sum_file = 0;
+        if (-f "$divided_sum_file") {
+          $nrow_divided_sum_file = `wc -l $divided_sum_file | awk '{print \$1}'`;
+          chomp($nrow_divided_sum_file);
+        }
 
-        $cmd = "$QSUB $p1_job_name -e $p1_job_name.log -o $p1_job_name.log <<< '$cmd_ppGz '";
-        print("$cmd\n");
-        if( system("$cmd") != 0) { die("Error: $cmd failed"); };
+        if ($nrow_divided_sum_file != scalar(@arr_ind_fineOrdering)+1) {
+
+          $cmd_ppGz  = "";
+          #$cmd_ppGz  = "gzip -dc $dir_each_ordering/$gz_cat_copyprob_each_dir |";
+          #$cmd_ppGz  = "zcat $dir_each_ordering/$gz_cat_copyprob_each_dir.?? |";
+          $cmd_ppGz .= $cmd_ppGz_common;
+          $cmd_ppGz .= " -i $each_gz_cat_copyprob ";
+          $cmd_ppGz .= " -s $suffix";
+          $cmd_ppGz .= " -p $loop_part";
+          # no "-c" here
+
+          $cmd = "$QSUB $p1_job_name -e $p1_job_name.log -o $p1_job_name.log <<< '$cmd_ppGz '";
+          print("$cmd\n");
+          if( system("$cmd") != 0) { die("Error: $cmd failed"); };
+
+        } else {
+
+          print "$divided_sum_file was not recreated because it has already $nrow_divided_sum_file lines\n";
+
+        }
       }
 
       while () {
@@ -382,7 +398,7 @@ if (!$opt_r) {
       
       
       #
-      # calculate average
+      # calculate average (executed as foregrond in a moment)
       #
       $loop_part = $LOOP_011;
       
