@@ -142,9 +142,9 @@ if (! -s $strainHapOrder_listFile) {
   die "Error: $strainHapOrder_listFile doesn't exist or empty";
 }
 
-my @arr_ind_fineOrdering = ();
-my %hash_ind_fineOrdering = ();
-my $strainFineOrderFile = $opt_s or die $usage; # if this is not specified, site_contrast_distScore.txt will not be created
+my @arr_ind_outDispOrdering = ();
+my %hash_ind_outDispOrdering = ();
+my $strainFineOrderFile = $opt_s or die $usage; # if this is not specified, site_distScore.txt will not be created
 if (! -s $strainFineOrderFile) {
   die "Error: $strainFineOrderFile doesn't exist or empty";
 }
@@ -160,13 +160,13 @@ while (my $line = <FINESTRUCT_ORDER>) {
     $strainName = $arr_line[1];
   }
   
-  push(@arr_ind_fineOrdering, $strainName);
-  $hash_ind_fineOrdering{$strainName} = 1;
+  push(@arr_ind_outDispOrdering, $strainName);
+  $hash_ind_outDispOrdering{$strainName} = 1;
 }
 close(FINESTRUCT_ORDER);
 
 my $out_fine_header = "";
-foreach my $header_name (@arr_ind_fineOrdering) {
+foreach my $header_name (@arr_ind_outDispOrdering) {
   $out_fine_header .= "$header_name ";
 }
 $out_fine_header =~ s/ $//g;
@@ -315,7 +315,7 @@ if (!$opt_r) {
       chomp($nrow_ave_matrix);
     }
 
-    if ($nrow_ave_matrix == scalar(@arr_ind_fineOrdering)+1) {
+    if ($nrow_ave_matrix == scalar(@arr_ind_outDispOrdering)+1) {
       print "$dir_each_ordering/$out_each_dir_averave_matrix.?? already exists. Skipped.\n";
     } else {
       
@@ -348,7 +348,7 @@ if (!$opt_r) {
           chomp($nrow_divided_sum_file);
         }
 
-        if ($nrow_divided_sum_file != scalar(@arr_ind_fineOrdering)+1) {
+        if ($nrow_divided_sum_file != scalar(@arr_ind_outDispOrdering)+1) {
 
           $cmd_ppGz  = "";
           #$cmd_ppGz  = "gzip -dc $dir_each_ordering/$gz_cat_copyprob_each_dir |";
@@ -1039,7 +1039,7 @@ if ($opt_n) {
         # msort across orderings is possible 
         # for files in which sites are sorted by positions (by using "sort -n" above)
         #
-        #   note that for each pos, the number of lines = (scalar(@arr_ind_fineOrdering)-1) * $num_dir_orderings 
+        #   note that for each pos, the number of lines = (scalar(@arr_ind_outDispOrdering)-1) * $num_dir_orderings 
         #
         my $cmd_sort_p3  = "$sort_path $sort_opt "; 
            $cmd_sort_p3 .= " -T $out_dir_results ";
@@ -1073,8 +1073,8 @@ if ($opt_n) {
 
           my $recipient_name = $arr_line[1]; # 2nd column is required to distinguish rows with the same recipient
 
-          for (my $i_donor=0; $i_donor<scalar(@arr_ind_fineOrdering); $i_donor++) { 
-            my $donor_name     = $arr_ind_fineOrdering[$i_donor];
+          for (my $i_donor=0; $i_donor<scalar(@arr_ind_outDispOrdering); $i_donor++) { 
+            my $donor_name     = $arr_ind_outDispOrdering[$i_donor];
             
             if (!defined($hash_sum_site_minus_ave{$recipient_name}{$donor_name})) {
               $hash_sum_site_minus_ave{$recipient_name}{$donor_name}  = $arr_line[$i_donor+2]; # note: pos recipient_name values ... (num_dir_orderings lines)
@@ -1086,7 +1086,7 @@ if ($opt_n) {
           # 
           # output this site
           #
-          if ($i_this_pos == (scalar(@arr_ind_fineOrdering)-1)*$num_dir_orderings ) {
+          if ($i_this_pos == (scalar(@arr_ind_outDispOrdering)-1)*$num_dir_orderings ) {
 
             my $type = $hash_summaryPos2Type{$pos};
             
@@ -1107,12 +1107,12 @@ if ($opt_n) {
             print OUT_SUM_DIST_SITE "type distRankDesc pos $out_fine_header\n";
 
             # output matrix of this site
-            foreach my $recipient_name (@arr_ind_fineOrdering) {
+            foreach my $recipient_name (@arr_ind_outDispOrdering) {
               if (!defined($hash_summaryPos2Type{$pos})) {
                 die "Error: $pos is not defined in hash_summaryPos2Type";
               }
               my $out_line_pos_recipient = $type . " " . $hash_summaryPos2Rank{$pos} . " $pos ";
-              foreach my $donor_name (@arr_ind_fineOrdering) {
+              foreach my $donor_name (@arr_ind_outDispOrdering) {
                 if (!defined($hash_sum_site_minus_ave{$recipient_name}{$donor_name})) {
                   print Dumper(\%hash_sum_site_minus_ave);
                   die "Error: hash_sum_site_minus_ave of pos=$pos, recipient=$recipient_name, donor=$donor_name is undefined";

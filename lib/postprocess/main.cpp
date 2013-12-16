@@ -190,7 +190,7 @@ int main(int argc, char **argv)
     bool exclude_ind_flag;
     bool skip_calc_flag;
 
-    vector<string> arr_indName_fineOrdering; 
+    vector<string> arr_indName_outDispOrdering; 
 
     map<pair<int, int>, double> hash_summation; 
     map<pair<int, int>, double> hash_average_prob; 
@@ -281,7 +281,7 @@ int main(int argc, char **argv)
     // ########################################################################################
 
     //
-    // load arr_indName_fineOrdering
+    // load arr_indName_outDispOrdering
     //
     fh = fopen_wrapper(strainFineOrderFile, "r");
     while (!feof(fh)) {
@@ -291,7 +291,7 @@ int main(int argc, char **argv)
             *arr_line = strtok(buffer , "\t");
             strainName = string(*arr_line);
 
-            arr_indName_fineOrdering.push_back(strainName);
+            arr_indName_outDispOrdering.push_back(strainName);
         }
     }
     fclose(fh);
@@ -349,9 +349,9 @@ int main(int argc, char **argv)
             memcpy(buffer2, buffer, sizeof(buffer2));
 
             i_row++;
-            if (i_row % (arr_indName_fineOrdering.size()*1000) == 0) { // (precisely, arr_indName_fineOrdering.size()-1)
+            if (i_row % (arr_indName_outDispOrdering.size()*1000) == 0) { // (precisely, arr_indName_outDispOrdering.size()-1)
                 timer = time(NULL); stamp = ctime(&timer); stamp[strlen(stamp)-1] = '\0';
-                printf("%s: i_l1=%d\n",stamp,i_row/arr_indName_fineOrdering.size());
+                printf("%s: i_l1=%d\n",stamp,i_row/arr_indName_outDispOrdering.size());
             }
 
             i_recipient_strain_of_this_pos++;
@@ -473,7 +473,7 @@ int main(int argc, char **argv)
             if (type_painting == 2) {
               cnt_recipient = i+1;
             } else if (type_painting == 1) {
-              cnt_recipient = hash_strainName2IND[arr_indName_fineOrdering[i]];
+              cnt_recipient = hash_strainName2IND[arr_indName_outDispOrdering[i]];
             }
 
             // diagonal is always zero
@@ -484,7 +484,7 @@ int main(int argc, char **argv)
                 if (type_painting == 2) {
                   cnt_donor = j+1;
                 } else if (type_painting == 1) {
-                  cnt_donor = hash_strainName2IND[arr_indName_fineOrdering[j]];
+                  cnt_donor = hash_strainName2IND[arr_indName_outDispOrdering[j]];
                 }
 
                 if (j==0) {
@@ -556,7 +556,7 @@ int main(int argc, char **argv)
                         if (type_painting == 2) {
                           cnt_donor = i;
                         } else if (type_painting == 1) {
-                          cnt_donor = hash_strainName2IND[arr_indName_fineOrdering[i]];
+                          cnt_donor = hash_strainName2IND[arr_indName_outDispOrdering[i]];
                         }
 
                         if (atof(*(arr_line+i)) > 0) {
@@ -599,7 +599,7 @@ int main(int argc, char **argv)
             if (type_painting == 2) {
               cnt_recipient = i+1; // 1-indexed <= 0-indexed
             } else if (type_painting == 1) {
-              cnt_recipient = hash_strainName2IND[arr_indName_fineOrdering[i]]; // <= order by fineOrdering (i=0,...,n-1) 
+              cnt_recipient = hash_strainName2IND[arr_indName_outDispOrdering[i]]; // <= order by outDispOrdering (i=0,...,n-1) 
             }
 
             if (out_header == "") {
@@ -615,7 +615,7 @@ int main(int argc, char **argv)
             if (type_painting == 2) {
               cnt_recipient = i+1;
             } else if (type_painting == 1) {
-              cnt_recipient = hash_strainName2IND[arr_indName_fineOrdering[i]];
+              cnt_recipient = hash_strainName2IND[arr_indName_outDispOrdering[i]];
             }
 
             // diagonal is always zero
@@ -627,7 +627,7 @@ int main(int argc, char **argv)
                 if (type_painting == 2) {
                   cnt_donor = j+1;
                 } else if (type_painting == 1) {
-                  cnt_donor = hash_strainName2IND[arr_indName_fineOrdering[j]];
+                  cnt_donor = hash_strainName2IND[arr_indName_outDispOrdering[j]];
                 }
 
                 //
@@ -651,7 +651,7 @@ int main(int argc, char **argv)
                 if (type_painting == 2) {
                   cnt_donor = j+1;
                 } else if (type_painting == 1) {
-                  cnt_donor = hash_strainName2IND[arr_indName_fineOrdering[j]];
+                  cnt_donor = hash_strainName2IND[arr_indName_outDispOrdering[j]];
                 }
                 donor_name = hash_strainIND2Name[cnt_donor];
 
@@ -742,14 +742,14 @@ int main(int argc, char **argv)
                 if (type_painting == 2) {
                     cnt_recipient = i+1;
                 } else if (type_painting == 1) {
-                    cnt_recipient = hash_strainName2IND[arr_indName_fineOrdering[i]];
+                    cnt_recipient = hash_strainName2IND[arr_indName_outDispOrdering[i]];
                 }
 
                 j = 0;
                 if (type_painting == 2) {
                   cnt_donor = j+1;
                 } else if (type_painting == 1) {
-                  cnt_donor = hash_strainName2IND[arr_indName_fineOrdering[j]];
+                  cnt_donor = hash_strainName2IND[arr_indName_outDispOrdering[j]];
                 }
                 hash_average_prob[pair<int,int>(cnt_recipient, cnt_donor)] = atof(*arr_line);
 
@@ -761,7 +761,7 @@ int main(int argc, char **argv)
                     if (type_painting == 2) {
                       cnt_donor = j+1;
                     } else if (type_painting == 1) {
-                      cnt_donor = hash_strainName2IND[arr_indName_fineOrdering[j]];
+                      cnt_donor = hash_strainName2IND[arr_indName_outDispOrdering[j]];
                     }
                     hash_average_prob[pair<int,int>(cnt_recipient, cnt_donor)] = atof(*(arr_line+j));
                 }
@@ -802,9 +802,9 @@ int main(int argc, char **argv)
                 memcpy(buffer2, buffer, sizeof(buffer2));
 
                 i_row++;
-                if (i_row % (arr_indName_fineOrdering.size()*1000) == 0) { // (precisely, arr_indName_fineOrdering.size()-1)
+                if (i_row % (arr_indName_outDispOrdering.size()*1000) == 0) { // (precisely, arr_indName_outDispOrdering.size()-1)
                     timer = time(NULL); stamp = ctime(&timer); stamp[strlen(stamp)-1] = '\0';
-                    printf("%s: i_l2=%d\n",stamp,i_row/arr_indName_fineOrdering.size());
+                    printf("%s: i_l2=%d\n",stamp,i_row/arr_indName_outDispOrdering.size());
                 }
 
                 *arr_line = strtok(buffer, " ");
@@ -898,9 +898,9 @@ int main(int argc, char **argv)
                     } // for column
 
 
-                    if (type_painting == 2 && (i_recipient_strain_of_this_pos != arr_indName_fineOrdering.size()-1)) {
+                    if (type_painting == 2 && (i_recipient_strain_of_this_pos != arr_indName_outDispOrdering.size()-1)) {
                         continue;
-                    } else if (type_painting == 1 && (i_recipient_strain_of_this_pos != arr_indName_fineOrdering.size())) {
+                    } else if (type_painting == 1 && (i_recipient_strain_of_this_pos != arr_indName_outDispOrdering.size())) {
                         continue;
                     } else {
                         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -985,7 +985,7 @@ int main(int argc, char **argv)
                         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
                         // calculate and save distScore of this site 
                         //   using the site_by_site and average matrices
-                        //     according to fine ordering
+                        //     according to outDisp ordering
                         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
                         distScore_per_mat = 0;
 
@@ -1159,9 +1159,9 @@ int main(int argc, char **argv)
                 memcpy(buffer2, buffer, sizeof(buffer2));
 
                 i_row++;
-                if (i_row % (arr_indName_fineOrdering.size()*1000) == 0) { // (precisely, arr_indName_fineOrdering.size()-1)
+                if (i_row % (arr_indName_outDispOrdering.size()*1000) == 0) { // (precisely, arr_indName_outDispOrdering.size()-1)
                     timer = time(NULL); stamp = ctime(&timer); stamp[strlen(stamp)-1] = '\0';
-                    printf("%s: i_l3=%d\n",stamp,i_row/arr_indName_fineOrdering.size());
+                    printf("%s: i_l3=%d\n",stamp,i_row/arr_indName_outDispOrdering.size());
                 }
 
                 *arr_line = strtok(buffer, " ");
@@ -1238,11 +1238,12 @@ int main(int argc, char **argv)
 
                     //
                     // save a row of this recipient in Sij - Mj matrix 
-                    //   according to fine ordering of donors
+                    //   2nd column: recipient name is saved
+                    //   3rd column and after that: according to outDisp ordering of donors
                     // 
                     fprintf(fh_out, "%d %s",pos,recipient_name.c_str());
-                    for (i=0; i<arr_indName_fineOrdering.size(); i++) {
-                        cnt_donor = hash_strainName2IND[arr_indName_fineOrdering[i]];
+                    for (i=0; i<arr_indName_outDispOrdering.size(); i++) {
+                        cnt_donor = hash_strainName2IND[arr_indName_outDispOrdering[i]];
 
                         if ( !has_pairkey_int2double( hash_site_minus_ave, pair<int,int>(cnt_recipient,cnt_donor) ) ) {
                             //if ( hash_site_minus_ave.count(pair<int,int>(cnt_recipient,cnt_donor)) == 0) {
