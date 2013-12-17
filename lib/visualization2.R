@@ -56,10 +56,10 @@ distRankDesc <- d_each_target_site[1,]$distRankDesc
 
 d_each_for_plot <- d_each_target_site[,-c(1:3)]
 
+names(d_each_for_plot) <- sub("^X","",names(d_each_for_plot))
+
 if (visual_orderFile != "") {
   c_visual_order <- c()
-
-  names(d_each_for_plot) <- sub("^X","",names(d_each_for_plot))
 
   d_visual_order <- read.table(visual_orderFile, header=F)
   for (each in d_visual_order[,1]) {
