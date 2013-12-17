@@ -44,8 +44,8 @@ my $env_file = "$FindBin::Bin/env_func.bashrc";
 #
 # path of commands/scripts
 #
-my $sort_path = "$FindBin::Bin/sort";
-my $sort_opt = " -n -m --batch-size=100 --parallel=8"; # "-m" makes the sorting much faster when all input files are sorted (ascending order)
+my $msort_path = "$FindBin::Bin/sort";
+my $msort_opt = " -n -m --batch-size=100 --parallel=8"; # "-m" makes the sorting much faster when all input files are sorted (ascending order)
                                                        # --batch-size=100 is enough for 10 orderings
                                                        # --batch-size=300 is required for more than 50 orderings
 
@@ -855,7 +855,7 @@ if ($opt_n) {
 
       $stamp = `date +%Y%m%d_%T`;
       chomp($stamp);
-      print("$stamp output $out_each_dir_site_minus_average_matrix_summary for each ordering  ... \n");
+      print("$stamp output $out_each_dir_site_minus_average_matrix_summary.?? for each ordering  ... \n");
 
       my $cnt_in_ordering_listFile = 0;
       open(DIR_ORDERING, $dir_ordering_listFile);
@@ -939,10 +939,10 @@ if ($opt_n) {
         my @arr_outfiles = glob("$dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary.??");
         if (scalar(@arr_outfiles) == $PARALLEL_PER_ORDERING) {
           if (! -s "$dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary") {
-            my $cmd_cat_sort  = "/bin/sort -n $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary.?? ";
-               $cmd_cat_sort .= " > $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary";
+            my $cmd_sort_within_each_ordering  = "/bin/sort -n $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary.?? ";
+               $cmd_sort_within_each_ordering .= " > $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary";
             
-            $cmd = "$QSUB $p3_job_name -e $p3_job_name.log -o $p3_job_name.log <<< '$cmd_cat_sort'";
+            $cmd = "$QSUB $p3_job_name -e $p3_job_name.log -o $p3_job_name.log <<< '$cmd_sort_within_each_ordering'";
             print("$cmd\n");
             if( system("$cmd") != 0) { die("Error: $cmd failed"); };
           }
@@ -958,7 +958,20 @@ if ($opt_n) {
         chomp($check);
         
         if ($check == 0) {
-          last;
+          # also check existence of the output files, just in case
+          open(DIR_ORDERING, $dir_ordering_listFile);
+          while (my $dir_each_ordering = <DIR_ORDERING>) {
+            chomp($dir_each_ordering);
+            if (! -s "$dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary") {
+              $check = 1;
+              last;
+            }
+          }
+          close(DIR_ORDERING);
+
+          if ($check == 0) {
+            last;
+          }
         }
         sleep 10;
       }
@@ -988,8 +1001,12 @@ if ($opt_n) {
       my $i_this_pos = 0;
       my %hash_sum_site_minus_ave = ();
 
-      my $check_nrow = `gzip -dc $out_dir_results/$out_sum_site_minus_average_summary.gz | wc -l`;
-      chomp($check_nrow);
+      my $check_nrow = 0;
+      if (-f "$out_dir_results/$out_sum_site_minus_average_summary.gz") {
+        $check_nrow = `gzip -dc $out_dir_results/$out_sum_site_minus_average_summary.gz | wc -l`;
+        chomp($check_nrow);
+      }
+
       if ($check_nrow > 2) {
         print "$out_dir_results/$out_sum_site_minus_average_summary.gz already exists. Skipped\n";
       } else {
@@ -1041,8 +1058,8 @@ if ($opt_n) {
         #
         #   note that for each pos, the number of lines = (scalar(@arr_ind_outDispOrdering)-1) * $num_dir_orderings 
         #
-        my $cmd_sort_p3  = "$sort_path $sort_opt "; 
-           $cmd_sort_p3 .= " -T $out_dir_results ";
+        my $cmd_sort_across  = "$msort_path $msort_opt "; 
+           $cmd_sort_across .= " -T $out_dir_results ";
         open(DIR_ORDERING, $dir_ordering_listFile);
         while (my $dir_each_ordering = <DIR_ORDERING>) {
           print("$dir_each_ordering");
@@ -1051,14 +1068,15 @@ if ($opt_n) {
           if (! -d $dir_each_ordering) {
             die "Error: $dir_each_ordering doesn't exist";
           }
-          $cmd_sort_p3 .= " $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary ";
+          $cmd_sort_across .= " $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary ";
         }
         close(DIR_ORDERING);
-        $cmd_sort_p3 .= " > $out_dir_results/$out_each_dir_site_minus_average_matrix_summary.msort"; # tmp file
-        print("$cmd_sort_p3\n");
-        if( system("$cmd_sort_p3") != 0) { die("Error: $cmd_sort_p3 failed"); };
+        $cmd_sort_across .= " > $out_dir_results/$out_each_dir_site_minus_average_matrix_summary.msort"; # tmp file
+        print("$cmd_sort_across\n");
+        if( system("$cmd_sort_across") != 0) { die("Error: $cmd_sort_across failed"); };
 
-        open(SITE_DIST_SORT, "$out_dir_results/$out_each_dir_site_minus_average_matrix_summary.msort");
+
+        open(SITE_DIST_SORT, "$out_dir_results/$out_each_dir_site_minus_average_matrix_summary.msort"); # open the tmp file
         while (my $line = <SITE_DIST_SORT>) {
           chomp $line;
 
