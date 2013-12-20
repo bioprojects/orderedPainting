@@ -82,6 +82,10 @@ my $LOOP_030 = "030";
 # parallelization in each ordering for 01,..,09 (constant)
 #
 my $PARALLEL_PER_ORDERING = 9;
+#
+# maximum number of parallelization executed at the same time 
+#
+my $MAX_PARALLEL = 200;
 
 #
 # number of sites in sum_site_minus_average.summary.txt and for visualization
@@ -363,6 +367,22 @@ if (!$opt_r) {
           print("$cmd\n");
           if( system("$cmd") != 0) { die("Error: $cmd failed"); };
 
+          # check total number of submitted postprocessing jobs across orderings
+          my $check = `$QSTAT | grep $p1_job_name | wc -l`;
+          chomp($check);
+          if ($check > $MAX_PARALLEL) {
+            while () {
+              sleep 10;
+              
+              $check = `$QSTAT | grep $p1_job_name | wc -l`;
+              chomp($check);
+              
+              if ($check < $MAX_PARALLEL) {
+                last;
+              }
+            }
+          }
+
         } else {
 
           print "$divided_sum_file was not recreated because it has already $nrow_divided_sum_file lines\n";
@@ -476,6 +496,22 @@ if (!$opt_r) {
         $cmd = "$QSUB $p2_job_name -e $p2_job_name.log -o $p2_job_name.log <<< '$cmd_ppGz '";
         print("$cmd\n");
         if( system("$cmd") != 0) { die("Error: $cmd failed"); };
+
+        # check total number of submitted postprocessing jobs across orderings
+        my $check = `$QSTAT | grep $p2_job_name | wc -l`;
+        chomp($check);
+        if ($check > $MAX_PARALLEL) {
+          while () {
+            sleep 10;
+            
+            $check = `$QSTAT | grep $p2_job_name | wc -l`;
+            chomp($check);
+            
+            if ($check < $MAX_PARALLEL) {
+              last;
+            }
+          }
+        }
       }
 
       while () {
@@ -945,6 +981,22 @@ if ($opt_n) {
             $cmd = "$QSUB $p3_job_name -e $p3_job_name.log -o $p3_job_name.log <<< '$cmd_sort_within_each_ordering'";
             print("$cmd\n");
             if( system("$cmd") != 0) { die("Error: $cmd failed"); };
+            
+            # check total number of submitted postprocessing jobs across orderings
+            my $check = `$QSTAT | grep $p3_job_name | wc -l`;
+            chomp($check);
+            if ($check > $MAX_PARALLEL) {
+              while () {
+                sleep 10;
+                
+                $check = `$QSTAT | grep $p3_job_name | wc -l`;
+                chomp($check);
+                
+                if ($check < $MAX_PARALLEL) {
+                  last;
+                }
+              }
+            }
           }
         } else {
           die "Error: the number of $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary.?? must be $PARALLEL_PER_ORDERING files";
