@@ -916,8 +916,8 @@ do
         echo "incomplete ${EACH_COPYPROB_GZ} was removed"
       fi
     else
-      sleep 10
-      if [ -f "${EACH_COPYPROB_GZ}" ]; then
+      sleep 10 # just in case of a problem of timing to write files in your file system
+      if [ ! -f "${EACH_COPYPROB_GZ}" ]; then
         echo "painting of ${EACH_HAP} failed, because there is no ${EACH_COPYPROB_GZ}"
         let i_failed=${i_failed}+1
       fi
