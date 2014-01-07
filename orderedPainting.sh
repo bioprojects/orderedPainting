@@ -915,6 +915,9 @@ do
         /bin/rm -f ${EACH_COPYPROB_GZ}
         echo "incomplete ${EACH_COPYPROB_GZ} was removed"
       fi
+    else
+        echo "painting of ${EACH_HAP} failed, because there is no ${EACH_COPYPROB_GZ}"
+        let i_failed=${i_failed}+1
     fi
 
   done < "${TARGET_HAP_LIST}"
@@ -953,7 +956,7 @@ declare -a arr_dirs_for_msort
 while read EACH_DIR
 do
   #
-  # prepare $TARGET_HAP_LIST, $NUM_TARGET_HAP
+  # prepare $TARGET_HAP_LIST, $NUM_TARGET_GZ
   #
   TARGET_GZ_LIST="${EACH_DIR}/${TARGET_GZ_FNANE}"
   /bin/cat /dev/null > "${TARGET_GZ_LIST}"
