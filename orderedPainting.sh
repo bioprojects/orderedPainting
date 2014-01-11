@@ -826,14 +826,19 @@ do
   echo "preparing ${TARGET_HAP_LIST} ... "
 
   #
-  # skip this ordered directory if there is already ${GZ_CAT_COPYPROB_EACH_DIR}.??
+  # skip this ordered directory if there is already all ${GZ_CAT_COPYPROB_EACH_DIR}.??
   #
+  SKIP_FLAG=0
   if ls ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}.?? &> /dev/null; then
     CHECK=`ls ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}.?? | wc -l`
 
     if [ "${CHECK}" == "${NUM_SPLITN}" ]; then
-      echo "painting in ${EACH_DIR} is skipped because there are already ${NUM_SPLITN} ${GZ_CAT_COPYPROB_EACH_DIR}. files"
+      SKIP_FLAG=1
     fi
+  fi
+  
+  if [ "${SKIP_FLAG}" -eq 1 ]; then
+    echo "painting in ${EACH_DIR} is skipped because there are already ${NUM_SPLITN} ${GZ_CAT_COPYPROB_EACH_DIR}. files"
   else
     for EACH_HAP in `grep ${EACH_DIR} ${ORDER_HAP_LIST}`
     do
@@ -851,7 +856,8 @@ do
           echo "incomplete ${EACH_COPYPROB_GZ} was removed"
         fi
       fi
-      # otherwise, execute painting of unfinished hap files in this ordered directory 
+      
+      # execute painting of unfinished hap files in this ordered directory 
       if [ "${target_flag}" -eq 1 ]; then
         echo ${EACH_HAP} >> ${TARGET_HAP_LIST}
         let NUM_TARGET_HAP=${NUM_TARGET_HAP}+1
@@ -862,32 +868,32 @@ do
         fi
       fi
     done
-  fi
 
-  #
-  # execute paining of the target hap files
-  #
-  if [ "${NUM_TARGET_HAP}" -eq 0 ]; then
-    echo "${EACH_DIR} was skipped because there is no hap file to be painted."
-  else
-    ARRAY_S=1
-    ARRAY_E=${NUM_TARGET_HAP}
-    
-    CMD=`returnQSUB_CMD ${STAMP} ${ARRAY_S} ${ARRAY_E}`
-    #CMD=${CMD}" -t 1:${NUM_TARGET_HAP} "
-    CMD=${CMD}" ${SH_PAINT_QSUB}"
-    CMD=${CMD}"  -r ${RECOMB_FNANE}"
-    CMD=${CMD}"  -n ${N_e_FNAME}"
-    CMD=${CMD}"  -l ${TARGET_HAP_LIST}"
+    #
+    # execute paining of the target hap files
+    #
+    if [ "${NUM_TARGET_HAP}" -eq 0 ]; then
+      echo "${EACH_DIR} was skipped because there is no hap file to be painted."
+    else
+      ARRAY_S=1
+      ARRAY_E=${NUM_TARGET_HAP}
+      
+      CMD=`returnQSUB_CMD ${STAMP} ${ARRAY_S} ${ARRAY_E}`
+      #CMD=${CMD}" -t 1:${NUM_TARGET_HAP} "
+      CMD=${CMD}" ${SH_PAINT_QSUB}"
+      CMD=${CMD}"  -r ${RECOMB_FNANE}"
+      CMD=${CMD}"  -n ${N_e_FNAME}"
+      CMD=${CMD}"  -l ${TARGET_HAP_LIST}"
 
-    echo ${CMD}
-    QSUB_MSG=`${CMD}`
-    if [ $? -ne 0 ]; then 
-      echo_fail "Execution error: ${CMD} (step${STEP}) "
+      echo ${CMD}
+      QSUB_MSG=`${CMD}`
+      if [ $? -ne 0 ]; then 
+        echo_fail "Execution error: ${CMD} (step${STEP}) "
+      fi
+      #QSUB_ID=`echo ${QSUB_MSG} | perl -pe 's/ \(.*$//g' | perl -pe 's/^.* //g' | perl -pe 's/\..*$//g'`
     fi
-    #QSUB_ID=`echo ${QSUB_MSG} | perl -pe 's/ \(.*$//g' | perl -pe 's/^.* //g' | perl -pe 's/\..*$//g'`
-  fi
 
+  fi
 done < ${ORDER_DIR_LIST}
 
 wait_until_finish "${STAMP}"
