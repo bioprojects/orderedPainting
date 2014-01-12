@@ -57,7 +57,7 @@ Please wait during that time.
 
 The following is the most basic example which uses files in the "example1" directory.
 
-  $ qsub -cwd -o example1.log -e example1.log <<< "/bin/bash ./orderedPainting.sh  -g example1/simulatedData_N100.hap  -l example1/strainName_N100.txt"
+  $ qsub -cwd -o example1.log -e example1.log <<< "/bin/bash ./orderedPainting.sh  -g example1/simulatedData_N50.hap  -l example1/strainName_N50.txt"
   
   (If you use LSF, please use "bsub" instead of "qsub -cwd")
 
@@ -78,11 +78,11 @@ Please check the log file you specified above.
 If the program finished running normally, the following message 
 will be written in the log file
 
-  Done. Please look at output files in simulatedData_N100_orderedS1_rnd_1_10_dirs_results
+  Done. Please look at output files in simulatedData_N50_orderedS1_rnd_1_10_dirs_results
 
 Please look at the output files there. 
 
-  $ ls simulatedData_N100_orderedS1_rnd_1_10_dirs_results/
+  $ ls simulatedData_N50_orderedS1_rnd_1_10_dirs_results/
 
 The following files and directories will be seen.
 
@@ -114,7 +114,7 @@ If "-x" was specified, the following files and directories are also created.
 "results_siteStats.txt.gz" contains values of the distance statistic and bootstrap support of each site.
 
 "results_siteStats_along_seq.png" shows intensity of recombination (distribution of the distance statistic) 
-along the genome.  Two recombination hot regions should be seen.
+along the genome.  Two recombination hot regions will be seen.
 
 "results_siteStats_hist.png" shows a histogram of the distance statistic.
 
