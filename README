@@ -208,5 +208,10 @@ be speficied by "MAX_MEMORY" in "lib/env_func.bashrc" above.
 # 8. Further information
 #---------------------------------------------------------
 
-If you find any problem, please inform to koji.yahara@gmail.com
+If orderedPainting doesn't work in your computational cluster,
+please send your input files to koji.yahara@gmail.com
+Koji Yahara will do the computation, remove the input files, and 
+send outputs to you.
+
+If you find any other problem, please inform to koji.yahara@gmail.com
 

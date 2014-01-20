@@ -15,7 +15,8 @@ usage () {
   echo "  -g file.hap "
   echo "  -l strainName.list (individual name in the hap file)" 
   echo " [-n 20 (num. of dirs where uncompressed tmp files are processed simultaneously: default=20) ]"
-  echo " [-m pos_missingInd.txt (pos[tab]missing_individual_name]"
+  echo " [-t 10 (num. of orderings: default=10) ]"
+  echo " [-m pos_missingInd.txt (pos[tab]missing_individual_name) ]"
   echo " [-o strainName.list (individual name in an order for output matrices: default is the file specified by -l) ]"
   echo " [-x (output matrix files for top/middle/bottom sites) ]"
   
