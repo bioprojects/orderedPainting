@@ -1165,7 +1165,7 @@ if ($opt_n) {
                $out_rank_pos_file .= "$pos.txt";
 
             #
-            # visualize_top or middle or bottom
+            # visualize top or middle or bottom
             #
             my $dir_visType = $prefix_of_dirs_for_visualization . $hash_summaryPos2Type{$pos};
             if (! -d "$dir_visType") {
