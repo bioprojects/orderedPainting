@@ -1249,6 +1249,18 @@ if [ "${SKIP_FLAG}" -eq 0 ]; then
     if [ ! -s "${COMBINED_RES_DIR}/${OUTF_SUMMARY_RANGE}" ]; then
       echo_fail "Error (step${STEP}): ${COMBINED_RES_DIR}/${OUTF_SUMMARY_RANGE} doesn't exist or empty "
     fi
+    
+    CHECK_VISUALIZE_DIR_WC=`find ${COMBINED_RES_DIR} -type d -name visualize\* | wc -l`
+    if [ "${CHECK_VISUALIZE_DIR_WC}" -ne 3 ]; then
+      echo_fail "Error (step${STEP}): ${COMBINED_RES_DIR}/visualize_* directories are incomplete"
+    fi
+    
+    tail -n+2 ${COMBINED_RES_DIR}/${OUTF_SITE_STATS} | awk '{print $1}' | sort > ${COMBINED_RES_DIR}/${OUTF_SITE_STATS}.sort
+    ls ${COMBINED_RES_DIR}/visualize_*/*.txt | perl -pe 's/\.txt//g' | perl -pe 's/^.*_//g' |sort > ${COMBINED_RES_DIR}/visualize_pos.sort
+    DIFF=`diff ${COMBINED_RES_DIR}/${OUTF_SITE_STATS}.sort ${COMBINED_RES_DIR}/visualize_pos.sort`
+    if [ "${DIFF}" != "" ]; then
+      echo_fail "Error (step${STEP}): error in creating data of sites for visualization "
+    fi
   fi
 
   echo "The step${STEP} normally finished."
