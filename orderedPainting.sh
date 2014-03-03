@@ -1176,18 +1176,20 @@ if [ "${OUTPUT_REPRESENTATIVES}" == "TRUE" ]; then
   if [ -s "${COMBINED_RES_DIR}/${OUTF_SITE_STATS}" ]; then
     if [ -s "${COMBINED_RES_DIR}/${OUTF_SUMMARY_POS}" ]; then
       
-      if [ `gzip -dc "${COMBINED_RES_DIR}/${OUTF_SUMMARY_SITE_MINUS_AVERAGE}" | wc -l` -gt 2 ]; then
-        if [ -s "${COMBINED_RES_DIR}/${OUTF_SUMMARY_RANGE}" ]; then
-          DIRS_OK_FLAG=1
-          for VISUALIZE_TYPE_DIR in `find ${COMBINED_RES_DIR} -type d -name visualize\*`
-          do
-            if [ ! -d "${VISUALIZE_TYPE_DIR}" ]; then
-              DIRS_OK_FLAG=0
-            fi
-          done
+      if [ -f "${COMBINED_RES_DIR}/${OUTF_SUMMARY_SITE_MINUS_AVERAGE}" ]; then
+        if [ `gzip -dc "${COMBINED_RES_DIR}/${OUTF_SUMMARY_SITE_MINUS_AVERAGE}" | wc -l` -gt 2 ]; then
+          if [ -s "${COMBINED_RES_DIR}/${OUTF_SUMMARY_RANGE}" ]; then
+            DIRS_OK_FLAG=1
+            for VISUALIZE_TYPE_DIR in `find ${COMBINED_RES_DIR} -type d -name visualize\*`
+            do
+              if [ ! -d "${VISUALIZE_TYPE_DIR}" ]; then
+                DIRS_OK_FLAG=0
+              fi
+            done
 
-          if [ "${DIRS_OK_FLAG}" -eq 1 ]; then
-            SKIP_FLAG=1
+            if [ "${DIRS_OK_FLAG}" -eq 1 ]; then
+              SKIP_FLAG=1
+            fi
           fi
         fi
       fi
