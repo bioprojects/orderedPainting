@@ -1,2 +1,7 @@
 July, 2013	The first upload (under development)
+
 March, 2014	version 1.0.0
+
+May 21, 2014, version 1.0.1
+  * The configuration file (env_func.bashrc) and README were modified so that by default MAX_MEMORY is not specified
+    (because the option depends on qsub systems).

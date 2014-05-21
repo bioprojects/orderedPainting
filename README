@@ -28,12 +28,19 @@ LSF instead, please edit "lib/env_func.bashrc" as below
 
   #QUEUE_TYPE="SGE"                        # comment out
   #QSUB_COMMON="qsub -cwd "                # comment out
-  #MAX_MEMORY="-l s_vmem=8G -l mem_req=8"  # comment out
   
-  QUEUE_TYPE="LSF"          # comment in instead
-  QSUB_COMMON="bsub "       # comment in instead
-  MAX_MEMORY="-M 8000000"   # comment in instead
+  QUEUE_TYPE="LSF"                         # comment in instead
+  QSUB_COMMON="bsub "                      # comment in instead
 
+
+If you need to increase the upper limit of memory usage
+in your computational cluster, please also modify 
+"lib/env_func.bashrc" as below
+
+  #MAX_MEMORY=""                           # comment out
+  
+  # for SGE, but please check options in your cluster
+  MAX_MEMORY="-l s_vmem=8G -l mem_req=8" 
 
 
 #---------------------------------------------------------

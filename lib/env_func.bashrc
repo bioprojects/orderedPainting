@@ -1,18 +1,29 @@
 #######################################################################################
 # definition for your grid engine
-#
-#   MAX_MEMORY (in GB)
-#     depends on only the number of SNPs
-#     is used only at the step of combining all orderings
-#
 #######################################################################################
 
 QUEUE_TYPE="SGE"
 QSUB_COMMON="qsub -cwd "
-MAX_MEMORY="-l s_vmem=8G -l mem_req=8"
 
 #QUEUE_TYPE="LSF"
 #QSUB_COMMON="bsub "
+
+#
+# If you need to increase an upper limit of memory usage,
+# please specify a correct option in your computational cluster.
+#
+# The followings are examples.
+#
+# The memory usage of orderedPainting depends on only the number of SNPs.
+#
+# This option is used only at the step of combining all orderings.
+#
+MAX_MEMORY=""
+
+## for SGE, but please check options in your cluster
+#MAX_MEMORY="-l s_vmem=8G -l mem_req=8" 
+
+## for LSF
 #MAX_MEMORY="-M 8000000"
 
 
