@@ -30,7 +30,7 @@ eval ${CMD}
 # 1. ChromoPainter
 #
 if [ ! -f "chromopainter-${VERSION}/chromopainter" ]; then
-  URL=http://www.maths.bris.ac.uk/%7Emadjl/finestructure/chromopainter-${VERSION}.tar.gz
+  URL=http://yahara.hustle.ne.jp/software/chromopainter-${VERSION}.tar.gz
   wget ${URL}
   if [ $? -ne 0 ]; then
     echo_fail "Download failed.  Please check the URL: ${URL}"
@@ -70,7 +70,7 @@ arr_scripts=(
 for aa in ${arr_scripts[@]}
 do
   if [ ! -f "${LIB_DIR}/${aa}" ]; then
-    URL=http://www2.maths.bris.ac.uk/~madjl/finestructure/${aa}.zip
+    URL=http://yahara.hustle.ne.jp/software/${aa}.zip
     wget ${URL}
     if [ $? -ne 0 ]; then
       echo_fail "Download failed.  Please check the URL: ${URL}"
