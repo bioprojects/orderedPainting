@@ -1,3 +1,7 @@
+Sept 29, 2015, version 1.1
+  * It stopped to use the "<<<" operator, which is not available in Ubuntu cluster.
+  * The normalized statistic H_i is added to the output file.
+
 Dec 12, 2014, version 1.0.2
   * setup.sh was modified to deal with the change of URLs 
 
