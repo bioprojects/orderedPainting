@@ -19,6 +19,13 @@ if (!file.exists(gzfile_site_dist)) {
 
 d_site_dist <- read.table(gzfile(gzfile_site_dist),header=T)
 
+# calculate Hi, and overwrite the gz file
+d_site_dist$H_i <- scale(d_site_dist$D_i)
+
+gzFh <- gzfile(gzfile_site_dist, "w")
+write.table(d_site_dist, gzFh, sep="\t", quote=F, row.names=F)
+close(gzFh)
+
 # top 1%
 dist_top_percentile <- round( d_site_dist[ round(nrow(d_site_dist)*0.01), 2] )
 
@@ -34,9 +41,16 @@ dev.off()
 # plot along the sequence
 out_along_sequence_file <- sub(".txt.gz","_along_seq.png", gzfile_site_dist)
 png(out_along_sequence_file)
-plot( d_site_dist$pos, d_site_dist$D_i, pch=16,cex=0.2
+plot( d_site_dist$pos, d_site_dist$D_i, pch=16, cex=0.2
       ,  xlab="genomic position" 
       ,  ylab="D_i (intensity of recombination)" 
       )
 dev.off()
 
+out_along_sequence_file <- sub(".txt.gz","_Hi_along_seq.png", gzfile_site_dist)
+png(out_along_sequence_file)
+plot( d_site_dist$pos, d_site_dist$H_i, pch=16, cex=0.2
+      ,  xlab="genomic position" 
+      ,  ylab="H_i (intensity of recombination)" 
+      )
+dev.off()

@@ -142,25 +142,32 @@ returnQSUB_CMD() {
 }
 
 submit_calcAveDist_ordering() {
-  CMD=`returnQSUB_CMD ${STAMP}`
-  CMD=${CMD}" <<< '"
-  CMD=${CMD}" perl ${PL_SITE_BY_SITE}"
-  CMD=${CMD}" -g ${PHASEFILE} "
-  CMD=${CMD}" -d ${ORDER_DIR_LIST} "
-  CMD=${CMD}" -l ${ORDER_STRAIN_LIST} "
+
+  EXEC_CMD="perl ${PL_SITE_BY_SITE}"
+  EXEC_CMD=${EXEC_CMD}" -g ${PHASEFILE} "
+  EXEC_CMD=${EXEC_CMD}" -d ${ORDER_DIR_LIST} "
+  EXEC_CMD=${EXEC_CMD}" -l ${ORDER_STRAIN_LIST} "
   #if [ "${CONTRAST_MAX}" -gt 0 ]; then
-  #  CMD=${CMD}" -c ${CONTRAST_MAX} " 
+  #  EXEC_CMD=${EXEC_CMD}" -c ${CONTRAST_MAX} " 
   #fi
-  CMD=${CMD}" -s ${HAP_LIST_OUTDISP} "
-  #CMD=${CMD}" -n ${i_ordering}"
-  CMD=${CMD}" -n $1"
+  EXEC_CMD=${EXEC_CMD}" -s ${HAP_LIST_OUTDISP} "
+  #EXEC_CMD=${EXEC_CMD}" -n ${i_ordering}"
+  EXEC_CMD=${EXEC_CMD}" -n $1"
   if [ "${MISSING_POS_IND_FILE}" != "" ]; then
-    CMD=${CMD}" -m ${MISSING_POS_IND_FILE}"
+    EXEC_CMD=${EXEC_CMD}" -m ${MISSING_POS_IND_FILE}"
   fi
   if [ "${CONSTRAINT_FILE}" != "" ]; then
-    CMD=${CMD}" -c ${CONSTRAINT_FILE}"
+    EXEC_CMD=${EXEC_CMD}" -c ${CONSTRAINT_FILE}"
   fi
-  CMD=${CMD}"'"
+
+  TMP_SH="${STAMP}_n$1_job.sh"
+  echo ${EXEC_CMD} > ${TMP_SH}
+  chmod 755 ${TMP_SH}
+
+  CMD=`returnQSUB_CMD ${STAMP}`
+  #CMD=${CMD}" <<< '"
+  CMD="${CMD} ./${TMP_SH}"
+  #CMD=${CMD}"'"
 
   echo ${CMD}
   eval ${CMD}
@@ -526,10 +533,16 @@ else
   do
     out_prefix_ind=${OUT_PREFIX_BASE}_${ind}
 
+    EXEC_CMD="${EXE_PAINT} -i ${NUM_EM} -in -n 1 -a $ind $ind -j -g $PHASEFILE -r $RECOMB_FNANE -o ${OUT_DIR_linked1_est}/${out_prefix_ind}"
+
+    TMP_SH="${STAMP}_ind${ind}_job.sh"
+    echo ${EXEC_CMD} > ${TMP_SH}
+    chmod 755 ${TMP_SH}
+
     CMD=`returnQSUB_CMD ${STAMP}`
-    CMD=${CMD}" <<< '"
-    CMD=${CMD}"${EXE_PAINT} -i ${NUM_EM} -in -n 1 -a $ind $ind -j -g $PHASEFILE -r $RECOMB_FNANE -o ${OUT_DIR_linked1_est}/${out_prefix_ind}"
-    CMD=${CMD}"'"
+    #CMD=${CMD}" <<< '"
+    CMD="${CMD} ./${TMP_SH}"
+    #CMD=${CMD}"'"
     echo ${CMD}
     eval ${CMD}
     if [ $? -ne 0 ]; then 
@@ -1207,22 +1220,28 @@ fi
 
 if [ "${SKIP_FLAG}" -eq 0 ]; then
 
+  EXEC_CMD=" perl ${PL_SITE_BY_SITE}"
+  EXEC_CMD=${EXEC_CMD}" -g ${PHASEFILE} "
+  EXEC_CMD=${EXEC_CMD}" -d ${ORDER_DIR_LIST} "
+  EXEC_CMD=${EXEC_CMD}" -l ${ORDER_STRAIN_LIST} "
+  #if [ "${CONTRAST_MAX}" -gt 0 ]; then
+  #  EXEC_CMD=${EXEC_CMD}" -c ${CONTRAST_MAX} " 
+  #fi
+  EXEC_CMD=${EXEC_CMD}" -s ${HAP_LIST_OUTDISP} "
+  EXEC_CMD=${EXEC_CMD}" -r "   # only one difference from the previous step
+  if [ "${OUTPUT_REPRESENTATIVES}" == "TRUE" ]; then
+    EXEC_CMD=${EXEC_CMD}" -x "
+  fi
+
+  TMP_SH="${STAMP}_job.sh"
+  echo ${EXEC_CMD} > ${TMP_SH}
+  chmod 755 ${TMP_SH}
+
   CMD=`returnQSUB_CMD ${STAMP}` 
   CMD=${CMD}" ${MAX_MEMORY} " # ${MAX_MEMORY} is used only here
-  CMD=${CMD}" <<< '"
-  CMD=${CMD}"perl ${PL_SITE_BY_SITE}"
-  CMD=${CMD}" -g ${PHASEFILE} "
-  CMD=${CMD}" -d ${ORDER_DIR_LIST} "
-  CMD=${CMD}" -l ${ORDER_STRAIN_LIST} "
-  #if [ "${CONTRAST_MAX}" -gt 0 ]; then
-  #  CMD=${CMD}" -c ${CONTRAST_MAX} " 
-  #fi
-  CMD=${CMD}" -s ${HAP_LIST_OUTDISP} "
-  CMD=${CMD}" -r "   # only one difference from the previous step
-  if [ "${OUTPUT_REPRESENTATIVES}" == "TRUE" ]; then
-    CMD=${CMD}" -x "
-  fi
-  CMD=${CMD}"'"
+#  CMD=${CMD}" <<< '"
+  CMD="${CMD} ./${TMP_SH}"
+#  CMD=${CMD}"'"
   
   echo ${CMD}
   eval ${CMD}

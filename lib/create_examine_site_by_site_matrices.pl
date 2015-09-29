@@ -217,7 +217,7 @@ $QUEUE_TYPE =~ s/QUEUE_TYPE=//g;
 $QUEUE_TYPE =~ s/ //g;
 
 if ($QUEUE_TYPE eq "SGE") {
-  $QSUB = "qsub -cwd -N ";
+  $QSUB = "qsub -S /bin/bash -cwd -N "; # "-S /bin/bash" is required in SGE
 } elsif ($QUEUE_TYPE eq "LSF") {
   $QSUB = "bsub -J ";
 } else {
@@ -297,7 +297,7 @@ if (!$opt_r) {
     #
     # prepare
     #
-    $cmd_ppGz_common  = " $postprocess_path ";
+    $cmd_ppGz_common  = "$postprocess_path ";
     $cmd_ppGz_common .= " -d $dir_each_ordering ";
     $cmd_ppGz_common .= " -l $strainHapOrderFile ";
     $cmd_ppGz_common .= " -o $strainFineOrderFile ";
@@ -362,8 +362,24 @@ if (!$opt_r) {
           $cmd_ppGz .= " -s $suffix";
           $cmd_ppGz .= " -p $loop_part";
           # no "-c" here
+          
+          $stamp =~ s/://g;
+          my $tmp_sh = $each_gz_cat_copyprob . "_$stamp.sh";
+          open(TMP_SH, "> $tmp_sh");
+          print TMP_SH $cmd_ppGz;
+          close(TMP_SH);
+          chmod 0755, $tmp_sh or die "Couldn't chmod $tmp_sh: $!";
 
-          $cmd = "$QSUB $p1_job_name -e $p1_job_name.log -o $p1_job_name.log <<< '$cmd_ppGz '";
+          while () {
+            sleep 3;
+            
+            if (-f $tmp_sh) {
+              last;
+            }
+          }
+
+          #$cmd = "$QSUB $p1_job_name -e $p1_job_name.log -o $p1_job_name.log <<< '$cmd_ppGz '";
+          $cmd = "$QSUB $p1_job_name -e $p1_job_name.log -o $p1_job_name.log ./$tmp_sh";
           print("$cmd\n");
           if( system("$cmd") != 0) { die("Error: $cmd failed"); };
 
@@ -410,6 +426,13 @@ if (!$opt_r) {
       my @arr_p1_job_logs = glob("$p1_job_name.*");
       foreach my $each_p1_job_log (@arr_p1_job_logs) {
         unlink($each_p1_job_log);
+      }
+
+      foreach my $each_gz_cat_copyprob (@arr_divided_gz_cat_copyprob) {
+        my @arr_tmp_sh = glob("$each_gz_cat_copyprob/*$stamp*.sh");
+        foreach my $each_tmp_sh (@arr_tmp_sh) {
+          unlink($each_tmp_sh);
+        }
       }
 
       $stamp = `date +%Y%m%d_%T`;
@@ -492,8 +515,24 @@ if (!$opt_r) {
         if ($opt_c) {
           $cmd_ppGz .= " -c $constraint_File";
         }
-        
-        $cmd = "$QSUB $p2_job_name -e $p2_job_name.log -o $p2_job_name.log <<< '$cmd_ppGz '";
+
+        $stamp =~ s/://g;
+        my $tmp_sh = $each_gz_cat_copyprob . "_$stamp.sh";
+        open(TMP_SH, "> $tmp_sh");
+        print TMP_SH $cmd_ppGz;
+        close(TMP_SH);
+        chmod 0755, $tmp_sh or die "Couldn't chmod $tmp_sh: $!";
+
+        while () {
+          sleep 3;
+          
+          if (-f $tmp_sh) {
+            last;
+          }
+        }
+
+        #$cmd = "$QSUB $p2_job_name -e $p2_job_name.log -o $p2_job_name.log <<< '$cmd_ppGz '";
+        $cmd = "$QSUB $p2_job_name -e $p2_job_name.log -o $p2_job_name.log ./$tmp_sh";
         print("$cmd\n");
         if( system("$cmd") != 0) { die("Error: $cmd failed"); };
 
@@ -534,6 +573,13 @@ if (!$opt_r) {
       my @arr_p2_job_logs = glob("$p2_job_name.*");
       foreach my $each_p2_job_log (@arr_p2_job_logs) {
         unlink($each_p2_job_log);
+      }
+
+      foreach my $each_gz_cat_copyprob (@arr_divided_gz_cat_copyprob) {
+        my @arr_tmp_sh = glob("$each_gz_cat_copyprob/*$stamp*.sh");
+        foreach my $each_tmp_sh (@arr_tmp_sh) {
+          unlink($each_tmp_sh);
+        }
       }
 
       $stamp = `date +%Y%m%d_%T`;
@@ -941,8 +987,24 @@ if ($opt_n) {
             if ($opt_c) {
               $cmd_ppGz .= " -c $constraint_File";
             }
-            
-            $cmd = "$QSUB $p3_job_name -e $p3_job_name.log -o $p3_job_name.log <<< '$cmd_ppGz '";
+
+            $stamp =~ s/://g;
+            my $tmp_sh = $each_gz_cat_copyprob . "_$stamp.sh";
+            open(TMP_SH, "> $tmp_sh");
+            print TMP_SH $cmd_ppGz;
+            close(TMP_SH);
+            chmod 0755, $tmp_sh or die "Couldn't chmod $tmp_sh: $!";
+
+            while () {
+              sleep 3;
+              
+              if (-f $tmp_sh) {
+                last;
+              }
+            }
+
+            #$cmd = "$QSUB $p3_job_name -e $p3_job_name.log -o $p3_job_name.log <<< '$cmd_ppGz '";
+            $cmd = "$QSUB $p3_job_name -e $p3_job_name.log -o $p3_job_name.log ./$tmp_sh";
             print("$cmd\n");
             if( system("$cmd") != 0) { die("Error: $cmd failed"); };
           }
@@ -977,11 +1039,27 @@ if ($opt_n) {
           if (! -s "$dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary") {
             my $cmd_sort_within_each_ordering  = "/bin/sort -n $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary.?? ";
                $cmd_sort_within_each_ordering .= " > $dir_each_ordering/$out_each_dir_site_minus_average_matrix_summary";
-            
-            $cmd = "$QSUB $p3_job_name -e $p3_job_name.log -o $p3_job_name.log <<< '$cmd_sort_within_each_ordering'";
+
+            $stamp =~ s/://g;
+            my $tmp_sh = $dir_each_ordering . "_$stamp.sh";
+            open(TMP_SH, "> $tmp_sh");
+            print TMP_SH $cmd_sort_within_each_ordering;
+            close(TMP_SH);
+            chmod 0755, $tmp_sh or die "Couldn't chmod $tmp_sh: $!";
+
+            while () {
+              sleep 3;
+              
+              if (-f $tmp_sh) {
+                last;
+              }
+            }
+
+            #$cmd = "$QSUB $p3_job_name -e $p3_job_name.log -o $p3_job_name.log <<< '$cmd_sort_within_each_ordering'";
+            $cmd = "$QSUB $p3_job_name -e $p3_job_name.log -o $p3_job_name.log ./$tmp_sh";
             print("$cmd\n");
             if( system("$cmd") != 0) { die("Error: $cmd failed"); };
-            
+ 
             # check total number of submitted postprocessing jobs across orderings
             my $check = `$QSTAT | grep $p3_job_name | wc -l`;
             chomp($check);
@@ -1034,6 +1112,16 @@ if ($opt_n) {
       my @arr_p3_job_logs = glob("$p3_job_name.*");
       foreach my $each_p3_job_log (@arr_p3_job_logs) {
         unlink($each_p3_job_log);
+      }
+
+      open(DIR_ORDERING, $dir_ordering_listFile);
+      while (my $dir_each_ordering = <DIR_ORDERING>) {
+        chomp($dir_each_ordering);
+
+        my @arr_tmp_sh = glob("$dir_each_ordering/*$stamp*.sh");
+        foreach my $each_tmp_sh (@arr_tmp_sh) {
+          unlink($each_tmp_sh);
+        }
       }
 
       $stamp = `date +%Y%m%d_%T`;
