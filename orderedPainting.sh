@@ -360,6 +360,9 @@ fi
 
 NUM_IND=`head -2 ${PHASEFILE} | tail -1`
 
+NUM_HAP_IN_PHASEFILE=`wc -l ${PHASEFILE} | awk '{print $1}'`
+let NUM_HAP_IN_PHASEFILE=${NUM_HAP_IN_PHASEFILE}-5
+
 if [ ! -f "${HAP_LIST}" ]; then
   echo_fail "Error: ${HAP_LIST} doesn't exist"
 fi
@@ -392,6 +395,10 @@ WC_HAP_LIST=`wc -l ${HAP_LIST} | awk '{print $1}'`
 if [ "${WC_HAP_LIST}" -ne "${NUM_IND}" ]; then
   echo_fail "Error: The number of rows of ${HAP_LIST} must be ${NUM_IND}, but ${WC_HAP_LIST}"
 fi
+if [ "${WC_HAP_LIST}" -ne "${NUM_HAP_IN_PHASEFILE}" ]; then
+  echo_fail "Error: The number of haplotypes in the phasefile is ${NUM_HAP_IN_PHASEFILE}, but the number of lines in ${HAP_LIST} is ${WC_HAP_LIST}"
+fi
+
 
 # 
 # check ${HAP_LIST_OUTDISP}
@@ -461,6 +468,9 @@ ORDER_STRAIN_LIST=${OUT_PREFIX_BASE}_orderedS${SEED}_rnd_1_${TYPE_NUM_ORDERING}_
 
 cwd=`dirname $0` 
 cd $cwd
+
+perl -i -pe 's/\r//g' ${PHASEFILE}
+perl -i -pe 's/ $//g' ${PHASEFILE}
 
 ################################################################################################################
 
