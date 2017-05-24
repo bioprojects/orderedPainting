@@ -391,6 +391,11 @@ if [ "${CHECK_PIPE}" != "" ]; then
   perl -i -pe 's/\|/_/g' ${HAP_LIST}
 fi
 
+CHECK_REDIRECT=`cat "${HAP_LIST}" | grep '>'`
+if [ "${CHECK_REDIRECT}" != "" ]; then
+  perl -i -pe 's/>//g' ${HAP_LIST}
+fi
+
 WC_HAP_LIST=`wc -l ${HAP_LIST} | awk '{print $1}'`
 if [ "${WC_HAP_LIST}" -ne "${NUM_IND}" ]; then
   echo_fail "Error: The number of rows of ${HAP_LIST} must be ${NUM_IND}, but ${WC_HAP_LIST}"
@@ -1008,13 +1013,17 @@ do
 
   #
   # skip this ordered directory if there is already ${GZ_CAT_COPYPROB_EACH_DIR}.??
+  SKIP_FLAG=0
   if ls ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}.?? &> /dev/null; then
     CHECK=`ls ${EACH_DIR}/${GZ_CAT_COPYPROB_EACH_DIR}.?? | wc -l`
 
     if [ "${CHECK}" == "${NUM_SPLITN}" ]; then
+      SKIP_FLAG=1
       echo "msort in ${EACH_DIR} is skipped because there are already ${NUM_SPLITN} ${GZ_CAT_COPYPROB_EACH_DIR}. files"
     fi
-  else
+  fi
+  
+  if [ "${SKIP_FLAG}" -eq 0 ]; then
     arr_dirs_for_msort=("${arr_dirs_for_msort[@]}" "${EACH_DIR}")
     
     #
@@ -1069,8 +1078,8 @@ do
 
       sleep 10
     done
-
   fi
+
 done < ${ORDER_DIR_LIST}
 
 #
