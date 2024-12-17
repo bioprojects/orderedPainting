@@ -99,8 +99,9 @@ if [ ! -d "coreutils-8.11" ]; then
   tar xvfz coreutils-8.11.tar.gz
   cd coreutils-8.11
   CC=gcc
-  ./configure
+  ./configure CFLAGS=-O3
   cd ./lib
+  perl -i -pe 's/_GL_WARN_ON_USE \(gets, /\/\/_GL_WARN_ON_USE (gets/g' stdio.h
   make
   cd ../src
   make version.h
